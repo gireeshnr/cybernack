@@ -1,3 +1,4 @@
+// src/use-form-react/index.js
 import { useState } from 'react';
 
 const forms = {};
@@ -37,7 +38,7 @@ const useSpecificForm = (name, {initialValues={},debug=false, callback=(inputs)=
       event.preventDefault();
     }
     if(debug) console.log({name, event: 'onSubmit', values: inputs});
-    return callback(inputs);
+    return Promise.resolve(callback(inputs)).finally(() => setSubmitting(false)); // Ensure it handles promises correctly
   }
 
   return {

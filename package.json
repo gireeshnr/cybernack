@@ -3,6 +3,10 @@
   "description": "CRUD in MongoDB, Express, React/Hooks, Node",
   "main": "index.js",
   "scripts": {
+    "start": "node server/src/index.js",
+    "server": "npm run start --prefix server",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
     "test": "eslint --fix **/src/",
     "precommit": "npm test",
     "prepush": "npm test",
@@ -28,6 +32,7 @@
   },
   "homepage": "https://github.com/amazingandyyy/mern#readme",
   "devDependencies": {
+    "concurrently": "^6.5.1",
     "eslint": "^4.14.0",
     "eslint-config-logux": "^17.0.0",
     "eslint-config-standard": "^10.2.1",

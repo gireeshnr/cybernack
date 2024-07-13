@@ -1,18 +1,19 @@
-import {
-    AUTH_USER,
-    UNAUTH_USER,
-    AUTH_ERROR,
-} from '../actions/types';
+import { AUTH_USER, AUTH_ERROR, UNAUTH_USER } from '../actions/types';
 
-export default function(state={}, action) {
-    switch (action.type) {
-        case AUTH_USER:
-            return { ...state, error: '', authenticated: true }
-        case UNAUTH_USER:
-            return { ...state, authenticated: false }
-        case AUTH_ERROR:
-            return { ...state, error: action.payload }
-        default:
-            return state
-    }
+const INITIAL_STATE = {
+  authenticated: !!localStorage.getItem('auth_jwt_token'), // Convert to boolean
+  errorMessage: ''
+};
+
+export default function (state = INITIAL_STATE, action) {
+  switch (action.type) {
+    case AUTH_USER:
+      return { ...state, authenticated: true, errorMessage: '' };
+    case UNAUTH_USER:
+      return { ...state, authenticated: false, errorMessage: '' };
+    case AUTH_ERROR:
+      return { ...state, errorMessage: action.payload };
+    default:
+      return state;
+  }
 }

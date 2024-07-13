@@ -1,11 +1,10 @@
-import UserController from './controller';
+import express from 'express';
+import UserController from './controller.js';
+import auth from '../middleware/auth.js';
 
-const router = require('express').Router();
+const router = express.Router();
 
-router.get('/profile', (req, res)=>{
-    res.send(req.user);
-})
-
-router.post('/profile', UserController.updateProfile)
+router.get('/profile', auth, UserController.getProfile);
+router.post('/profile', auth, UserController.updateProfile);
 
 export default router;

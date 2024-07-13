@@ -1,10 +1,10 @@
-import { configureStore } from '@reduxjs/toolkit'
-import slices from './slices'
-import reducers from './reducers'
+import { configureStore } from '@reduxjs/toolkit';
+import rootReducer from './reducers';
+
 export const store = configureStore({
-  reducer: {...slices, ...reducers},
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
-  getDefaultMiddleware({
-    serializableCheck: false
-  })
-})
+    getDefaultMiddleware({
+      serializableCheck: false
+    })
+});

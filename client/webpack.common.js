@@ -1,15 +1,16 @@
 const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
     entry: {
         app: './src/app.js',
-        vendor: [ 
-            'react', 'react-dom', 'redux', 
-            'react-redux', 'react-router-dom', 
-            'axios', 'prop-types' ]
+        vendor: [
+            'react', 'react-dom', 'redux',
+            'react-redux', 'react-router-dom',
+            'axios', 'prop-types'
+        ]
     },
     output: {
         path: path.resolve(__dirname, '../docs/'),
@@ -19,33 +20,30 @@ module.exports = {
         rules: [
             {
                 test: /\.jsx?$/,
-                exclude: path.resolve(__dirname, 'node_modules'),
-                loader: 'babel-loader'
+                exclude: /node_modules/,
+                use: 'babel-loader'
             },
             {
                 test: /\.s?css$/,
-                exclude: path.resolve(__dirname, "node_modules"),
-                use: ExtractTextPlugin.extract({
-                    fallback: 'style-loader',
-                    use: [{
-                        loader: 'css-loader',
-                        options: {
-                            sourceMap: true
-                        }
-                    },'sass-loader'],
-                })
+                exclude: /node_modules/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    'css-loader',
+                    'sass-loader'
+                ]
             }
         ]
     },
     plugins: [
-        new HtmlWebpackPlugin({template: path.resolve(__dirname, 'src/index.html')}),
-        new webpack.optimize.CommonsChunkPlugin({
-            name: 'manifest',
-            filename: "manifest.js",
-            chunks: ['vendor']
+        new HtmlWebpackPlugin({ template: path.resolve(__dirname, 'src/index.html') }),
+        new webpack.DefinePlugin({
+            'process.env': {
+                'NODE_ENV': JSON.stringify('development'),
+                'API_URI': JSON.stringify('http://localhost:8000')
+            }
         }),
-        new ExtractTextPlugin({
+        new MiniCssExtractPlugin({
             filename: 'styles/style.css'
-        }),
+        })
     ]
 }

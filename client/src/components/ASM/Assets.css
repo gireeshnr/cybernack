@@ -1,0 +1,21 @@
+.sticky-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+  }
+  
+  .sticky-action-icons {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: white;
+    padding: 10px 0;
+  }
+  
+  .table-container {
+    position: relative;
+    overflow: auto;
+    max-height: 60vh;
+  }
+  

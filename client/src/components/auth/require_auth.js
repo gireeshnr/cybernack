@@ -1,19 +1,21 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 
-const AuthComponent = ({ Component, ...props }) => {
-  const navigate = useNavigate()
+const AuthComponent = ({ Component, authenticated, ...props }) => {
+  const navigate = useNavigate();
+
   useEffect(() => {
-    if (!props.authenticated) {
-      navigate('/signin')
+    if (!authenticated) {
+      navigate('/signin');
     }
-  }, [])
+  }, [authenticated, navigate]);
 
-  return <Component {...props} />
-}
+  return authenticated ? <Component {...props} /> : null;
+};
 
-function mapStateToProps({auth}) {
-  return { authenticated: auth.authenticated };
-}
-export default connect(mapStateToProps)(AuthComponent)
+const mapStateToProps = (state) => ({
+  authenticated: state.auth.authenticated,
+});
+
+export default connect(mapStateToProps)(AuthComponent);
