@@ -1,8 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import { FaTrash, FaEdit, FaSearch, FaPlus, FaTimes, FaInfoCircle } from 'react-icons/fa';
-import { Modal, Button, Form, Spinner, Toast, Tabs, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import React, { useState, useEffect } from 'react';
+import { fetchAssets, autoDiscovery, addOrUpdateAssets, deleteAssets, updateAsset } from '../../utils/api';
+import { applyFilters } from '../../utils/filters';
+import { isValidDomainOrIP } from '../../utils/validators';
+import AssetList from './AssetList';
+import AutoDiscovery from './AutoDiscovery';
+import DiscoveryResults from './DiscoveryResults';
+import AddNewAsset from './AddNewAsset';
+import EditAssetModal from './EditAssetModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
+import ToastNotification from './ToastNotification';
+import { Tabs, Tab } from 'react-bootstrap'; // Import Tabs and Tab from react-bootstrap
 import './Assets.css'; // Import the CSS file
 
 const Assets = () => {
@@ -43,9 +50,9 @@ const Assets = () => {
   });
 
   useEffect(() => {
-    const fetchAssets = async () => {
+    const loadAssets = async () => {
       try {
-        const response = await axios.get('/api/assets');
+        const response = await fetchAssets();
         setAssets(response.data);
         setFilteredAssets(response.data);
       } catch (error) {
@@ -55,7 +62,7 @@ const Assets = () => {
       }
     };
 
-    fetchAssets();
+    loadAssets();
   }, []);
 
   const handleAutoDiscovery = async () => {
@@ -64,34 +71,47 @@ const Assets = () => {
       setShowToast(true);
       return;
     }
-    if (!/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain) && !/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(domain)) {
+    if (!isValidDomainOrIP(domain)) {
       setError('Invalid domain or IP address format.');
       setShowToast(true);
       return;
     }
 
-    setLoading(true);
+    setLoading(true); // Start loading spinner
     setError('');
     setShowToast(false);
 
     try {
-      const response = await axios.post('/api/assets/auto-discovery', { domain });
+      const response = await autoDiscovery(domain);
       const discoveredAssets = response.data.assets;
-      const updatedDiscoveryAssets = discoveredAssets.map((asset) => {
-        const existingAsset = assets.find((a) => a.domain === asset.domain);
-        return {
-          ...asset,
-          status: existingAsset ? 'Existing' : 'New',
-        };
-      });
-      setDiscoveryAssets(updatedDiscoveryAssets);
-      setFilteredDiscoveryAssets(updatedDiscoveryAssets);
+      if (discoveredAssets.length === 0) {
+        setError('No assets found for the provided domain.');
+        setShowToast(true);
+      } else {
+        const updatedDiscoveryAssets = discoveredAssets.map((asset) => {
+          const existingAsset = assets.find((a) => a.domain === asset.domain);
+          return {
+            ...asset,
+            status: existingAsset ? 'Existing' : 'New',
+          };
+        });
+        setDiscoveryAssets(updatedDiscoveryAssets);
+        setFilteredDiscoveryAssets(updatedDiscoveryAssets);
+        setMessage('Discovery completed successfully.');
+        setShowToast(true);
+      }
     } catch (error) {
       console.error('Error during auto discovery:', error);
-      setError('Error during auto discovery');
+      if (error.response && error.response.data && error.response.data.error) {
+        setError(`Error during discovery: ${error.response.data.error}`);
+      } else if (error.message) {
+        setError(`Error during discovery: ${error.message}`);
+      } else {
+        setError('An unexpected error occurred during discovery.');
+      }
       setShowToast(true);
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading spinner
     }
   };
 
@@ -119,7 +139,7 @@ const Assets = () => {
 
   const confirmDeleteAssets = async () => {
     try {
-      await axios.post('/api/assets/delete', { assetIds: selectedAssets });
+      await deleteAssets(selectedAssets);
       const updatedAssets = assets.filter((asset) => !selectedAssets.includes(asset._id));
       setAssets(updatedAssets);
       setFilteredAssets(updatedAssets);
@@ -141,7 +161,7 @@ const Assets = () => {
 
   const handleUpdateAsset = async () => {
     try {
-      const response = await axios.post('/api/assets/update', {
+      const response = await updateAsset({
         assetId: editAsset._id,
         domain: editAsset.domain,
         type: editAsset.type,
@@ -179,9 +199,9 @@ const Assets = () => {
       const newAssets = selectedDiscoveryAssets.filter((asset) => asset.status === 'New');
       const existingAssets = selectedDiscoveryAssets.filter((asset) => asset.status === 'Existing');
 
-      await axios.post('/api/assets/add-or-update', { assets: [...newAssets, ...existingAssets] });
+      await addOrUpdateAssets([...newAssets, ...existingAssets]);
 
-      const updatedAssets = await axios.get('/api/assets');
+      const updatedAssets = await fetchAssets();
       setAssets(updatedAssets.data);
       setFilteredAssets(updatedAssets.data);
       setDiscoveryAssets(discoveryAssets.filter((asset) => !selectedDiscoveryAssets.includes(asset)));
@@ -221,8 +241,8 @@ const Assets = () => {
     }
 
     try {
-      await axios.post('/api/assets/add-or-update', { assets: [newAsset] });
-      const updatedAssets = await axios.get('/api/assets');
+      await addOrUpdateAssets([newAsset]);
+      const updatedAssets = await fetchAssets();
       setAssets(updatedAssets.data);
       setFilteredAssets(updatedAssets.data);
       setNewAsset({
@@ -238,14 +258,6 @@ const Assets = () => {
       setError('Error adding new asset');
       setShowToast(true);
     }
-  };
-
-  const applyFilters = (data, filters) => {
-    return data.filter((item) =>
-      Object.keys(filters).every((key) =>
-        item[key].toString().toLowerCase().includes(filters[key].toLowerCase())
-      )
-    );
   };
 
   const handleFilterChange = (e, field) => {
@@ -264,358 +276,68 @@ const Assets = () => {
     setFilteredDiscoveryAssets(filtered);
   };
 
-  const renderTooltip = (props) => (
-    <Tooltip id="button-tooltip" {...props}>
-      Provide your domain in the below field and search for related domains. You can add or update assets after discovery.
-    </Tooltip>
-  );
-
   return (
     <div>
       <Tabs defaultActiveKey="assets" id="uncontrolled-tab-example">
         <Tab eventKey="assets" title="Assets">
-          <div className="asset-list">
-            <h3>Asset List</h3>
-            <div className="sticky-action-icons">
-              {selectedAssets.length > 0 && (
-                <FaTrash onClick={handleDeleteAssets} style={{ cursor: 'pointer', color: 'red', marginBottom: '10px' }} />
-              )}
-            </div>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th className="sticky-header">
-                      <input
-                        type="checkbox"
-                        checked={selectedAssets.length === filteredAssets.length}
-                        onChange={handleSelectAll}
-                      />
-                    </th>
-                    <th className="sticky-header">
-                      Domain
-                      <input
-                        type="text"
-                        placeholder="Filter"
-                        onChange={(e) => handleFilterChange(e, 'domain')}
-                        style={{ display: 'block', marginTop: '5px' }}
-                      />
-                    </th>
-                    <th className="sticky-header">
-                      Type
-                      <input
-                        type="text"
-                        placeholder="Filter"
-                        onChange={(e) => handleFilterChange(e, 'type')}
-                        style={{ display: 'block', marginTop: '5px' }}
-                      />
-                    </th>
-                    <th className="sticky-header">
-                      IP Address
-                      <input
-                        type="text"
-                        placeholder="Filter"
-                        onChange={(e) => handleFilterChange(e, 'ip')}
-                        style={{ display: 'block', marginTop: '5px' }}
-                      />
-                    </th>
-                    <th className="sticky-header">
-                      Ports
-                      <input
-                        type="text"
-                        placeholder="Filter"
-                        onChange={(e) => handleFilterChange(e, 'ports')}
-                        style={{ display: 'block', marginTop: '5px' }}
-                      />
-                    </th>
-                    <th className="sticky-header">Edit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAssets.map((asset) => (
-                    <tr key={asset._id}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedAssets.includes(asset._id)}
-                          onChange={() => handleSelectAsset(asset._id)}
-                        />
-                      </td>
-                      <td>{asset.domain}</td>
-                      <td>{asset.type}</td>
-                      <td>{asset.ip}</td>
-                      <td>{asset.ports.join(', ')}</td>
-                      <td>
-                        <FaEdit onClick={() => handleEditAsset(asset)} style={{ cursor: 'pointer', color: 'blue' }} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <AssetList
+            assets={filteredAssets}
+            selectedAssets={selectedAssets}
+            handleSelectAsset={handleSelectAsset}
+            handleSelectAll={handleSelectAll}
+            filters={filters}
+            handleFilterChange={handleFilterChange}
+            handleDeleteAssets={handleDeleteAssets}
+            handleEditAsset={handleEditAsset}
+          />
         </Tab>
         <Tab eventKey="discovery" title="Auto Discovery">
-          <div className="auto-discovery" style={{ textAlign: 'left', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span>Auto Discover</span>
-              <OverlayTrigger
-                placement="right"
-                overlay={renderTooltip}
-              >
-                <span>
-                  <FaInfoCircle style={{ cursor: 'pointer', fontSize: '16px', color: '#007bff', marginLeft: '10px' }} />
-                </span>
-              </OverlayTrigger>
-            </div>
-            <div style={{ marginTop: '20px' }}>
-              <Form>
-                <Form.Group>
-                  <Form.Label>Domain</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter primary domain"
-                    value={domain}
-                    onChange={(e) => {
-                      setDomain(e.target.value);
-                      setError('');
-                      setShowToast(false);
-                    }}
-                  />
-                </Form.Group>
-                <Button onClick={handleAutoDiscovery} disabled={loading} style={{ marginTop: '10px' }}>
-                  Discover
-                </Button>
-                {loading && <Spinner animation="border" role="status" style={{ marginLeft: '10px' }}><span className="sr-only">Discovering...</span></Spinner>}
-              </Form>
-            </div>
-          </div>
-          <div className="discovery-table" style={{ marginTop: '20px' }}>
-            <h3>Discovery Results</h3>
-            <div className="sticky-action-icons">
-              <FaPlus
-                onClick={handleAddToAssetRegistry}
-                style={{ cursor: 'pointer', color: 'green', marginBottom: '10px', marginRight: '10px' }}
-                title="Add selected assets to Asset Registry"
-              />
-              <FaTimes
-                onClick={handleIgnoreAssets}
-                style={{ cursor: 'pointer', color: 'red', marginBottom: '10px' }}
-                title="Ignore selected assets"
-              />
-            </div>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th className="sticky-header">
-                      <input
-                        type="checkbox"
-                        checked={selectedDiscoveryAssets.length === filteredDiscoveryAssets.length}
-                        onChange={handleSelectAllDiscovery}
-                      />
-                    </th>
-                    <th className="sticky-header">
-                      Domain
-                      <input
-                        type="text"
-                        placeholder="Filter"
-                        onChange={(e) => handleDiscoveryFilterChange(e, 'domain')}
-                        style={{ display: 'block', marginTop: '5px' }}
-                      />
-                    </th>
-                    <th className="sticky-header">
-                      Type
-                      <input
-                        type="text"
-                        placeholder="Filter"
-                        onChange={(e) => handleDiscoveryFilterChange(e, 'type')}
-                        style={{ display: 'block', marginTop: '5px' }}
-                      />
-                    </th>
-                    <th className="sticky-header">
-                      IP Address
-                      <input
-                        type="text"
-                        placeholder="Filter"
-                        onChange={(e) => handleDiscoveryFilterChange(e, 'ip')}
-                        style={{ display: 'block', marginTop: '5px' }}
-                      />
-                    </th>
-                    <th className="sticky-header">
-                      Ports
-                      <input
-                        type="text"
-                        placeholder="Filter"
-                        onChange={(e) => handleDiscoveryFilterChange(e, 'ports')}
-                        style={{ display: 'block', marginTop: '5px' }}
-                      />
-                    </th>
-                    <th className="sticky-header">
-                      Status
-                      <input
-                        type="text"
-                        placeholder="Filter"
-                        onChange={(e) => handleDiscoveryFilterChange(e, 'status')}
-                        style={{ display: 'block', marginTop: '5px' }}
-                      />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredDiscoveryAssets.map((asset) => (
-                    <tr key={asset.domain}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedDiscoveryAssets.includes(asset)}
-                          onChange={() => handleSelectDiscoveryAsset(asset)}
-                        />
-                      </td>
-                      <td>{asset.domain}</td>
-                      <td>{asset.type}</td>
-                      <td>{asset.ip}</td>
-                      <td>{asset.ports.join(', ')}</td>
-                      <td>{asset.status}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <AutoDiscovery
+            domain={domain}
+            setDomain={setDomain}
+            handleAutoDiscovery={handleAutoDiscovery}
+            loading={loading}
+            setShowToast={setShowToast}
+          />
+          <DiscoveryResults
+            discoveryAssets={filteredDiscoveryAssets}
+            selectedDiscoveryAssets={selectedDiscoveryAssets}
+            handleSelectDiscoveryAsset={handleSelectDiscoveryAsset}
+            handleSelectAllDiscovery={handleSelectAllDiscovery}
+            filters={discoveryFilters}
+            handleDiscoveryFilterChange={handleDiscoveryFilterChange}
+            handleAddToAssetRegistry={handleAddToAssetRegistry}
+            handleIgnoreAssets={handleIgnoreAssets}
+          />
         </Tab>
         <Tab eventKey="add" title="Add New (Manual)">
-          <div className="add-new-asset" style={{ textAlign: 'left', marginBottom: '20px' }}>
-            <h3>Add New Asset</h3>
-            <Form>
-              <Form.Group>
-                <Form.Label>Domain<span style={{ color: 'red' }}>*</span></Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter domain"
-                  value={newAsset.domain}
-                  onChange={(e) => setNewAsset({ ...newAsset, domain: e.target.value })}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Type<span style={{ color: 'red' }}>*</span></Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter type"
-                  value={newAsset.type}
-                  onChange={(e) => setNewAsset({ ...newAsset, type: e.target.value })}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>IP Address</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter IP address"
-                  value={newAsset.ip}
-                  onChange={(e) => setNewAsset({ ...newAsset, ip: e.target.value })}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Ports</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter ports (comma separated)"
-                  value={newAsset.ports}
-                  onChange={(e) => setNewAsset({ ...newAsset, ports: e.target.value })}
-                />
-              </Form.Group>
-              <Button onClick={handleAddNewAsset} style={{ marginTop: '10px' }}>
-                Add Asset
-              </Button>
-            </Form>
-          </div>
+          <AddNewAsset
+            newAsset={newAsset}
+            setNewAsset={setNewAsset}
+            handleAddNewAsset={handleAddNewAsset}
+          />
         </Tab>
       </Tabs>
-      <Toast
-        onClose={() => setShowToast(false)}
-        show={showToast}
-        delay={4000}
-        autohide
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          minWidth: '200px',
-          backgroundColor: '#007bff',
-          color: 'white',
-        }}
-      >
-        <Toast.Body>{message || error}</Toast.Body>
-      </Toast>
-
+      <ToastNotification
+        showToast={showToast}
+        setShowToast={setShowToast}
+        message={message}
+        error={error}
+      />
       {editAsset && (
-        <Modal show={showModal} onHide={() => setShowModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Edit Asset</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group>
-                <Form.Label>Domain</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={editAsset.domain}
-                  onChange={(e) => setEditAsset({ ...editAsset, domain: e.target.value })}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Type</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={editAsset.type}
-                  onChange={(e) => setEditAsset({ ...editAsset, type: e.target.value })}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>IP Address</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={editAsset.ip}
-                  onChange={(e) => setEditAsset({ ...editAsset, ip: e.target.value })}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Ports</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={editAsset.ports.join(', ')}
-                  onChange={(e) => setEditAsset({ ...editAsset, ports: e.target.value.split(',').map(Number) })}
-                />
-              </Form.Group>
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleUpdateAsset}>
-              Save
-            </Button>
-          </Modal.Footer>
-        </Modal>
+        <EditAssetModal
+          editAsset={editAsset}
+          setEditAsset={setEditAsset}
+          showModal={showModal}
+          setShowModal={setShowModal}
+          handleUpdateAsset={handleUpdateAsset}
+        />
       )}
-
-      <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete the selected assets?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirmation(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDeleteAssets}>
-            Delete
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <ConfirmDeleteModal
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        confirmDeleteAssets={confirmDeleteAssets}
+      />
     </div>
   );
 };

@@ -1,0 +1,18 @@
+.asset-list {
+    margin-top: 20px;
+  }
+  
+  .asset-list .sticky-action-icons {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .asset-list .table-container {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  

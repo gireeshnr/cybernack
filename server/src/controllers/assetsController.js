@@ -17,6 +17,10 @@ export const autoDiscovery = async (req, res) => {
     const shodanResponse = await axios.get(`https://api.shodan.io/dns/domain/${domain}?key=${shodanApiKey}`);
     const subdomains = shodanResponse.data.subdomains;
 
+    if (!subdomains || subdomains.length === 0) {
+      return res.status(404).json({ error: 'No subdomains found for the provided domain.' });
+    }
+
     const assets = await Promise.all(subdomains.map(async (subdomain) => {
       const fullDomain = `${subdomain}.${domain}`;
       const hostResponse = await axios.get(`https://api.shodan.io/shodan/host/search?key=${shodanApiKey}&query=hostname:${fullDomain}`);
@@ -34,7 +38,11 @@ export const autoDiscovery = async (req, res) => {
     res.json({ message: 'Discovery completed.', assets });
   } catch (error) {
     console.error('Error during auto-discovery:', error);
-    res.status(500).json({ error: 'An error occurred during auto-discovery.' });
+    if (error.response) {
+      // Errors from Shodan API or other axios errors
+      return res.status(error.response.status).json({ error: error.response.data.error });
+    }
+    res.status(500).json({ error: 'An internal server error occurred during auto-discovery.' });
   }
 };
 

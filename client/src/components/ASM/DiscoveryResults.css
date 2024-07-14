@@ -1,0 +1,18 @@
+.discovery-table {
+    margin-top: 20px;
+  }
+  
+  .discovery-table .sticky-action-icons {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .discovery-table .table-container {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
