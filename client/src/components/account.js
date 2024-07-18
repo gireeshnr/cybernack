@@ -18,7 +18,8 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
       lastName: '',
       email: '',
       role: '',
-      password: ''
+      password: '',
+      org: '' // Include organization field
     },
     callback: () => {
       updateUserProfile(inputs)
@@ -78,7 +79,8 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
         lastName: profile.name.last,
         email: profile.email,
         role: profile.role,
-        password: '' // Initialize password field to avoid uncontrolled input warning
+        password: '', // Initialize password field to avoid uncontrolled input warning
+        org: profile.org // Include organization field
       });
     }
   }, [profile, setInputs]);
@@ -169,6 +171,19 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
             value={inputs.role}
             className="form-control form-control-lg"
             placeholder="Role"
+          />
+        </div>
+        <div className="form-group">
+          <label>Organization:</label>
+          <input
+            disabled={!editing}
+            type='text'
+            name="org"
+            onChange={handleChange}
+            value={inputs.org}
+            className="form-control form-control-lg"
+            placeholder="Organization"
+            required
           />
         </div>
         {showPasswordField && (

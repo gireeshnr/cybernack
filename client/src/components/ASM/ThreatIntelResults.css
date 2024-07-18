@@ -1,0 +1,70 @@
+.threat-intel-results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.threat-intel-section {
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px;
+  background-color: #fff;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+
+.card-header .card-icon {
+  margin-right: 10px;
+  font-size: 24px;
+  color: #333;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.rapid-dns-card .card-icon {
+  color: #007bff;
+}
+
+.virus-total-card.card-success .card-icon {
+  color: #28a745;
+}
+
+.virus-total-card.card-danger .card-icon {
+  color: #dc3545;
+}
+
+.grey-noise-card.card-success .card-icon {
+  color: #28a745;
+}
+
+.grey-noise-card.card-danger .card-icon {
+  color: #dc3545;
+}
+
+.analysis-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.analysis-result {
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  padding: 10px;
+  flex: 1 1 calc(50% - 20px);
+  margin-bottom: 10px;
+}

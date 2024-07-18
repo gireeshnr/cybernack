@@ -5,6 +5,10 @@ const organizationSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true
+  },
+  'Root Domain': {
+    type: String,
+    required: true
   }
 });
 

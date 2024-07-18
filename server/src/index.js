@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js';
 import UserRouter from './user/router.js';
 import TargetRoutes from './api/targetRoutes.js';
 import AssetRoutes from './routes/assets.js';
+import OrganizationRoutes from './routes/organizationRoutes.js'; // Import the new organization routes
 
 // Debugging logs
 console.log('Loaded environment variables in index.js:');
@@ -43,6 +44,7 @@ app.use('/auth-ping', authMiddleware, (req, res) => res.send('connected'));
 app.use('/user', authMiddleware, UserRouter);
 app.use('/api', TargetRoutes);
 app.use('/api/assets', authMiddleware, AssetRoutes);
+app.use('/api/organization', authMiddleware, OrganizationRoutes); // Use the new organization routes
 
 app.use((err, req, res, next) => {
   logger.error(err.message);

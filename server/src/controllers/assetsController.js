@@ -1,10 +1,14 @@
 import axios from 'axios';
 import Asset from '../models/Asset.js';
 import User from '../models/user.js';
+import { fetchSubdomains } from '../services/securityTrails.js';
+import { fetchCensysData } from '../services/censys.js';
+import { fetchRapidDNSData } from '../services/rapidDNS.js';
+import { fetchZoomEyeData } from '../services/zoomEye.js';
+import { fetchShodanData, fetchShodanHostData } from '../services/shodan.js';
+import logger from '../util/logger.js';
 
-const shodanApiKey = process.env.SHODAN_API_KEY;
-
-export const autoDiscovery = async (req, res) => {
+export const discoveryView = async (req, res) => {
   const { domain } = req.body;
   const userId = req.user.id;
 
@@ -14,35 +18,61 @@ export const autoDiscovery = async (req, res) => {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    const shodanResponse = await axios.get(`https://api.shodan.io/dns/domain/${domain}?key=${shodanApiKey}`);
-    const subdomains = shodanResponse.data.subdomains;
+    let subdomains = ['www']; // Default to a single subdomain if none found
 
-    if (!subdomains || subdomains.length === 0) {
-      return res.status(404).json({ error: 'No subdomains found for the provided domain.' });
+    try {
+      const shodanData = await fetchShodanData(domain);
+      if (shodanData && shodanData.subdomains && shodanData.subdomains.length > 0) {
+        subdomains = shodanData.subdomains;
+      }
+    } catch (error) {
+      console.warn('Shodan error:', error.message);
     }
 
     const assets = await Promise.all(subdomains.map(async (subdomain) => {
       const fullDomain = `${subdomain}.${domain}`;
-      const hostResponse = await axios.get(`https://api.shodan.io/shodan/host/search?key=${shodanApiKey}&query=hostname:${fullDomain}`);
-      const hostData = hostResponse.data.matches[0] || {};
+      let hostData = {};
 
-      return {
+      try {
+        hostData = await fetchShodanHostData(fullDomain);
+      } catch (error) {
+        console.warn('Shodan host search error:', error.message);
+      }
+
+      const results = await Promise.all([
+        fetchCensysData(fullDomain).catch(error => ({ error: error.message })),
+        fetchSubdomains(fullDomain).catch(error => ({ error: error.message })),
+        fetchRapidDNSData(fullDomain).catch(error => ({ error: error.message })),
+        fetchZoomEyeData(fullDomain).catch(error => ({ error: error.message }))
+      ]);
+
+      const censysData = results[0]?.error ? null : { data: results[0], source: 'Censys' };
+      const securityTrailsData = results[1]?.error ? null : { data: results[1], source: 'SecurityTrails' };
+      const rapidDNSData = results[2]?.error ? null : { data: results[2], source: 'RapidDNS' };
+      const zoomEyeData = results[3]?.error ? null : { data: results[3], source: 'ZoomEye' };
+
+      const assetData = [
+        censysData,
+        securityTrailsData,
+        rapidDNSData,
+        zoomEyeData
+      ].filter(data => data !== null).map(data => ({
         domain: fullDomain,
         type: 'subdomain',
         org: user.org,
-        ip: hostData.ip_str || 'N/A',
-        ports: hostData.ports || [],
-      };
+        ip: hostData?.ip_str || 'N/A',
+        ports: hostData?.ports || [],
+        source: data.source,
+        ...data.data
+      }));
+
+      return assetData;
     }));
 
-    res.json({ message: 'Discovery completed.', assets });
+    res.json({ message: 'Discovery completed.', assets: assets.flat() });
   } catch (error) {
-    console.error('Error during auto-discovery:', error);
-    if (error.response) {
-      // Errors from Shodan API or other axios errors
-      return res.status(error.response.status).json({ error: error.response.data.error });
-    }
-    res.status(500).json({ error: 'An internal server error occurred during auto-discovery.' });
+    console.error('Error during discovery view:', error);
+    res.status(500).json({ error: 'An internal server error occurred during discovery view.' });
   }
 };
 
@@ -58,7 +88,7 @@ export const getAssets = async (req, res) => {
     const assets = await Asset.find({ org: user.org });
     res.json(assets);
   } catch (error) {
-    console.error('Error fetching assets:', error);
+    logger.error('Error fetching assets:', error);
     res.status(500).json({ error: 'An error occurred while fetching assets.' });
   }
 };
@@ -70,7 +100,7 @@ export const deleteAssets = async (req, res) => {
     await Asset.deleteMany({ _id: { $in: assetIds } });
     res.json({ message: 'Assets deleted successfully.' });
   } catch (error) {
-    console.error('Error deleting assets:', error);
+    logger.error('Error deleting assets:', error);
     res.status(500).json({ error: 'An error occurred while deleting assets.' });
   }
 };
@@ -92,7 +122,7 @@ export const updateAsset = async (req, res) => {
 
     res.json({ message: 'Asset updated successfully.', asset });
   } catch (error) {
-    console.error('Error updating asset:', error);
+    logger.error('Error updating asset:', error);
     res.status(500).json({ error: 'An error occurred while updating the asset.' });
   }
 };
@@ -119,7 +149,7 @@ export const addOrUpdateAssets = async (req, res) => {
 
     res.json({ message: 'Assets added/updated successfully.' });
   } catch (error) {
-    console.error('Error adding/updating assets:', error);
+    logger.error('Error adding/updating assets:', error);
     res.status(500).json({ error: 'An error occurred while adding/updating assets.' });
   }
 };

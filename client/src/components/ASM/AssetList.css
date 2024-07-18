@@ -1,18 +1,12 @@
 .asset-list {
-    margin-top: 20px;
-  }
-  
-  .asset-list .sticky-action-icons {
-    position: sticky;
-    top: 0;
-    background-color: white;
-    z-index: 10;
-    display: flex;
-    justify-content: flex-end;
-  }
-  
-  .asset-list .table-container {
-    max-height: 400px;
-    overflow-y: auto;
-  }
-  
+  width: 100%;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  height: calc(100vh - 100px); /* Adjust height as needed */
+}
+
+/* Removed all table-related styles */

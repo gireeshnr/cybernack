@@ -1,0 +1,15 @@
+{
+    "redisConfig": {
+      "host": "127.0.0.1",
+      "port": 6379
+    },
+    "shodanApiKey": "ZUv4DZn6d6lU2iJf6PJu5UntSrE19PMH",
+    "securityTrailsApiKey": "tZHVlX8Y9cZApQ3JeVZlJP7GZ0l1PXJg",
+    "censysApiID": "c51a85a6-77ce-4ba6-9b9b-a999af0a7213",
+    "censysApiKey": "NyjhHZO79DDBq8QTr2lKemwckSGRFTDd",
+    "rapidDnsApiKey": "7fa83ef108msh2d947539aa875bbp1e6b98jsn7ebd69de3eaa",
+    "zoomeyeApiKey": "20161382-bf81-e4c91-b7a4-d4a6132f7f9",
+    "virusTotalApiKey": "c0d7c2aa7b8cd167163910ee1dcbf27df88f338ad6d3095205ee962c6ddcfa6a",
+    "greyNoiseApiKey": "XJfMV6IisWdNhb2ZWrEj2ZghRB7s5LTNKcnatlDn5hjhYjJgDBKVcOJtDpYbovJI"
+  }
+  

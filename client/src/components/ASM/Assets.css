@@ -1,21 +1,35 @@
-.sticky-header {
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 1;
-  }
-  
-  .sticky-action-icons {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: white;
-    padding: 10px 0;
-  }
-  
-  .table-container {
-    position: relative;
-    overflow: auto;
-    max-height: 60vh;
-  }
-  
+.discovery-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Align to the right */
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.discovery-icon {
+  font-size: 36px;
+  color: #007bff;
+  transition: transform 0.3s ease-in-out;
+}
+
+.discovery-icon.spinning {
+  transform: rotate(360deg);
+}
+
+.discovery-label {
+  margin-left: 10px;
+  font-size: 18px;
+  color: #007bff;
+}
+
+.assets-container {
+  padding-bottom: 50px; /* Expand the container to use more vertical space */
+}
+
+.loading-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+}

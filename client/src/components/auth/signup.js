@@ -1,4 +1,3 @@
-// src/components/auth/signup.js
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { signUserUp } from '../../actions';
