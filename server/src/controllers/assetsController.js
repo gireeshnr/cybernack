@@ -1,13 +1,42 @@
-import axios from 'axios';
-import Asset from '../models/Asset.js';
 import User from '../models/user.js';
-import { fetchSubdomains } from '../services/securityTrails.js';
-import { fetchCensysData } from '../services/censys.js';
-import { fetchRapidDNSData } from '../services/rapidDNS.js';
-import { fetchZoomEyeData } from '../services/zoomEye.js';
-import { fetchShodanData, fetchShodanHostData } from '../services/shodan.js';
-import logger from '../util/logger.js';
+import Asset from '../models/Asset.js';
+import ScanResult from '../models/NmapScanResult.js';
+import ZoomEyeScanResult from '../models/ZoomEyeScanResult.js';
+import logger from '../util/logger.js'; // Ensure you have a logger utility
+import { runZoomEyeDiscovery } from '../services/zoomeyeService.js';
+import { runNmapDiscovery } from '../services/nmapService.js';
+import { fetchShodanHostData, fetchShodanData } from '../services/shodanService.js';
+import { fetchCensysData, fetchSubdomains, fetchRapidDNSData } from '../services/otherServices.js';
+import { mergeAssetData } from '../util/mergeAsset.js';
 
+// Fetch assets for a specific organization
+export const getAssets = async (req, res) => {
+  try {
+    logger.info(`Fetching assets for organization ID: ${req.user.org}`);
+    const assets = await Asset.find({ org: req.user.org }).populate('org');
+    logger.info(`Fetched assets: ${JSON.stringify(assets, null, 2)}`);
+    res.status(200).json(assets);
+  } catch (error) {
+    logger.error('Error fetching assets:', error);
+    res.status(500).json({ error: 'An error occurred while fetching assets' });
+  }
+};
+
+// Delete assets for a specific organization
+export const deleteAssets = async (req, res) => {
+  try {
+    const { assetIds } = req.body;
+    logger.info(`Deleting assets with IDs: ${assetIds} for organization ID: ${req.user.org}`);
+    await Asset.deleteMany({ _id: { $in: assetIds }, org: req.user.org });
+    logger.info('Assets deleted successfully');
+    res.status(200).json({ message: 'Assets deleted successfully' });
+  } catch (error) {
+    logger.error('Error deleting assets:', error);
+    res.status(500).json({ error: 'An error occurred while deleting assets' });
+  }
+};
+
+// View discovery results for a specific domain
 export const discoveryView = async (req, res) => {
   const { domain } = req.body;
   const userId = req.user.id;
@@ -15,47 +44,54 @@ export const discoveryView = async (req, res) => {
   try {
     const user = await User.findById(userId);
     if (!user) {
+      logger.error('User not found');
       return res.status(401).json({ error: 'User not found' });
     }
 
     let subdomains = ['www']; // Default to a single subdomain if none found
 
+    // Fetch subdomains from Shodan
     try {
-      const shodanData = await fetchShodanData(domain);
+      const shodanData = await fetchShodanData(domain, user.org);
       if (shodanData && shodanData.subdomains && shodanData.subdomains.length > 0) {
         subdomains = shodanData.subdomains;
       }
     } catch (error) {
-      console.warn('Shodan error:', error.message);
+      logger.warn('Shodan error:', error.message);
     }
 
     const assets = await Promise.all(subdomains.map(async (subdomain) => {
       const fullDomain = `${subdomain}.${domain}`;
       let hostData = {};
 
+      // Fetch host data from Shodan
       try {
         hostData = await fetchShodanHostData(fullDomain);
       } catch (error) {
-        console.warn('Shodan host search error:', error.message);
+        logger.warn('Shodan host search error:', error.message);
       }
 
+      // Fetch data from other sources
       const results = await Promise.all([
         fetchCensysData(fullDomain).catch(error => ({ error: error.message })),
         fetchSubdomains(fullDomain).catch(error => ({ error: error.message })),
         fetchRapidDNSData(fullDomain).catch(error => ({ error: error.message })),
-        fetchZoomEyeData(fullDomain).catch(error => ({ error: error.message }))
+        runZoomEyeDiscovery(fullDomain, user).catch(error => ({ error: error.message })),
+        runNmapDiscovery(fullDomain, user).catch(error => ({ error: error.message })),
       ]);
 
       const censysData = results[0]?.error ? null : { data: results[0], source: 'Censys' };
       const securityTrailsData = results[1]?.error ? null : { data: results[1], source: 'SecurityTrails' };
       const rapidDNSData = results[2]?.error ? null : { data: results[2], source: 'RapidDNS' };
       const zoomEyeData = results[3]?.error ? null : { data: results[3], source: 'ZoomEye' };
+      const nmapData = results[4]?.error ? null : { data: results[4], source: 'Nmap' };
 
       const assetData = [
         censysData,
         securityTrailsData,
         rapidDNSData,
-        zoomEyeData
+        zoomEyeData,
+        nmapData,
       ].filter(data => data !== null).map(data => ({
         domain: fullDomain,
         type: 'subdomain',
@@ -63,93 +99,59 @@ export const discoveryView = async (req, res) => {
         ip: hostData?.ip_str || 'N/A',
         ports: hostData?.ports || [],
         source: data.source,
-        ...data.data
+        ...data.data,
       }));
 
       return assetData;
     }));
 
-    res.json({ message: 'Discovery completed.', assets: assets.flat() });
+    const consolidatedAssets = assets.flat().reduce((acc, asset) => {
+      const existing = acc.find(a => a.domain === asset.domain && a.org.equals(asset.org));
+      if (existing) {
+        existing.ports = [...new Set([...existing.ports, ...asset.ports])];
+        existing.sources[asset.source] = asset.lastSeen || new Date();
+      } else {
+        acc.push({ ...asset, sources: { [asset.source]: new Date() } });
+      }
+      return acc;
+    }, []);
+
+    // Update the assets in the database
+    for (const asset of consolidatedAssets) {
+      await Asset.updateOne(
+        { domain: asset.domain, org: asset.org },
+        { $set: asset },
+        { upsert: true }
+      );
+    }
+
+    logger.info(`Discovery completed for domain: ${domain}, assets: ${JSON.stringify(consolidatedAssets, null, 2)}`);
+    res.json({ message: 'Discovery completed.', assets: consolidatedAssets });
   } catch (error) {
-    console.error('Error during discovery view:', error);
+    logger.error('Error during discovery view:', error);
     res.status(500).json({ error: 'An internal server error occurred during discovery view.' });
   }
 };
 
-export const getAssets = async (req, res) => {
-  const userId = req.user.id;
-
+// Fetch details of a specific asset
+export const getAssetDetail = async (req, res) => {
   try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(401).json({ error: 'User not found' });
-    }
-
-    const assets = await Asset.find({ org: user.org });
-    res.json(assets);
-  } catch (error) {
-    logger.error('Error fetching assets:', error);
-    res.status(500).json({ error: 'An error occurred while fetching assets.' });
-  }
-};
-
-export const deleteAssets = async (req, res) => {
-  const { assetIds } = req.body;
-
-  try {
-    await Asset.deleteMany({ _id: { $in: assetIds } });
-    res.json({ message: 'Assets deleted successfully.' });
-  } catch (error) {
-    logger.error('Error deleting assets:', error);
-    res.status(500).json({ error: 'An error occurred while deleting assets.' });
-  }
-};
-
-export const updateAsset = async (req, res) => {
-  const { assetId, domain, type, ip, ports } = req.body;
-
-  try {
-    const asset = await Asset.findById(assetId);
+    const { assetId } = req.params;
+    logger.info(`Fetching asset detail for asset ID: ${assetId}`);
+    const asset = await Asset.findOne({ _id: assetId, org: req.user.org }).populate('org');
     if (!asset) {
+      logger.error('Asset not found');
       return res.status(404).json({ error: 'Asset not found' });
     }
 
-    asset.domain = domain;
-    asset.type = type;
-    asset.ip = ip;
-    asset.ports = ports;
-    await asset.save();
+    // Fetch scan results for the asset's domain
+    const scanResults = await ScanResult.find({ org: req.user.org, 'additionalFields.rawXML': { $regex: new RegExp(asset.domain, 'i') } });
+    logger.info(`Fetched asset detail: ${JSON.stringify(asset, null, 2)}`);
+    logger.info(`Fetched scan results: ${JSON.stringify(scanResults, null, 2)}`);
 
-    res.json({ message: 'Asset updated successfully.', asset });
+    res.status(200).json({ asset, scanResults });
   } catch (error) {
-    logger.error('Error updating asset:', error);
-    res.status(500).json({ error: 'An error occurred while updating the asset.' });
-  }
-};
-
-export const addOrUpdateAssets = async (req, res) => {
-  const { assets } = req.body;
-  const userId = req.user.id;
-
-  try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(401).json({ error: 'User not found' });
-    }
-
-    const bulkOps = assets.map((asset) => ({
-      updateOne: {
-        filter: { domain: asset.domain, org: user.org },
-        update: { $set: asset },
-        upsert: true,
-      },
-    }));
-
-    await Asset.bulkWrite(bulkOps);
-
-    res.json({ message: 'Assets added/updated successfully.' });
-  } catch (error) {
-    logger.error('Error adding/updating assets:', error);
-    res.status(500).json({ error: 'An error occurred while adding/updating assets.' });
+    logger.error('Error fetching asset detail:', error);
+    res.status(500).json({ error: 'An error occurred while fetching asset detail' });
   }
 };

@@ -69,6 +69,9 @@ const Header = ({ authenticated }) => {
             <li className="nav-item">
               <NavLink className="nav-link" to="/asm/vulnerability"><i className="fas fa-shield-alt"></i><span className="menu-text"> Vulnerability</span></NavLink>
             </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/asm/discovery"><i className="fas fa-search"></i><span className="menu-text"> Discovery</span></NavLink>
+            </li>
           </ul>
         </li>
         <li className="nav-item">

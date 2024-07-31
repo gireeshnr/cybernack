@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaTrash, FaEdit, FaSync } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import './AssetList.css';
 
 const AssetList = ({
@@ -10,7 +11,7 @@ const AssetList = ({
   handleFilterChange,
   handleDeleteAssets,
   handleEditAsset,
-  handleRefresh // Assuming you have a refresh handler function passed as a prop
+  handleRefresh
 }) => {
   return (
     <div className="asset-list">
@@ -39,6 +40,9 @@ const AssetList = ({
               <th className="sticky-header">Type</th>
               <th className="sticky-header">IP Address</th>
               <th className="sticky-header">Ports</th>
+              <th className="sticky-header">Protocol</th>
+              <th className="sticky-header">Status</th>
+              <th className="sticky-header">OS</th>
               <th className="sticky-header">Edit</th>
             </tr>
             <tr className="filter-row">
@@ -71,6 +75,27 @@ const AssetList = ({
                   onChange={(e) => handleFilterChange(e, 'ports')}
                 />
               </th>
+              <th className="sticky-filter" title="You can filter by keywords here">
+                <input
+                  type="text"
+                  placeholder="Search Protocol"
+                  onChange={(e) => handleFilterChange(e, 'protocol')}
+                />
+              </th>
+              <th className="sticky-filter" title="You can filter by keywords here">
+                <input
+                  type="text"
+                  placeholder="Search Status"
+                  onChange={(e) => handleFilterChange(e, 'status')}
+                />
+              </th>
+              <th className="sticky-filter" title="You can filter by keywords here">
+                <input
+                  type="text"
+                  placeholder="Search OS"
+                  onChange={(e) => handleFilterChange(e, 'os')}
+                />
+              </th>
               <th className="sticky-filter"></th>
             </tr>
           </thead>
@@ -87,10 +112,13 @@ const AssetList = ({
                     onChange={() => handleSelectAsset(asset._id)}
                   />
                 </td>
-                <td>{asset.domain}</td>
+                <td><Link to={`/asm/assets/${asset._id}`}>{asset.domain}</Link></td>
                 <td>{asset.type}</td>
                 <td>{asset.ip}</td>
-                <td>{asset.ports.join(', ')}</td>
+                <td>{asset.ports.map(port => port.portid).join(', ')}</td>
+                <td>{asset.ports.map(port => port.protocol).join(', ')}</td>
+                <td>{asset.status}</td>
+                <td>{asset.os}</td>
                 <td>
                   <FaEdit onClick={() => handleEditAsset(asset)} style={{ cursor: 'pointer', color: 'blue' }} />
                 </td>

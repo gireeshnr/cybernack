@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { signUserUp } from '../../actions';
 import CenterCard363 from '../centerCard363';
@@ -6,6 +6,8 @@ import useForm from '../../use-form-react';
 
 const Signup = (props) => {
   const [errMsg, setErrorMsg] = useState('');
+  const [rootDomain, setRootDomain] = useState(''); // State for root domain
+
   const options = {
     initialValues: {
       firstName: '',
@@ -17,7 +19,7 @@ const Signup = (props) => {
     },
     callback: () => {
       if (inputs.password === inputs.password2) {
-        props.signUserUp(inputs)
+        props.signUserUp({ ...inputs, rootDomain }) // Include rootDomain in the signup data
           .catch(err => {
             setErrorMsg(err.response.data || 'Error signing up. Please try again.');
           });
@@ -29,6 +31,15 @@ const Signup = (props) => {
   };
 
   const { onSubmit, onChange, inputs, dirty, submitting } = useForm('AdvanceForm', options);
+
+  useEffect(() => {
+    const emailParts = inputs.email.split('@');
+    if (emailParts.length > 1) {
+      setRootDomain(emailParts[1]);
+    } else {
+      setRootDomain('');
+    }
+  }, [inputs.email]);
 
   return (
     <CenterCard363>
@@ -70,6 +81,16 @@ const Signup = (props) => {
                 className="form-control form-control-lg"
                 placeholder="sample@email.com"
                 required />
+            </div>
+            <div className="form-group">
+              <label>Root Domain:</label>
+              <input
+                name="rootDomain"
+                value={rootDomain}
+                type='text'
+                className="form-control form-control-lg"
+                readOnly
+              />
             </div>
             <div className="form-group">
               <label>Password:</label>

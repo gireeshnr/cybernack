@@ -1,17 +1,15 @@
 import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
-const organizationSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    unique: true
+const OrganizationSchema = new Schema({
+  name: String,
+  rootDomain: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
-  'Root Domain': {
-    type: String,
-    required: true
-  }
 });
 
-const Organization = mongoose.model('Organization', organizationSchema);
+const Organization = mongoose.model('Organization', OrganizationSchema);
 
 export default Organization;

@@ -14,16 +14,10 @@ export const signin = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      console.log(`User not found with email: ${email}`);
       return res.status(401).send('Invalid email or password');
     }
 
-    console.log(`User found: ${JSON.stringify(user)}`);
-
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log(`Comparing provided password: ${password} with stored hash: ${user.password}`);
-    console.log(`Password match result: ${isMatch}`);
-
     if (!isMatch) {
       return res.status(401).send('Invalid email or password');
     }
@@ -31,13 +25,12 @@ export const signin = async (req, res) => {
     const token = generateToken(user);
     res.json({ token });
   } catch (error) {
-    console.error('Signin error:', error);
     res.status(500).send('Server error');
   }
 };
 
 export const signup = async (req, res) => {
-  const { email, password, firstName, lastName, org } = req.body;
+  const { email, password, firstName, lastName, org, rootDomain } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
@@ -50,12 +43,12 @@ export const signup = async (req, res) => {
       return res.status(400).send('Organization already exists. Contact your admin for access.');
     }
 
-    const organization = new Organization({ name: org });
+    const organization = new Organization({ name: org, rootDomain });
     await organization.save();
 
     const user = new User({
       email,
-      password, // No need to hash here
+      password,
       name: { first: firstName, last: lastName },
       org: organization._id,
       role: 'admin' // The first user is the admin
@@ -67,7 +60,6 @@ export const signup = async (req, res) => {
 
     res.json({ token });
   } catch (error) {
-    console.error('Signup error:', error);
     if (error.name === 'ValidationError') {
       res.status(400).send('Invalid input');
     } else {

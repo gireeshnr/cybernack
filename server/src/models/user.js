@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-// Define the schema
 const userSchema = new mongoose.Schema({
   name: {
     first: String,
@@ -38,30 +37,23 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Hash the password before saving
 userSchema.pre('save', async function (next) {
   const user = this;
   if (!user.isModified('password')) return next();
 
   try {
-    console.log(`Hashing password in userSchema pre-save: ${user.password}`);
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(user.password, salt);
     user.password = hash;
-    console.log(`Hashed password in userSchema pre-save: ${hash}`);
     next();
   } catch (err) {
     next(err);
   }
 });
 
-// Add a method to compare passwords
 userSchema.methods.comparePassword = async function (candidatePassword) {
   try {
-    const isMatch = await bcrypt.compare(candidatePassword, this.password);
-    console.log(`Comparing candidate password: ${candidatePassword} with stored hash: ${this.password}`);
-    console.log(`Password match result in comparePassword: ${isMatch}`);
-    return isMatch;
+    return await bcrypt.compare(candidatePassword, this.password);
   } catch (err) {
     throw err;
   }

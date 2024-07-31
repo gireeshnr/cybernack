@@ -1,20 +1,11 @@
 import express from 'express';
-import { discoveryView, getAssets, deleteAssets, updateAsset, addOrUpdateAssets } from '../controllers/assetsController.js';
-import { threatIntelView } from '../controllers/threatIntelController.js';
-import { rateLimiter } from '../middleware/rateLimiter.js';
+import { getAssets, deleteAssets, getAssetDetail } from '../controllers/assetsController.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/auto-discovery', rateLimiter, discoveryView);
-router.get('/', getAssets);
-router.post('/delete', deleteAssets);
-router.post('/update', updateAsset);
-router.post('/add-or-update', addOrUpdateAssets);
-
-// Discovery view endpoint
-router.post('/discovery-view', discoveryView);
-
-// Threat intel view endpoint
-router.post('/threat-intel-view', threatIntelView);
+router.get('/', authMiddleware, getAssets);
+router.delete('/', authMiddleware, deleteAssets);
+router.get('/:assetId', authMiddleware, getAssetDetail);
 
 export default router;

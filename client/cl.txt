@@ -1,0 +1,108 @@
+Folder PATH listing for volume Local Disk
+Volume serial number is A07A-D49D
+C:\Users\giree\pro_rabit\mern\client:.
+¦   .babelrc
+¦   .env.production
+¦   cl.txt
+¦   package-lock.json
+¦   package.json
+¦   README.md
+¦   webpack.common.js
+¦   webpack.config.js
+¦   webpack.dev.js
+¦   webpack.prod.js
+¦   yarn.lock
+¦   
++---src
+¦   ¦   api.js
+¦   ¦   app.js
+¦   ¦   index.html
+¦   ¦   index.js
+¦   ¦   store.js
+¦   ¦   
+¦   +---actions
+¦   ¦       index.js
+¦   ¦       types.js
+¦   ¦       
+¦   +---components
+¦   ¦   ¦   account.js
+¦   ¦   ¦   ASM.js
+¦   ¦   ¦   centerCard363.js
+¦   ¦   ¦   Dashboard.js
+¦   ¦   ¦   header.js
+¦   ¦   ¦   
+¦   ¦   +---ASM
+¦   ¦   ¦       AdditionalInfo.js
+¦   ¦   ¦       AdditionalInfoTable.js
+¦   ¦   ¦       AssetDetails.js
+¦   ¦   ¦       AssetDetailView.css
+¦   ¦   ¦       AssetDetailView.js
+¦   ¦   ¦       AssetList.css
+¦   ¦   ¦       AssetList.js
+¦   ¦   ¦       Assets.css
+¦   ¦   ¦       Assets.js
+¦   ¦   ¦       AssetSummary.js
+¦   ¦   ¦       ConfirmationModal.js
+¦   ¦   ¦       ConfirmDeleteModal.css
+¦   ¦   ¦       ConfirmDeleteModal.js
+¦   ¦   ¦       Discovery.css
+¦   ¦   ¦       Discovery.js
+¦   ¦   ¦       EditAssetModal.css
+¦   ¦   ¦       EditAssetModal.js
+¦   ¦   ¦       NetworkInformation.js
+¦   ¦   ¦       OSDistributionChart.js
+¦   ¦   ¦       PortsTable.js
+¦   ¦   ¦       PortStatusChart.js
+¦   ¦   ¦       ScanHistory.js
+¦   ¦   ¦       ServiceDistributionChart.js
+¦   ¦   ¦       ToastNotification.css
+¦   ¦   ¦       ToastNotification.js
+¦   ¦   ¦       Vulnerability.css
+¦   ¦   ¦       Vulnerability.js
+¦   ¦   ¦       VulnerabilityInfo.js
+¦   ¦   ¦       VulnerabilityInformation.js
+¦   ¦   ¦       
+¦   ¦   +---auth
+¦   ¦           require_auth.js
+¦   ¦           signin.js
+¦   ¦           signout.js
+¦   ¦           signup.js
+¦   ¦           
+¦   +---context
+¦   +---hooks
+¦   +---pages
+¦   +---reducers
+¦   ¦       auth_reducer.js
+¦   ¦       index.js
+¦   ¦       user_reducer.js
+¦   ¦       
+¦   +---services
+¦   +---slices
+¦   ¦       index.js
+¦   ¦       
+¦   +---statics
+¦   ¦       favicon.png
+¦   ¦       Logo.png
+¦   ¦       Logo1.png
+¦   ¦       Logo_bkp.png
+¦   ¦       placeholder.png
+¦   ¦       
+¦   +---style
+¦   ¦       style.scss
+¦   ¦       
+¦   +---use-form-react
+¦   ¦       index.js
+¦   ¦       
+¦   +---utils
+¦           api.js
+¦           ChartSetup.js
+¦           filters.js
+¦           token.js
+¦           validators.js
+¦           
++---test
+    ¦   test_helper.js
+    ¦   
+    +---components
+            app_test.js
+            

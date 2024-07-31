@@ -7,23 +7,34 @@
     "server": "nodemon src/index.js"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^5.16.5",
+    "@xmldom/xmldom": "^0.8.10",
+    "axios": "^1.7.2",
+    "bcrypt": "^5.1.1",
     "bcrypt-nodejs": "0.0.3",
     "bcryptjs": "^2.4.3",
     "bull": "^4.15.1",
+    "chart.js": "^4.4.3",
+    "child_process": "^1.0.2",
     "config": "^3.3.12",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "express-rate-limit": "^7.3.1",
     "jest": "^29.7.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-simple": "^0.5.6",
     "loglevel-colored-level-prefix": "^1.0.0",
-    "mongoose": "^5.11.15",
+    "mongoose": "^5.13.22",
     "morgan": "^1.10.0",
+    "react-chartjs-2": "^5.2.0",
     "redis": "^4.6.15",
     "swagger-ui-express": "^5.0.1",
-    "winston": "^3.13.1"
+    "winston": "^3.13.1",
+    "xml2js": "^0.6.2",
+    "xmldom": "^0.6.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { fetchAssets, autoDiscovery, addOrUpdateAssets, fetchRootDomainFromOrg, deleteAssets, updateAsset } from '../../utils/api';
 import AssetList from './AssetList';
 import EditAssetModal from './EditAssetModal';
@@ -21,57 +21,69 @@ const Assets = () => {
   const [showToast, setShowToast] = useState(false);
   const [rootDomain, setRootDomain] = useState('');
 
-  useEffect(() => {
-    loadAssets();
-    fetchRootDomain();
-  }, []);
-
-  const loadAssets = async () => {
+  const loadAssets = useCallback(async () => {
     try {
+      console.log('Calling API: fetchAssets');
       const response = await fetchAssets();
+      console.log('API response: fetchAssets', response.data);
       setAssets(response.data.map(asset => ({ ...asset, isNew: false })));
     } catch (error) {
       console.error('Error fetching assets:', error);
       setError('Error fetching assets');
       setShowToast(true);
     }
-  };
+  }, []);
 
-  const fetchRootDomain = async () => {
+  const fetchRootDomain = useCallback(async () => {
     try {
+      console.log('Calling API: fetchRootDomainFromOrg');
       const response = await fetchRootDomainFromOrg();
-      setRootDomain(response["Root Domain"]);
+      console.log('API response: fetchRootDomainFromOrg', response.data);
+      setRootDomain(response.data.rootDomain);
     } catch (error) {
       console.error('Error fetching root domain:', error);
+      setError('Error fetching root domain');
+      setShowToast(true);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    console.log('Component mounted: Fetching assets and root domain...');
+    loadAssets();
+    fetchRootDomain();
+  }, [loadAssets, fetchRootDomain]);
 
   const handleAutoDiscovery = async () => {
     setLoading(true);
     setError('');
     setShowToast(false);
-    
+    console.log('Starting auto discovery...');
+
     try {
       if (!rootDomain) {
         throw new Error('Root domain is not available');
       }
+      console.log('Calling API: autoDiscovery with domain', rootDomain);
       const response = await autoDiscovery(rootDomain);
+      console.log('API response: autoDiscovery', response.data);
       const newAssets = response.data.assets.filter(newAsset => !assets.some(asset => asset.domain === newAsset.domain));
-  
+
       if (newAssets.length > 0) {
+        console.log('Adding or updating new assets');
         await addOrUpdateAssets(newAssets);
         setAssets([...assets, ...newAssets.map(asset => ({ ...asset, isNew: true }))]);
         setMessage(`Discovery completed successfully with ${newAssets.length} new assets identified.`);
       } else {
         setMessage('No new assets found during discovery.');
       }
-  
+
     } catch (error) {
       console.error('Error during auto discovery:', error);
       setError(`Error during discovery: ${error.response?.data?.message || error.message}`);
     } finally {
       setLoading(false);
       setShowToast(true);
+      console.log('Auto discovery completed.');
     }
   };
 
@@ -99,6 +111,7 @@ const Assets = () => {
 
   const confirmDeleteAssets = async () => {
     try {
+      console.log('Deleting selected assets:', selectedAssets);
       await deleteAssets(selectedAssets);
       const updatedAssets = assets.filter((asset) => !selectedAssets.includes(asset._id));
       setAssets(updatedAssets);
@@ -120,13 +133,18 @@ const Assets = () => {
 
   const handleUpdateAsset = async () => {
     try {
+      console.log('Updating asset:', editAsset);
       const response = await updateAsset({
         assetId: editAsset._id,
         domain: editAsset.domain,
         type: editAsset.type,
         ip: editAsset.ip,
         ports: editAsset.ports,
+        protocol: editAsset.protocol,
+        status: editAsset.status,
+        os: editAsset.os
       });
+      console.log('API response: updateAsset', response.data);
       const updatedAssets = assets.map((asset) =>
         asset._id === editAsset._id ? response.data.asset : asset
       );

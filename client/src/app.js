@@ -6,6 +6,8 @@ import Dashboard from './components/Dashboard';
 import ASM from './components/ASM';
 import Assets from './components/ASM/Assets';
 import Vulnerability from './components/ASM/Vulnerability';
+import Discovery from './components/ASM/Discovery';
+import AssetDetailView from './components/ASM/AssetDetailView'; // Import the new component
 import Account from './components/account';
 import Signin from './components/auth/signin';
 import Signup from './components/auth/signup';
@@ -13,7 +15,6 @@ import Signout from './components/auth/signout';
 import AuthComponent from './components/auth/require_auth';
 import { AUTH_USER } from './actions/types';
 import { store } from './store';
-import Targets from './pages/Targets';
 import './style/style.scss';
 
 const token = localStorage.getItem('auth_jwt_token');
@@ -54,10 +55,11 @@ const ProtectedApp = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/asm" element={<ASM />} />
           <Route path="/asm/assets" element={<Assets />} />
+          <Route path="/asm/assets/:assetId" element={<AssetDetailView />} /> {/* Add the new route */}
           <Route path="/asm/vulnerability" element={<Vulnerability />} />
+          <Route path="/asm/discovery" element={<Discovery />} />
           <Route path="/account" element={<AuthComponent Component={Account} />} />
           <Route path="/signout" element={<Signout />} />
-          <Route path="/targets" element={<Targets />} />
         </Routes>
       </div>
     </div>

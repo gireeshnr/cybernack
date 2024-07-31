@@ -1,0 +1,26 @@
+/* client/src/components/ASM/Discovery.css */
+.discovery-container {
+    padding: 20px;
+  }
+  
+  .discovery-container h2 {
+    margin-bottom: 20px;
+  }
+  
+  .discovery-container .form-group {
+    margin-bottom: 10px;
+  }
+  
+  .discovery-container .discover-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .discovery-container .discover-button i {
+    margin-right: 5px;
+  }
+  
