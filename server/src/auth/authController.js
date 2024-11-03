@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/user.js';
 import Organization from '../models/Organization.js';
-import Subscription from '../models/Subscription.js';
+import Subscription from '../models/subscription.js';
 import config from '../config.js';
 import { sendPasswordResetEmail, sendActivationEmail } from '../services/emailService.js';
 
