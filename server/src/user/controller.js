@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
-import Organization from '../models/organization.js';
+import Organization from '../models/Organization.js';
 
 // Small comment added for re-trigger
 

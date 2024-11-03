@@ -1,4 +1,4 @@
-import Organization from '../models/organization.js';
+import Organization from '../models/Organization.js';
 import User from '../models/user.js';
 
 // Fetch organization by ID
