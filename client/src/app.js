@@ -4,7 +4,7 @@ import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Header from './components/header';
 import Account from './components/auth/account';
-import ManageUsers from './components/auth/manageUsers';
+import ManageUsers from './components/auth/ManageUsers'; // Ensure exact match with file
 import Signin from './components/auth/signin';
 import Signup from './components/auth/signup';
 import Signout from './components/auth/signout';
@@ -15,7 +15,7 @@ import AuthComponent from './components/auth/require_auth';
 import CreateOrganization from './components/superAdmin/CreateOrganization';
 import SuperAdminDashboard from './components/superAdmin/SuperAdminDashboard';
 import Users from './components/superAdmin/Users';
-import ManageSubscriptions from './components/superAdmin/ManageSubscriptions'; // Import ManageSubscriptions component
+import ManageSubscriptions from './components/superAdmin/manageSubscriptions'; // Ensure exact match with file
 import { AUTH_USER } from './actions/types';
 import { getUserProfile } from './auth/actions';
 import { store } from './store';
