@@ -3,13 +3,22 @@ const { Schema } = mongoose;
 
 const OrganizationSchema = new Schema({
   name: String,
-  rootDomain: String,
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  subscription: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subscription',
+    required: true,
+  },
+  isActive: {
+    type: Boolean,
+    default: true, // Default to true for newly created organizations
+  },
 });
 
-const Organization = mongoose.model('Organization', OrganizationSchema);
+// Check if the model already exists to avoid re-compilation
+const Organization = mongoose.models.Organization || mongoose.model('Organization', OrganizationSchema);
 
 export default Organization;

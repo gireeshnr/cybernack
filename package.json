@@ -1,6 +1,7 @@
 {
   "name": "mern",
   "description": "CRUD in MongoDB, Express, React/Hooks, Node",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node server/src/index.js",
@@ -32,20 +33,15 @@
   },
   "homepage": "https://github.com/amazingandyyy/mern#readme",
   "devDependencies": {
+    "@babel/eslint-parser": "^7.25.9",
+    "@babel/preset-react": "^7.25.9",
     "concurrently": "^6.5.1",
-    "eslint": "^4.14.0",
-    "eslint-config-logux": "^17.0.0",
-    "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-es5": "^1.1.0",
-    "eslint-plugin-import": "^2.8.0",
-    "eslint-plugin-jest": "^21.5.0",
-    "eslint-plugin-node": "^5.2.1",
-    "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-react": "^7.5.1",
-    "eslint-plugin-security": "^1.4.0",
-    "eslint-plugin-standard": "^3.0.1",
+    "eslint": "^9.14.0",
+    "eslint-plugin-react": "^7.37.2",
     "husky": "^0.14.3",
-    "nodemon": "^1.17.5"
+    "nodemon": "^3.1.4"
   },
-  "dependencies": {}
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
 }

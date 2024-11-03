@@ -1,10 +1,12 @@
+// client/src/reducers/index.js
+
 import { combineReducers } from 'redux';
-import authReducer from './auth_reducer';
-import userReducer from './user_reducer';
+import authReducer from '../auth/reducer';
+import subscriptionReducer from './subscriptionReducer';
 
 const rootReducer = combineReducers({
-  auth: authReducer,
-  user: userReducer,
+  auth: authReducer,            // Handles authentication, users, profile, and organizations
+  subscription: subscriptionReducer, // Handles subscription data
 });
 
 export default rootReducer;

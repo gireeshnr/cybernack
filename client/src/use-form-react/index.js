@@ -3,11 +3,11 @@ import { useState } from 'react';
 
 const forms = {};
 const useForm = (name, config) => {
-  forms[name] = useSpecificForm(name, config)
+  forms[name] = useSpecificForm(name, config);
   return forms[name];
 }
 
-const useSpecificForm = (name, {initialValues={},debug=false, callback=(inputs)=>console.log('form submitted', inputs)}) => {
+const useSpecificForm = (name, { initialValues = {}, debug = false, callback = (inputs, event) => console.log('form submitted', inputs, event) }) => {
   const [inputs, setInputs] = useState(initialValues);
   const [dirty, setDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -16,29 +16,29 @@ const useSpecificForm = (name, {initialValues={},debug=false, callback=(inputs)=
     setInputs(initialValues);
     setDirty(false);
     setSubmitting(false);
-    if(debug) console.log({name, event: 'reset', inputs})
+    if (debug) console.log({ name, event: 'reset', inputs });
   }
-  
+
   const onChange = (event) => {
     event.persist();
     setDirty(true);
     setSubmitting(false);
     let currentInputs = inputs;
     setInputs(inputs => {
-      currentInputs = {...inputs, [event.target.name]: event.target.value};
-      if(isEquivalent(currentInputs, initialValues)) setDirty(false);
-      return currentInputs
+      currentInputs = { ...inputs, [event.target.name]: event.target.value };
+      if (isEquivalent(currentInputs, initialValues)) setDirty(false);
+      return currentInputs;
     });
-    if(debug) console.log({name, event: 'onChange', field: event.target.name, value: event.target.value, currentInputs});
+    if (debug) console.log({ name, event: 'onChange', field: event.target.name, value: event.target.value, currentInputs });
   }
 
   const onSubmit = (event) => {
     setSubmitting(true);
-    if (event) {
-      event.preventDefault();
+    if (event && event.preventDefault) {
+      event.preventDefault(); // Ensure the event is available and valid
     }
-    if(debug) console.log({name, event: 'onSubmit', values: inputs});
-    return Promise.resolve(callback(inputs)).finally(() => setSubmitting(false)); // Ensure it handles promises correctly
+    if (debug) console.log({ name, event: 'onSubmit', values: inputs });
+    return Promise.resolve(callback(inputs, event)).finally(() => setSubmitting(false)); // Ensure it handles promises correctly
   }
 
   return {

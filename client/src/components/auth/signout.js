@@ -1,7 +1,6 @@
-// src/components/auth/signout.js
 import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
-import * as actions from '../../actions';
+import { signUserOut } from '../../auth/actions'; // Corrected path to actions.js
 
 const Signout = (props) => {
   useEffect(() => {
@@ -15,4 +14,4 @@ const Signout = (props) => {
   );
 }
 
-export default connect(null, actions)(Signout);
+export default connect(null, { signUserOut })(Signout);

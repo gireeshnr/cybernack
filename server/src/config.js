@@ -35,10 +35,14 @@ const envVariables = [
 console.log('Loaded environment variables in config.js:');
 envVariables.forEach(logEnvVariable);
 
+if (!process.env.DB_URI) {
+  console.error('Error: DB_URI is not set in .env');
+}
+
 const config = {
   jwt_secret: process.env.JWT_SECRET || 'unsafe_jwt_secret',
   mongoose: {
-    uri: process.env.DB_URI || 'mongodb://localhost/mern',
+    uri: process.env.DB_URI,  // Use the DB_URI from the .env file and remove any fallback
   },
   censysApiID: process.env.CENSYS_API_ID,
   censysApiKey: process.env.CENSYS_API_KEY,

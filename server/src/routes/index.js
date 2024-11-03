@@ -1,12 +1,14 @@
-const express = require('express');
+import express from 'express';
+import authRoutes from '../auth/authRoutes.js'; 
+import organizationRoutes from './organizationRoutes.js';
+import userRoutes from './userRoutes.js';  // Updated path for user routes
+import discoveryRoutes from './discovery'; 
+
 const router = express.Router();
 
-const authRoutes = require('./auth');
-const organizationRoutes = require('./organizationRoutes');
-const discoveryRoutes = require('./discovery'); // Updated line
-
-router.use('/auth', authRoutes);
+router.use('/auth', authRoutes); 
 router.use('/organization', organizationRoutes);
-router.use('/discovery', discoveryRoutes); // Updated line
+router.use('/user', userRoutes);  // Now using the relocated user routes
+router.use('/discovery', discoveryRoutes);
 
-module.exports = router;
+export default router;
