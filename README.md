@@ -252,4 +252,4 @@ Copy code
 git push origin feature/your-feature-name
 Open a pull request to the main repository.
 License
-This project is licensed under the MIT License. See the LICENSE file for more details.
+This project is licensed under the MIT License. See the LICENSE file for more details.# cybernack-platform
