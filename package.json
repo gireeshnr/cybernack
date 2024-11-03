@@ -12,7 +12,8 @@
     "precommit": "npm test",
     "prepush": "npm test",
     "heroku:add": "heroku git:remote -a",
-    "deploy:heroku": "git subtree push --prefix server heroku master"
+    "deploy:heroku": "git subtree push --prefix server heroku master",
+    "build": "npm install --prefix client && npm run build --prefix client"
   },
   "engines": {
     "node": ">=16.0.0",
