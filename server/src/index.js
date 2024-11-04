@@ -4,6 +4,7 @@ import express from 'express';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import path from 'path'; // Import path to serve static files
 import logger from './util/logger.js';
 import config from './config.js';
 import authMiddleware from './auth/authMiddleware.js';
@@ -62,16 +63,13 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Test routes
-app.get('/ping', (req, res) => res.send('pong'));
-app.get('/', (req, res) => res.json({ source: 'https://github.com/amazingandyyy/mern' }));
-
 // Register all routes
 app.use((req, res, next) => {
   logger.info(`Incoming request: ${req.method} ${req.url}`);
   next();
 });
 
+// API routes
 app.use('/auth', authRoutes);
 app.use('/auth-ping', authMiddleware, (req, res) => {
   logger.info(`Auth-ping success for user: ${req.user.email}`);
@@ -81,6 +79,17 @@ app.use('/user', authMiddleware, UserRoutes);
 app.use('/api', authMiddleware, ApiRoutes);
 app.use('/organization', authMiddleware, OrganizationRoutes);
 app.use('/subscription', authMiddleware, SubscriptionRoutes);
+
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+  const __dirname = path.resolve();
+  app.use(express.static(path.join(__dirname, 'client/build')));
+
+  // Catch-all handler: for any request that doesn't match an API route, send back the React app's index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
