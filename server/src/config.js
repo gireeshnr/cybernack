@@ -21,28 +21,37 @@ if (process.env.NODE_ENV !== 'production') {
   }
 }
 
-// Debugging logs (optional, remove or comment out in production)
-const logEnvVariable = (key) => {
+// Function to safely log presence of environment variables (avoiding values)
+const logEnvVariableStatus = (key) => {
   console.log(`${key}:`, process.env[key] ? 'Loaded' : 'Not Set');
 };
 
+// List of environment variables to check
 const envVariables = [
   'JWT_SECRET', 'DB_URI', 'CENSYS_API_ID', 'CENSYS_API_KEY',
   'GREYNOISE_API_KEY', 'RAPID_DNS_API_KEY', 'SECURITY_TRAILS_API_KEY',
   'VIRUS_TOTAL_API_KEY', 'ZOOM_EYE_API_KEY'
 ];
 
-console.log('Loaded environment variables in config.js:');
-envVariables.forEach(logEnvVariable);
+// Log environment variables status (development only)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('Loaded environment variables in config.js:');
+  envVariables.forEach(logEnvVariableStatus);
+}
 
+// Error handling if critical variables are missing
 if (!process.env.DB_URI) {
   console.error('Error: DB_URI is not set in .env');
+}
+
+if (!process.env.JWT_SECRET) {
+  console.error('Warning: JWT_SECRET is not set. Using an unsafe default.');
 }
 
 const config = {
   jwt_secret: process.env.JWT_SECRET || 'unsafe_jwt_secret',
   mongoose: {
-    uri: process.env.DB_URI,  // Use the DB_URI from the .env file and remove any fallback
+    uri: process.env.DB_URI,
   },
   censysApiID: process.env.CENSYS_API_ID,
   censysApiKey: process.env.CENSYS_API_KEY,

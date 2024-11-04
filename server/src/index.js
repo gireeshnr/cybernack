@@ -7,11 +7,11 @@ import cors from 'cors';
 import logger from './util/logger.js';
 import config from './config.js';
 import authMiddleware from './auth/authMiddleware.js';
-import authRoutes from './routes/authRoutes.js';  // Corrected Auth routes path
+import authRoutes from './routes/authRoutes.js';
 import UserRoutes from './routes/userRoutes.js';
 import ApiRoutes from './routes/api.js';
 import OrganizationRoutes from './routes/organizationRoutes.js';
-import SubscriptionRoutes from './routes/subscriptionRoutes.js'; // Import subscription routes
+import SubscriptionRoutes from './routes/subscriptionRoutes.js';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
@@ -53,8 +53,8 @@ const corsOptions = {
   origin: process.env.CORS_ORIGIN || 'http://localhost:9000',
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type,Authorization',
-  credentials: true,  // Allow credentials (cookies, authorization headers)
-  optionsSuccessStatus: 200,  // For legacy browsers
+  credentials: true,
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
@@ -72,15 +72,15 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/auth', authRoutes);  // Add auth routes
+app.use('/auth', authRoutes);
 app.use('/auth-ping', authMiddleware, (req, res) => {
   logger.info(`Auth-ping success for user: ${req.user.email}`);
   res.send('connected');
 });
 app.use('/user', authMiddleware, UserRoutes);
 app.use('/api', authMiddleware, ApiRoutes);
-app.use('/organization', authMiddleware, OrganizationRoutes); // Fixed path
-app.use('/subscription', authMiddleware, SubscriptionRoutes); // Register subscription routes
+app.use('/organization', authMiddleware, OrganizationRoutes);
+app.use('/subscription', authMiddleware, SubscriptionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -88,8 +88,8 @@ app.use((err, req, res, next) => {
   res.status(422).json({ error: err.message });
 });
 
-// Start the server and log it
-const port = process.env.PORT || 8000;
+// Use the dynamic port assigned by Render
+const port = process.env.PORT;
 app.listen(port, () => {
-  logger.info(`Server listening on: ${port}`);
+  logger.info(`Server listening on port: ${port}`);
 });
