@@ -1,8 +1,9 @@
+// client/src/api.js
 import axios from 'axios';
 
 // Create an axios instance with a base URL
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000', // Use environment variable if available
+  baseURL: process.env.REACT_APP_API_BASE_URL || 'https://app.cybernack.com', // Use environment variable if available
 });
 
 // Request interceptor to add token to headers

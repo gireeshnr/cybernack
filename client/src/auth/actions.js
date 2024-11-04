@@ -21,7 +21,7 @@ import {
 } from '../actions/types';
 import { refreshToken } from './token';
 
-const ROOT_URL = process.env.API_URI || 'http://localhost:8000';
+const ROOT_URL = process.env.API_URI || 'https://app.cybernack.com';
 
 axios.defaults.baseURL = ROOT_URL;
 axios.defaults.headers.post['Content-Type'] = 'application/json';

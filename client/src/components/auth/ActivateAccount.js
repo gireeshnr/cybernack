@@ -37,7 +37,7 @@ const ActivateAccount = () => {
 
     try {
       // Call the backend to activate the account
-      const response = await axios.post('http://localhost:8000/auth/activate-account', {
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL || 'https://app.cybernack.com'}/auth/activate-account`, {
         token,
         password,
       });

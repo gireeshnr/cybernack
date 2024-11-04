@@ -1,3 +1,4 @@
+// client/webpack.common.js
 const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -39,11 +40,11 @@ module.exports = {
         new webpack.DefinePlugin({
             'process.env': {
                 'NODE_ENV': JSON.stringify('development'),
-                'API_URI': JSON.stringify('http://localhost:8000')
+                'API_URI': JSON.stringify(process.env.API_URI || 'http://localhost:8000')
             }
         }),
         new MiniCssExtractPlugin({
             filename: 'styles/style.css'
         })
     ]
-}
+};
