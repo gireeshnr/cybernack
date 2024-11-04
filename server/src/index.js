@@ -4,7 +4,7 @@ import express from 'express';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import path from 'path'; // Import path to serve static files
+import path from 'path';
 import logger from './util/logger.js';
 import config from './config.js';
 import authMiddleware from './auth/authMiddleware.js';
