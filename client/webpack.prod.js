@@ -1,19 +1,18 @@
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
-const path = require('path');  // Ensure 'path' is imported
-const common = require('./webpack.config.js'); // Main config file
+const path = require('path');
+const common = require('./webpack.config.js');
 
 module.exports = merge(common, {
     mode: 'production',
     output: {
-        path: path.resolve(__dirname, 'build'),  // Output set to 'build' directory
-        publicPath: '/',  // Ensures correct routing in production
+        path: path.resolve(__dirname, 'build'),
     },
     plugins: [
         new webpack.DefinePlugin({
             'process.env': {
                 'NODE_ENV': JSON.stringify('production'),
-                'API_URI': JSON.stringify(process.env.CORS_ORIGIN || 'https://cybernack-platform.onrender.com'),  // Set API URL for Render
+                'API_URI': JSON.stringify('https://app.cybernack.com'),  // Set the correct production URL here
             },
         }),
     ],
