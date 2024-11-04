@@ -50,8 +50,10 @@ mongoose.connection.on('reconnected', () => {
 });
 
 // CORS and basic middleware setup
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:9000'];
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:9000',
+  origin: allowedOrigins,
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type,Authorization',
   credentials: true,

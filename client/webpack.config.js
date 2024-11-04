@@ -7,9 +7,10 @@ const webpack = require('webpack');
 module.exports = {
   entry: './src/index.js',
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'build'),  // Change 'dist' to 'build'
     filename: 'bundle.js',
     clean: true,
+    publicPath: '/',  // Ensure correct routing for React
   },
   resolve: {
     fallback: {
@@ -65,7 +66,8 @@ module.exports = {
     }),
   ],
   devServer: {
-    static: path.resolve(__dirname, 'dist'),
+    static: path.resolve(__dirname, 'build'),  // Change 'dist' to 'build'
     port: 9000,
+    historyApiFallback: true,  // Enable routing support for single-page apps
   },
 };
