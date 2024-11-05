@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../api'; // Use configured axios instance from src/api.js
 import {
   GET_SUBSCRIPTIONS_SUCCESS,
   CREATE_ORGANIZATION_SUCCESS,
@@ -19,12 +19,6 @@ import {
   UPDATE_SUBSCRIPTION_SUCCESS,
   DELETE_SUBSCRIPTIONS_SUCCESS,
 } from '../actions/types';
-import { refreshToken } from './token';
-
-const ROOT_URL = process.env.API_URI || 'https://app.cybernack.com';
-
-axios.defaults.baseURL = ROOT_URL;
-axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 // Sign-in functionality
 export function signUserIn(data) {
@@ -46,74 +40,66 @@ export function signUserIn(data) {
 }
 
 // Fetch subscriptions
-export const getSubscriptions = () => {
-  return (dispatch) => {
-    return axios
-      .get('/subscription')
-      .then((response) => {
-        dispatch({
-          type: GET_SUBSCRIPTIONS_SUCCESS,
-          payload: response.data,
-        });
-      })
-      .catch((error) => {
-        throw error;
+export const getSubscriptions = () => (dispatch) => {
+  return axios
+    .get('/subscription')
+    .then((response) => {
+      dispatch({
+        type: GET_SUBSCRIPTIONS_SUCCESS,
+        payload: response.data,
       });
-  };
+    })
+    .catch((error) => {
+      throw error;
+    });
 };
 
 // Create subscription
-export const createSubscription = (subscriptionData) => {
-  return (dispatch) => {
-    return axios
-      .post('/subscription/create', subscriptionData)
-      .then((response) => {
-        dispatch({
-          type: CREATE_SUBSCRIPTION_SUCCESS,
-          payload: response.data.subscription,
-        });
-        dispatch(getSubscriptions());
-      })
-      .catch((error) => {
-        throw error;
+export const createSubscription = (subscriptionData) => (dispatch) => {
+  return axios
+    .post('/subscription/create', subscriptionData)
+    .then((response) => {
+      dispatch({
+        type: CREATE_SUBSCRIPTION_SUCCESS,
+        payload: response.data.subscription,
       });
-  };
+      dispatch(getSubscriptions());
+    })
+    .catch((error) => {
+      throw error;
+    });
 };
 
 // Update subscription
-export const updateSubscription = (subId, subscriptionData) => {
-  return (dispatch) => {
-    return axios
-      .put(`/subscription/${subId}`, subscriptionData)
-      .then((response) => {
-        dispatch({
-          type: UPDATE_SUBSCRIPTION_SUCCESS,
-          payload: response.data.subscription,
-        });
-        dispatch(getSubscriptions());
-      })
-      .catch((error) => {
-        throw error;
+export const updateSubscription = (subId, subscriptionData) => (dispatch) => {
+  return axios
+    .put(`/subscription/${subId}`, subscriptionData)
+    .then((response) => {
+      dispatch({
+        type: UPDATE_SUBSCRIPTION_SUCCESS,
+        payload: response.data.subscription,
       });
-  };
+      dispatch(getSubscriptions());
+    })
+    .catch((error) => {
+      throw error;
+    });
 };
 
 // Delete subscriptions
-export const deleteSubscriptions = (subIds) => {
-  return (dispatch) => {
-    return axios
-      .post('/subscription/delete', { subIds })
-      .then(() => {
-        dispatch({
-          type: DELETE_SUBSCRIPTIONS_SUCCESS,
-          payload: subIds,
-        });
-        dispatch(getSubscriptions());
-      })
-      .catch((error) => {
-        throw error;
+export const deleteSubscriptions = (subIds) => (dispatch) => {
+  return axios
+    .post('/subscription/delete', { subIds })
+    .then(() => {
+      dispatch({
+        type: DELETE_SUBSCRIPTIONS_SUCCESS,
+        payload: subIds,
       });
-  };
+      dispatch(getSubscriptions());
+    })
+    .catch((error) => {
+      throw error;
+    });
 };
 
 // Sign-up functionality

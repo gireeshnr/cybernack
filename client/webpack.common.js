@@ -39,8 +39,12 @@ module.exports = {
         new HtmlWebpackPlugin({ template: path.resolve(__dirname, 'src/index.html') }),
         new webpack.DefinePlugin({
             'process.env': {
-                'NODE_ENV': JSON.stringify('development'),
-                'API_URI': JSON.stringify(process.env.API_URI || 'http://localhost:8000')
+                'NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+                'REACT_APP_API_BASE_URL': JSON.stringify(
+                    process.env.NODE_ENV === 'production'
+                        ? process.env.PROD_APP_URL
+                        : process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'
+                ),
             }
         }),
         new MiniCssExtractPlugin({

@@ -27,11 +27,7 @@ const logEnvVariableStatus = (key) => {
 };
 
 // List of environment variables to check
-const envVariables = [
-  'JWT_SECRET', 'DB_URI', 'CENSYS_API_ID', 'CENSYS_API_KEY',
-  'GREYNOISE_API_KEY', 'RAPID_DNS_API_KEY', 'SECURITY_TRAILS_API_KEY',
-  'VIRUS_TOTAL_API_KEY', 'ZOOM_EYE_API_KEY'
-];
+const envVariables = ['JWT_SECRET', 'DB_URI', 'CORS_ORIGIN', 'PORT'];
 
 // Log environment variables status (development only)
 if (process.env.NODE_ENV !== 'production') {
@@ -53,13 +49,8 @@ const config = {
   mongoose: {
     uri: process.env.DB_URI,
   },
-  censysApiID: process.env.CENSYS_API_ID,
-  censysApiKey: process.env.CENSYS_API_KEY,
-  greyNoiseApiKey: process.env.GREYNOISE_API_KEY,
-  rapidDnsApiKey: process.env.RAPID_DNS_API_KEY,
-  securityTrailsApiKey: process.env.SECURITY_TRAILS_API_KEY,
-  virusTotalApiKey: process.env.VIRUS_TOTAL_API_KEY,
-  zoomEyeApiKey: process.env.ZOOM_EYE_API_KEY,
+  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:9000',
+  port: process.env.PORT || 8000,
 };
 
 export default config;

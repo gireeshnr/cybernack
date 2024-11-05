@@ -7,7 +7,7 @@ const webpack = require('webpack');
 module.exports = {
   entry: './src/index.js',
   output: {
-    path: path.resolve(__dirname, 'build'),  // Change 'dist' to 'build'
+    path: path.resolve(__dirname, 'build'),
     filename: 'bundle.js',
     clean: true,
     publicPath: '/',  // Ensure correct routing for React
@@ -66,8 +66,8 @@ module.exports = {
     }),
   ],
   devServer: {
-    static: path.resolve(__dirname, 'build'),  // Change 'dist' to 'build'
+    static: path.resolve(__dirname, 'build'),
     port: 9000,
-    historyApiFallback: true,  // Enable routing support for single-page apps
+    historyApiFallback: true,
   },
 };

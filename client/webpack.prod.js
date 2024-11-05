@@ -12,7 +12,7 @@ module.exports = merge(common, {
         new webpack.DefinePlugin({
             'process.env': {
                 'NODE_ENV': JSON.stringify('production'),
-                'API_URI': JSON.stringify('https://app.cybernack.com'),  // Set the correct production URL here
+                'REACT_APP_API_BASE_URL': JSON.stringify('https://app.cybernack.com'), // Set production URL here
             },
         }),
     ],

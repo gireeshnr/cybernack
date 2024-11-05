@@ -49,9 +49,8 @@ mongoose.connection.on('reconnected', () => {
   logger.info('MongoDB reconnected!');
 });
 
-// CORS and basic middleware setup
+// CORS setup
 const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:9000'];
-
 const corsOptions = {
   origin: allowedOrigins,
   methods: 'GET,POST,PUT,DELETE',
@@ -65,7 +64,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Register all routes
+// Log all incoming requests
 app.use((req, res, next) => {
   logger.info(`Incoming request: ${req.method} ${req.url}`);
   next();
@@ -87,7 +86,7 @@ if (process.env.NODE_ENV === 'production') {
   const __dirname = path.resolve();
   app.use(express.static(path.join(__dirname, 'client/build')));
 
-  // Catch-all handler: for any request that doesn't match an API route, send back the React app's index.html
+  // Catch-all handler for React app
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
   });
@@ -99,8 +98,8 @@ app.use((err, req, res, next) => {
   res.status(422).json({ error: err.message });
 });
 
-// Use the dynamic port assigned by Render
-const port = process.env.PORT;
+// Use the dynamic port or default to 8000
+const port = process.env.PORT || 8000;
 app.listen(port, () => {
   logger.info(`Server listening on port: ${port}`);
 });
