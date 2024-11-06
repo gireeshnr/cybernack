@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Set base URL based on environment variable
+// Use environment variable for base URL or default to localhost
 const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
 
 // Create an axios instance with the base URL
@@ -11,7 +11,7 @@ const instance = axios.create({
 // Request interceptor to add token to headers
 instance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -25,7 +25,7 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      window.location.href = '/login';
+      window.location.href = '/signin';
     }
     return Promise.reject(error);
   }
