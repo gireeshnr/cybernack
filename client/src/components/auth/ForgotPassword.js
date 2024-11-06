@@ -10,24 +10,25 @@ toast.configure();
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // Set loading to true when submitting
+    setIsLoading(true);
+
     try {
-      await axios.post('/auth/forgot-password', { email });
+      const apiUrl = process.env.REACT_APP_API_BASE_URL || 'https://app.cybernack.com';
+      await axios.post(`${apiUrl}/auth/forgot-password`, { email });
       setIsSubmitted(true);
     } catch (error) {
-      // Check if error response is related to email not found
       if (error.response && error.response.status === 404) {
         toast.error('The provided email is not known to us.');
       } else {
         toast.error('Error sending reset email. Please try again.');
       }
     } finally {
-      setIsLoading(false); // Set loading to false after response
+      setIsLoading(false);
     }
   };
 
@@ -38,9 +39,7 @@ const ForgotPassword = () => {
           <img src={Logo} alt="Logo" className="company-logo" />
         </div>
         <div className="intermediate-page">
-          <h2>
-            If the email provided is registered with us, you will receive a password reset email.
-          </h2>
+          <h2>If the email provided is registered with us, you will receive a password reset email.</h2>
           <button className="btn btn-primary" onClick={() => navigate('/signin')}>
             Click to log in
           </button>
@@ -66,18 +65,18 @@ const ForgotPassword = () => {
               required
               className="form-control form-control-lg"
               placeholder="Enter your email"
-              disabled={isLoading} // Disable input when loading
+              disabled={isLoading}
             />
           </div>
           <button
             type="submit"
             className="btn btn-primary btn-lg btn-block"
-            disabled={isLoading} // Disable button when loading
+            disabled={isLoading}
           >
             {isLoading ? 'Sending...' : 'Send Reset Email'}
           </button>
         </form>
-        {isLoading && <p>Sending reset email, please wait...</p>} {/* Loading message */}
+        {isLoading && <p>Sending reset email, please wait...</p>}
       </div>
     </div>
   );

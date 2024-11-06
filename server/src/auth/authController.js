@@ -70,7 +70,7 @@ export const activateAccount = async (req, res) => {
       return res.status(400).send('Invalid or expired token');
     }
 
-    user.password = password;
+    user.password = await bcrypt.hash(password, 12); // Ensure the password is hashed
     user.isActive = true;
     user.activationToken = null;
 
@@ -119,7 +119,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).send('Password reset token is invalid or has expired.');
     }
 
-    user.password = password;
+    user.password = await bcrypt.hash(password, 12); // Ensure the password is hashed
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 

@@ -22,7 +22,11 @@ const ResetPassword = () => {
       return;
     }
     try {
-      await axios.post('/auth/reset-password', { token, password });
+      // Ensure the request is sent to the correct base URL
+      await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL || 'https://app.cybernack.com'}/auth/reset-password`,
+        { token, password }
+      );
       setIsReset(true);
     } catch (error) {
       if (error.response && error.response.status === 400) {
