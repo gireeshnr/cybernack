@@ -50,7 +50,12 @@ mongoose.connection.on('reconnected', () => {
 });
 
 // CORS setup
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:9000'];
+const allowedOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) 
+  : ['http://localhost:9000'];
+
+console.log('Allowed Origins:', allowedOrigins); // Log for verification
+
 const corsOptions = {
   origin: allowedOrigins,
   methods: 'GET,POST,PUT,DELETE',
