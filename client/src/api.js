@@ -22,6 +22,7 @@ instance.interceptors.request.use(
     } else {
       console.warn('No token found in localStorage.');
     }
+    console.log('Request config:', config);
     return config;
   },
   (error) => {
@@ -38,9 +39,12 @@ instance.interceptors.response.use(
   },
   (error) => {
     console.error('Error in response interceptor:', error);
-    if (error.response && error.response.status === 401) {
-      console.warn('Unauthorized access, redirecting to signin.');
-      window.location.href = '/signin';
+    if (error.response) {
+      console.error('Error response details:', error.response);
+      if (error.response.status === 401) {
+        console.warn('Unauthorized access detected, redirecting to signin.');
+        window.location.href = '/signin';
+      }
     }
     return Promise.reject(error);
   }

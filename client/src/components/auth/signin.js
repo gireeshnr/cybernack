@@ -19,11 +19,12 @@ const Signin = (props) => {
       setErrorMsg('');
       return props.signUserIn(inputs)
         .then(() => {
-          console.log('Sign-in successful, navigating to home page.');
+          console.log('Sign-in successful for email:', inputs.email);
+          console.log('Navigating to home page.');
           navigate('/');
         })
         .catch(err => {
-          console.error('Error during sign-in:', err);
+          console.error('Error during sign-in for email:', inputs.email, 'Error details:', err);
           setErrorMsg('Invalid email or password');
         });
     },
@@ -33,6 +34,7 @@ const Signin = (props) => {
   const { onSubmit, onChange, inputs, dirty, submitting } = useForm('AdvanceForm', options);
 
   useEffect(() => {
+    console.log('Signin component mounted.');
     return () => {
       console.log('Cleaning up Signin component.');
       setErrorMsg('');
@@ -52,7 +54,10 @@ const Signin = (props) => {
               value={inputs.email}
               className="form-control form-control-lg"
               placeholder="sample@email.com"
-              onChange={onChange}
+              onChange={(e) => {
+                console.log('Email input changed:', e.target.value);
+                onChange(e);
+              }}
               required
             />
           </div>
@@ -64,7 +69,10 @@ const Signin = (props) => {
               value={inputs.password}
               className="form-control form-control-lg"
               placeholder="Your password"
-              onChange={onChange}
+              onChange={(e) => {
+                console.log('Password input changed.');
+                onChange(e);
+              }}
               required
             />
           </div>
