@@ -4,38 +4,37 @@ import User from '../models/user.js';
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.header('Authorization');
+  console.log('Auth middleware invoked, checking authorization header.');
 
   if (!authHeader) {
+    console.warn('Authorization header missing.');
     return res.status(401).send({ error: 'Access denied. No token provided.' });
   }
 
   const token = authHeader.replace('Bearer ', '');
-
-  if (!token) {
-    return res.status(401).send({ error: 'Access denied. No token provided.' });
-  }
+  console.log('Token extracted:', token);
 
   try {
     const decoded = jwt.verify(token, config.jwt_secret);
+    console.log('Token decoded successfully:', decoded);
 
-    // Fetch the user from the database and include the 'role' field
     const user = await User.findById(decoded.id).select('email role org');
-
     if (!user) {
+      console.warn('User not found for decoded token ID:', decoded.id);
       return res.status(401).send({ error: 'User not found.' });
     }
 
-    // Include the role in req.user
     req.user = {
       id: user._id,
       email: user.email,
       org: user.org,
       role: user.role,
     };
+    console.log('User authenticated successfully:', user.email);
 
     next();
   } catch (error) {
-    // Sending a generic error message to avoid exposing sensitive details
+    console.error('Error in authMiddleware:', error);
     res.status(400).send({ error: 'Invalid token.' });
   }
 };

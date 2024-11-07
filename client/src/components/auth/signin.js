@@ -1,10 +1,8 @@
-// client/src/components/auth/signin.js
-
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { NavLink, useNavigate, Link } from 'react-router-dom'; 
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import useForm from '../../use-form-react';
-import { signUserIn } from '../../auth/actions'; 
+import { signUserIn } from '../../auth/actions';
 import CenterCard from '../CenterCard'; // Use the new CenterCard
 
 const Signin = (props) => {
@@ -17,10 +15,15 @@ const Signin = (props) => {
       password: ''
     },
     callback: () => {
-      setErrorMsg(''); 
+      console.log('Form submitted with inputs:', inputs);
+      setErrorMsg('');
       return props.signUserIn(inputs)
-        .then(() => navigate('/'))
+        .then(() => {
+          console.log('Sign-in successful, navigating to home page.');
+          navigate('/');
+        })
         .catch(err => {
+          console.error('Error during sign-in:', err);
           setErrorMsg('Invalid email or password');
         });
     },
@@ -31,12 +34,13 @@ const Signin = (props) => {
 
   useEffect(() => {
     return () => {
-      setErrorMsg(''); 
+      console.log('Cleaning up Signin component.');
+      setErrorMsg('');
     };
   }, []);
 
   return (
-    <CenterCard showLogo={true}> {/* Show the logo */}
+    <CenterCard showLogo={true}>
       <h2 className="form-header">Sign In</h2>
       <div className="centered-form">
         <form onSubmit={onSubmit}>

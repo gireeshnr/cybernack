@@ -23,7 +23,7 @@ if (!config.jwt_secret) {
   const err = new Error('No JWT_SECRET in env variable');
   logger.warn(err.message);
 } else {
-  logger.info(`JWT_SECRET is loaded successfully.`);
+  logger.info('JWT_SECRET is loaded successfully.');
 }
 
 const app = express();
@@ -69,22 +69,43 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Log all incoming requests
+// Log all incoming requests with additional details
 app.use((req, res, next) => {
   logger.info(`Incoming request: ${req.method} ${req.url}`);
+  logger.debug('Request Headers:', req.headers);
   next();
 });
 
-// API routes
-app.use('/auth', authRoutes);
+// API routes with logging
+app.use('/auth', (req, res, next) => {
+  logger.debug('Auth route accessed');
+  next();
+}, authRoutes);
+
 app.use('/auth-ping', authMiddleware, (req, res) => {
   logger.info(`Auth-ping success for user: ${req.user.email}`);
   res.send('connected');
 });
-app.use('/user', authMiddleware, UserRoutes);
-app.use('/api', authMiddleware, ApiRoutes);
-app.use('/organization', authMiddleware, OrganizationRoutes);
-app.use('/subscription', authMiddleware, SubscriptionRoutes);
+
+app.use('/user', authMiddleware, (req, res, next) => {
+  logger.debug('User route accessed');
+  next();
+}, UserRoutes);
+
+app.use('/api', authMiddleware, (req, res, next) => {
+  logger.debug('API route accessed');
+  next();
+}, ApiRoutes);
+
+app.use('/organization', authMiddleware, (req, res, next) => {
+  logger.debug('Organization route accessed');
+  next();
+}, OrganizationRoutes);
+
+app.use('/subscription', authMiddleware, (req, res, next) => {
+  logger.debug('Subscription route accessed');
+  next();
+}, SubscriptionRoutes);
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
@@ -93,13 +114,15 @@ if (process.env.NODE_ENV === 'production') {
 
   // Catch-all handler for React app
   app.get('*', (req, res) => {
+    logger.debug('Serving React app for route:', req.url);
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
   });
 }
 
-// Error handling middleware
+// Error handling middleware with enhanced logging
 app.use((err, req, res, next) => {
   logger.error(`Error occurred: ${err.message}`);
+  logger.debug('Stack trace:', err.stack);
   res.status(422).json({ error: err.message });
 });
 
