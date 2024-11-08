@@ -194,8 +194,7 @@ export const signup = async (req, res) => {
       activationToken,
     });
 
-    await user.save();
-    await sendActivationEmail(user.email, activationToken);
+    await user.save();    await sendActivationEmail(user.email, activationToken);
     console.log('User created and activation email sent:', email);
 
     res.status(200).send('User created successfully. Activation email sent.');
