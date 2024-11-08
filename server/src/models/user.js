@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: false, 
+    required: false,
   },
   phone: {
     number: String,
@@ -51,9 +51,10 @@ userSchema.pre('save', async function (next) {
     try {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(user.password, salt);
-      console.log('Hashed password:', hash);  // Log the hashed password
+      console.log('Hashed password:', hash); // Log the hashed password
       user.password = hash;
     } catch (err) {
+      console.error('Error hashing password:', err);
       return next(err);
     }
   }
@@ -65,6 +66,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (err) {
+    console.error('Error comparing password:', err);
     throw err;
   }
 };
