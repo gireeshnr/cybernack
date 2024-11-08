@@ -46,28 +46,12 @@ export const signin = async (req, res) => {
       return res.status(401).send('Account not activated. Please check your email to activate your account.');
     }
 
-    // Log provided and stored passwords for comparison (hashed and input)
+    // Correctly use bcrypt.compare() to compare plaintext with hash
     console.log(`Provided password for comparison: ${password}`);
     console.log(`Stored (hashed) password: ${user.password}`);
 
     const isMatch = await bcrypt.compare(password, user.password);
     console.log(`Password comparison result: ${isMatch}`);
-
-    // Debugging code for re-hashing the password and comparing hashes
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-      if (err) {
-        console.error('Error re-hashing provided password:', err);
-      } else {
-        console.log('Re-hashed provided password for consistency check:', hashedPassword);
-        bcrypt.compare(password, hashedPassword, (compareErr, result) => {
-          if (compareErr) {
-            console.error('Error comparing re-hashed password:', compareErr);
-          } else {
-            console.log('Direct comparison result with re-hashed password:', result);
-          }
-        });
-      }
-    });
 
     if (!isMatch) {
       console.warn('Password does not match for email:', email);
