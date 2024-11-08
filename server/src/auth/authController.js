@@ -46,7 +46,7 @@ export const signin = async (req, res) => {
       return res.status(401).send('Account not activated. Please check your email to activate your account.');
     }
 
-    // Log provided and stored passwords for comparison (hashed and input)
+    // Log provided and stored passwords for debugging
     console.log(`Provided password for comparison: ${password}`);
     console.log(`Stored (hashed) password: ${user.password}`);
 
