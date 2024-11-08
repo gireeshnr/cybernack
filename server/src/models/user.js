@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
   },
   emailVerified: {
     type: Boolean,
-    default: false,
+    default:    false,
   },
   password: {
     type: String,
@@ -52,6 +52,7 @@ userSchema.pre('save', async function (next) {
     try {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(user.password, salt);
+      console.log('Generated salt for hashing:', salt);
       console.log('Hashed password before saving:', hash); // Log the hashed password for debugging
       user.password = hash;
     } catch (err) {
@@ -68,7 +69,17 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   console.log(`Provided password: ${candidatePassword}`);
   console.log(`Stored hashed password: ${this.password}`);
   try {
-    return await bcrypt.compare(candidatePassword, this.password);
+    const isMatch = await bcrypt.compare(candidatePassword, this.password);
+    console.log(`Result of password comparison: ${isMatch}`);
+    if (!isMatch) {
+      console.log('Re-hashing the provided password for further debugging');
+      const rehashedPassword = await bcrypt.hash(candidatePassword, 10);
+      console.log('Re-hashed password:', rehashedPassword);
+      console.log('Checking re-hashed password consistency');
+      const directCompareResult = await bcrypt.compare(candidatePassword, rehashedPassword);
+      console.log(`Direct comparison result with re-hashed password: ${directCompareResult}`);
+    }
+    return isMatch;
   } catch (err) {
     console.error('Error comparing password:', err);
     throw err;
