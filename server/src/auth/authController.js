@@ -46,11 +46,13 @@ export const signin = async (req, res) => {
       return res.status(401).send('Account not activated. Please check your email to activate your account.');
     }
 
-    // Log provided and stored passwords for debugging
+    // Log provided and stored passwords for comparison (hashed and input)
     console.log(`Provided password for comparison: ${password}`);
     console.log(`Stored (hashed) password: ${user.password}`);
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log(`Password comparison result: ${isMatch}`);
+
     if (!isMatch) {
       console.warn('Password does not match for email:', email);
       return res.status(401).send('Invalid email or password');

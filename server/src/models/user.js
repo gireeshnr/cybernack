@@ -16,9 +16,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-   password: {
+  password: {
     type: String,
     required: false,
+    select: false, // Exclude by default
   },
   phone: {
     number: String,
@@ -51,7 +52,7 @@ userSchema.pre('save', async function (next) {
     try {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(user.password, salt);
-      console.log('Hashed password before saving:', hash); // Log the hashed password
+      console.log('Hashed password before saving:', hash); // Log the hashed password for debugging
       user.password = hash;
     } catch (err) {
       console.error('Error hashing password:', err);
@@ -63,9 +64,10 @@ userSchema.pre('save', async function (next) {
 
 // Compare the entered password with the hashed password in the database
 userSchema.methods.comparePassword = async function (candidatePassword) {
+  console.log('Comparing provided password with stored password');
+  console.log(`Provided password: ${candidatePassword}`);
+  console.log(`Stored hashed password: ${this.password}`);
   try {
-    console.log('Candidate password:', candidatePassword); // Log the candidate password
-    console.log('Stored (hashed) password for comparison:', this.password); // Log the stored password
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (err) {
     console.error('Error comparing password:', err);
