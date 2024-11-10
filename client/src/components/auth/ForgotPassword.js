@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../../api'; // Use the configured axios instance
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Logo from '../../statics/Logo.png';
@@ -18,8 +18,7 @@ const ForgotPassword = () => {
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.REACT_APP_API_BASE_URL || 'https://app.cybernack.com';
-      await axios.post(`${apiUrl}/auth/forgot-password`, { email });
+      await axios.post('/auth/forgot-password', { email });
       setIsSubmitted(true);
     } catch (error) {
       if (error.response && error.response.status === 404) {

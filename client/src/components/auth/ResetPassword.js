@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../api'; // Use configured axios instance
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Logo from '../../statics/Logo.png'; // Ensure the correct logo path
-
-toast.configure();
+import Logo from '../../statics/Logo.png';
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -22,15 +20,10 @@ const ResetPassword = () => {
       return;
     }
     try {
-      // Ensure the request is sent to the correct base URL
-      await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL || 'https://app.cybernack.com'}/auth/reset-password`,
-        { token, password }
-      );
+      await axios.post('/auth/reset-password', { token, password });
       setIsReset(true);
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        // Handle the specific case of an invalid or expired token
         setErrorMsg('The reset link is invalid or has expired. Please request a new reset link.');
       } else {
         toast.error('Error resetting password. Please try again.');

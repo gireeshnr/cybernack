@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../api'; // Ensure the use of the configured instance
 
 export const refreshToken = async () => {
   try {

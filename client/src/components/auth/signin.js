@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import useForm from '../../use-form-react';
 import { signUserIn } from '../../auth/actions';
-import CenterCard from '../CenterCard'; // Use the new CenterCard
+import CenterCard from '../CenterCard';
 
 const Signin = (props) => {
   const [errMsg, setErrorMsg] = useState('');
@@ -20,7 +20,6 @@ const Signin = (props) => {
       return props.signUserIn(inputs)
         .then(() => {
           console.log('Sign-in successful for email:', inputs.email);
-          console.log('Navigating to home page.');
           navigate('/');
         })
         .catch(err => {
@@ -50,7 +49,7 @@ const Signin = (props) => {
             <label>Email:</label>
             <input
               name="email"
-              type='email'
+              type="email"
               value={inputs.email}
               className="form-control form-control-lg"
               placeholder="sample@email.com"
@@ -64,7 +63,7 @@ const Signin = (props) => {
           <div className="form-group">
             <label>Password:</label>
             <input
-              type='password'
+              type="password"
               name="password"
               value={inputs.password}
               className="form-control form-control-lg"
@@ -99,4 +98,5 @@ const Signin = (props) => {
   );
 };
 
+// Ensure the export is correctly named and matches the file structure
 export default connect(null, { signUserIn })(Signin);

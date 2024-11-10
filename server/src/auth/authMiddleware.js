@@ -18,7 +18,9 @@ const authMiddleware = async (req, res, next) => {
     const decoded = jwt.verify(token, config.jwt_secret);
     console.log('Token decoded successfully:', decoded);
 
-    const user = await User.findById(decoded.id).select('email role org');
+    const user = await User.findById(decoded.id).select('email role org password');
+    console.log('User found in database:', user);
+
     if (!user) {
       console.warn('User not found for decoded token ID:', decoded.id);
       return res.status(401).send({ error: 'User not found.' });

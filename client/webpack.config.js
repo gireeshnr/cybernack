@@ -8,11 +8,12 @@ module.exports = {
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'build'),
-    filename: 'bundle.js',
+    filename: 'bundle.[contenthash].js', // Include content hash for cache busting
     clean: true,
-    publicPath: '/',  // Ensure correct routing for React
+    publicPath: '/', // Ensure correct routing for React
   },
   resolve: {
+    extensions: ['.js', '.jsx'], // Include .jsx for React components if needed
     fallback: {
       process: require.resolve('process/browser'),
       path: require.resolve('path-browserify'),
@@ -26,6 +27,9 @@ module.exports = {
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-react'], // Ensure React preset is included
+          },
         },
       },
       {
@@ -38,14 +42,10 @@ module.exports = {
       },
       {
         test: /\.(png|jpe?g|gif|svg)$/,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {
-              name: 'statics/[name].[ext]',
-            },
-          },
-        ],
+        type: 'asset/resource',
+        generator: {
+          filename: 'statics/[name][ext]', // Consistent naming for assets
+        },
       },
     ],
   },
@@ -53,9 +53,10 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './src/index.html',
       filename: 'index.html',
+      inject: true, // Ensure script injection into the HTML template
     }),
     new MiniCssExtractPlugin({
-      filename: 'main.css',
+      filename: '[name].[contenthash].css', // Use content hash for cache busting
     }),
     new CopyWebpackPlugin({
       patterns: [{ from: 'src/statics', to: 'statics' }],
@@ -68,6 +69,8 @@ module.exports = {
   devServer: {
     static: path.resolve(__dirname, 'build'),
     port: 9000,
-    historyApiFallback: true,
+    historyApiFallback: true, // Support for client-side routing
+    hot: true, // Enable Hot Module Replacement for better dev experience
+    open: true, // Automatically open the browser on server start
   },
 };

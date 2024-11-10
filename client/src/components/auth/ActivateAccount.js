@@ -9,13 +9,9 @@ const ActivateAccount = () => {
   const { token } = useParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    localStorage.removeItem('auth_jwt_token');
-    sessionStorage.clear();
-
     if (!token) {
       toast.error('Activation token is missing.');
       setTimeout(() => navigate('/signin'), 3000);
@@ -24,28 +20,21 @@ const ActivateAccount = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
 
     try {
-      const apiUrl = process.env.REACT_APP_API_BASE_URL || 'https://app.cybernack.com';
-      const response = await axios.post(`${apiUrl}/auth/activate-account`, {
-        token,
-        password,
-      });
-
-      setMessage('Account activated successfully.');
+      const apiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'; // Use localhost for testing
+      await axios.post(`${apiUrl}/auth/activate-account`, { token, password });
       toast.success('Account activated successfully! Redirecting to login...');
 
       setTimeout(() => {
-        navigate('/intermediate-page', { state: { message: 'Your account has been activated successfully.' } });
+        navigate('/signin');
       }, 2000);
     } catch (error) {
       console.error('Activation Error:', error.response?.data || error.message);
-      setMessage('Error activating account. Please try again.');
       toast.error('Error activating account. Please try again.');
     }
   };
@@ -81,7 +70,6 @@ const ActivateAccount = () => {
         </div>
         <button type="submit" className="btn btn-primary btn-lg btn-block">Activate Account</button>
       </form>
-      {message && <p>{message}</p>}
       <ToastContainer />
     </div>
   );

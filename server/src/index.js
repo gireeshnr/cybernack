@@ -52,12 +52,18 @@ mongoose.connection.on('reconnected', () => {
 // CORS setup
 const allowedOrigins = process.env.CORS_ORIGIN 
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) 
-  : ['http://localhost:9000'];
+  : ['http://localhost:9000', 'https://app.cybernack.com'];
 
 console.log('Allowed Origins:', allowedOrigins); // Log for verification
 
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type,Authorization',
   credentials: true,

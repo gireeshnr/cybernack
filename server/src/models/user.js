@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+const SALT_ROUNDS = 12;
+
 const userSchema = new mongoose.Schema({
   name: {
     first: String,
@@ -19,7 +21,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: false,
-    select: false, // Exclude by default
+    select: false,
   },
   phone: {
     number: String,
@@ -45,34 +47,23 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpires: Date,
 });
 
-// Hash the password before saving the user
 userSchema.pre('save', async function (next) {
   const user = this;
   if (user.password && user.isModified('password')) {
-    try {
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(user.password, salt);
-      console.log('Generated salt for hashing:', salt);
-      console.log('Hashed password before saving:', user.password); // Log the hashed password for debugging
-    } catch (err) {
-      console.error('Error hashing password:', err);
-      return next(err);
+    if (!user.password.startsWith('$2a$')) {
+      try {
+        const salt = await bcrypt.genSalt(SALT_ROUNDS);
+        user.password = await bcrypt.hash(user.password, salt);
+      } catch (err) {
+        return next(err);
+      }
     }
   }
   next();
 });
 
-// Compare the entered password with the hashed password in the database
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  console.log('Comparing provided password with stored password');
-  try {
-    const isMatch = await bcrypt.compare(candidatePassword, this.password);
-    console.log(`Password comparison result: ${isMatch}`);
-    return isMatch;
-  } catch (err) {
-    console.error('Error comparing password:', err);
-    throw err;
-  }
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);

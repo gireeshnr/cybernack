@@ -1,12 +1,15 @@
 import nodemailer from 'nodemailer';
 
+const getBaseUrl = () => {
+  return process.env.NODE_ENV === 'production'
+    ? process.env.PROD_APP_URL
+    : process.env.LOCAL_APP_URL || 'http://localhost:9000'; // Ensure LOCAL_APP_URL is set or defaults to localhost
+};
+
 // Function to send the activation email
 export const sendActivationEmail = async (recipientEmail, activationToken) => {
   try {
-    const baseUrl = process.env.NODE_ENV === 'production'
-      ? process.env.PROD_APP_URL
-      : process.env.APP_URL;
-
+    const baseUrl = getBaseUrl();
     const activationLink = `${baseUrl}/#/activate-account/${activationToken}`;
 
     let transporter = nodemailer.createTransport({
@@ -39,10 +42,7 @@ export const sendActivationEmail = async (recipientEmail, activationToken) => {
 // Function to send the password reset email
 export const sendPasswordResetEmail = async (recipientEmail, resetToken) => {
   try {
-    const baseUrl = process.env.NODE_ENV === 'production'
-      ? process.env.PROD_APP_URL
-      : process.env.APP_URL;
-
+    const baseUrl = getBaseUrl();
     const resetLink = `${baseUrl}/#/reset-password/${resetToken}`;
 
     let transporter = nodemailer.createTransport({

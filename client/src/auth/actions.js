@@ -24,7 +24,7 @@ import {
 export function signUserIn(data) {
   return function (dispatch) {
     return axios
-      .post(`/auth/signin`, data)
+      .post('/auth/signin', data)
       .then((res) => {
         dispatch({ type: AUTH_USER });
         localStorage.setItem('auth_jwt_token', res.data.token);
@@ -50,6 +50,7 @@ export const getSubscriptions = () => (dispatch) => {
       });
     })
     .catch((error) => {
+      console.error('Error fetching subscriptions:', error);
       throw error;
     });
 };
@@ -66,6 +67,7 @@ export const createSubscription = (subscriptionData) => (dispatch) => {
       dispatch(getSubscriptions());
     })
     .catch((error) => {
+      console.error('Error creating subscription:', error);
       throw error;
     });
 };
@@ -82,6 +84,7 @@ export const updateSubscription = (subId, subscriptionData) => (dispatch) => {
       dispatch(getSubscriptions());
     })
     .catch((error) => {
+      console.error('Error updating subscription:', error);
       throw error;
     });
 };
@@ -98,6 +101,7 @@ export const deleteSubscriptions = (subIds) => (dispatch) => {
       dispatch(getSubscriptions());
     })
     .catch((error) => {
+      console.error('Error deleting subscriptions:', error);
       throw error;
     });
 };
@@ -110,6 +114,7 @@ export const signUserUp = (userData) => async (dispatch) => {
     alert('Signup successful! Please check your email for the activation link.');
     window.location = '/#/signin';
   } catch (error) {
+    console.error('Error during sign up:', error);
     dispatch({ type: AUTH_ERROR, payload: 'Error signing up. Please try again.' });
     throw error;
   }
@@ -128,7 +133,7 @@ export function signUserOut() {
 export function getUserProfile() {
   return function (dispatch) {
     return axios
-      .get(`/user/profile`)
+      .get('/user/profile')
       .then((response) => {
         dispatch({
           type: GET_USER_PROFILE,
@@ -145,7 +150,7 @@ export function getUserProfile() {
 export function updateUserProfile(data) {
   return function (dispatch) {
     return axios
-      .post(`/user/profile`, data)
+      .post('/user/profile', data)
       .then((response) => {
         dispatch({
           type: UPDATE_USER_PROFILE,
@@ -153,6 +158,7 @@ export function updateUserProfile(data) {
         });
       })
       .catch((error) => {
+        console.error('Error updating user profile:', error);
         throw error;
       });
   };
@@ -170,6 +176,7 @@ export function getUsers() {
         });
       })
       .catch((error) => {
+        console.error('Error fetching users:', error);
         throw error;
       });
   };
@@ -187,6 +194,7 @@ export function getOrganizations() {
         });
       })
       .catch((error) => {
+        console.error('Error fetching organizations:', error);
         throw error;
       });
   };
@@ -204,6 +212,7 @@ export function createOrganization(orgData) {
         });
       })
       .catch((error) => {
+        console.error('Error creating organization:', error);
         throw error;
       });
   };
@@ -220,7 +229,7 @@ export function updateOrganization(orgId, data) {
 
   return function (dispatch) {
     return axios
-      .post(`/organization/update`, updatedData)
+      .post('/organization/update', updatedData)
       .then((response) => {
         dispatch({
           type: UPDATE_ORGANIZATION_STATUS_SUCCESS,
@@ -228,6 +237,7 @@ export function updateOrganization(orgId, data) {
         });
       })
       .catch((error) => {
+        console.error('Error updating organization:', error);
         throw error;
       });
   };
@@ -245,12 +255,13 @@ export function deleteOrganizations(orgIds) {
         });
       })
       .catch((error) => {
+        console.error('Error deleting organizations:', error);
         throw error;
       });
   };
 }
 
-// Additional user-related functions
+// Add user to an organization
 export function addUser(userData) {
   return function (dispatch) {
     return axios
@@ -259,11 +270,13 @@ export function addUser(userData) {
         dispatch({ type: ADD_USER_SUCCESS, payload: response.data });
       })
       .catch((error) => {
+        console.error('Error adding user:', error);
         throw error;
       });
   };
 }
 
+// Update user details
 export function updateUser(userId, userData) {
   return function (dispatch) {
     return axios
@@ -272,11 +285,13 @@ export function updateUser(userId, userData) {
         dispatch({ type: UPDATE_USER_SUCCESS, payload: response.data });
       })
       .catch((error) => {
+        console.error('Error updating user:', error);
         throw error;
       });
   };
 }
 
+// Delete users from an organization
 export function deleteUsers(userIds) {
   return function (dispatch) {
     return axios
@@ -285,6 +300,7 @@ export function deleteUsers(userIds) {
         dispatch({ type: DELETE_USERS_SUCCESS, payload: userIds });
       })
       .catch((error) => {
+        console.error('Error deleting users:', error);
         throw error;
       });
   };
