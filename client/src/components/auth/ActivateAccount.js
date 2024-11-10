@@ -1,3 +1,5 @@
+// client/src/components/auth/ActivateAccount.js
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api'; // Centralized Axios instance import
@@ -12,6 +14,7 @@ const ActivateAccount = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Activation token:', token); // Check if the token is present
     if (!token) {
       toast.error('Activation token is missing.');
       setTimeout(() => navigate('/signin'), 3000);
@@ -26,7 +29,9 @@ const ActivateAccount = () => {
     }
 
     try {
+      console.log('Sending activation request with token and password');
       await api.post('/auth/activate-account', { token, password });
+      console.log('Account activation successful');
       toast.success('Account activated successfully! Redirecting to login...');
 
       setTimeout(() => {
