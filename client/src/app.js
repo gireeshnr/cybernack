@@ -4,7 +4,7 @@ import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Header from './components/header';
 import Account from './components/auth/account';
-import ManageUsers from './components/auth/ManageUsers'; // Ensure exact match with file
+import ManageUsers from './components/auth/ManageUsers';
 import Signin from './components/auth/signin';
 import Signup from './components/auth/signup';
 import Signout from './components/auth/signout';
@@ -15,7 +15,7 @@ import AuthComponent from './components/auth/require_auth';
 import CreateOrganization from './components/superAdmin/CreateOrganization';
 import SuperAdminDashboard from './components/superAdmin/SuperAdminDashboard';
 import Users from './components/superAdmin/Users';
-import ManageSubscriptions from './components/superAdmin/manageSubscriptions'; // Ensure exact match with file
+import ManageSubscriptions from './components/superAdmin/manageSubscriptions';
 import { AUTH_USER } from './actions/types';
 import { getUserProfile } from './auth/actions';
 import { store } from './store';
@@ -25,7 +25,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const token = localStorage.getItem('auth_jwt_token');
 if (token) {
-  console.log('Token found in localStorage, dispatching AUTH_USER');
   store.dispatch({ type: AUTH_USER });
 }
 
@@ -64,31 +63,12 @@ const ProtectedApp = () => {
       <Header />
       <div className="content">
         <Routes>
-          {/* Account and Manage Users for Admins */}
           <Route path="/account" element={<AuthComponent Component={Account} />} />
-          <Route
-            path="/users"
-            element={<AuthComponent Component={ManageUsers} allowedRoles={['admin']} />}
-          />
-
-          {/* Super Admin Routes */}
-          <Route
-            path="/superadmin/dashboard"
-            element={<AuthComponent Component={SuperAdminDashboard} allowedRoles={['superadmin']} />}
-          />
-          <Route
-            path="/superadmin/create-organization"
-            element={<AuthComponent Component={CreateOrganization} allowedRoles={['superadmin']} />}
-          />
-          <Route
-            path="/superadmin/users"
-            element={<AuthComponent Component={Users} allowedRoles={['superadmin']} />}
-          />
-          <Route
-            path="/superadmin/manage-subscriptions"
-            element={<AuthComponent Component={ManageSubscriptions} allowedRoles={['superadmin']} />}
-          /> {/* New Manage Subscriptions route */}
-          
+          <Route path="/users" element={<AuthComponent Component={ManageUsers} allowedRoles={['admin']} />} />
+          <Route path="/superadmin/dashboard" element={<AuthComponent Component={SuperAdminDashboard} allowedRoles={['superadmin']} />} />
+          <Route path="/superadmin/create-organization" element={<AuthComponent Component={CreateOrganization} allowedRoles={['superadmin']} />} />
+          <Route path="/superadmin/users" element={<AuthComponent Component={Users} allowedRoles={['superadmin']} />} />
+          <Route path="/superadmin/manage-subscriptions" element={<AuthComponent Component={ManageSubscriptions} allowedRoles={['superadmin']} />} />
           <Route path="/signout" element={<Signout />} />
         </Routes>
       </div>

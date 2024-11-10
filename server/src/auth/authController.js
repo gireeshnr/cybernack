@@ -6,7 +6,6 @@ import Organization from '../models/Organization.js';
 import Subscription from '../models/Subscription.js';
 import config from '../config.js';
 import { sendPasswordResetEmail, sendActivationEmail } from '../services/emailService.js';
-import logger from '../util/logger.js';
 
 const SALT_ROUNDS = 12;
 
@@ -51,28 +50,18 @@ export const signin = async (req, res) => {
   }
 };
 
-// server/src/auth/authController.js
-
 export const activateAccount = async (req, res) => {
   const { token, password } = req.body;
 
-  console.log('Activation endpoint hit'); // Log to confirm the endpoint is accessed
-  console.log('Received token:', token); // Log the token received from the client
-
   if (!token || !password) {
-    console.warn('Token or password missing'); // Warning for missing data
     return res.status(400).send('Token and password are required');
   }
 
   try {
     const decoded = jwt.verify(token, config.jwt_secret);
-    console.log('Decoded token:', decoded); // Log decoded token details
-
     const user = await User.findOne({ email: decoded.email, activationToken: token });
-    console.log('User found for activation:', user ? user.email : 'No user found'); // Log user info
 
     if (!user || !user.activationToken) {
-      console.warn('Invalid or expired token');
       return res.status(400).send('Invalid or expired token');
     }
 
@@ -81,11 +70,8 @@ export const activateAccount = async (req, res) => {
     user.activationToken = null;
 
     await user.save();
-    console.log('User activated and password updated');
-
     res.status(200).send('Account activated successfully');
   } catch (error) {
-    console.error('Error during account activation:', error);
     res.status(500).send('Error activating account');
   }
 };
