@@ -7,6 +7,9 @@ const baseURL = process.env.REACT_APP_API_BASE_URL ||
                 ? 'http://localhost:8000' // Local server for development
                 : 'https://app.cybernack.com'); // Production server
 
+console.log('Environment:', process.env.NODE_ENV);
+console.log('REACT_APP_API_BASE_URL:', process.env.REACT_APP_API_BASE_URL);
+console.log('window.location.hostname:', window.location.hostname);
 console.log('Axios baseURL:', baseURL); // Log to ensure the correct base URL is being used
 
 // Create an axios instance with the base URL

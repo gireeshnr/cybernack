@@ -30,7 +30,7 @@ const app = express();
 
 // Updated mongoose connection with logging
 mongoose
-  .connect(config.mongoose.uri)
+  .connect(config.mongoose.uri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     logger.info('Connected to MongoDB successfully');
   })
@@ -54,13 +54,14 @@ const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) 
   : ['http://localhost:9000', 'https://app.cybernack.com'];
 
-console.log('Allowed Origins:', allowedOrigins); // Log for verification
+logger.info('Allowed Origins:', allowedOrigins); // Log for verification
 
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      logger.warn(`Blocked by CORS: Origin ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },

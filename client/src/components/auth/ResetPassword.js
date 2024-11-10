@@ -20,6 +20,7 @@ const ResetPassword = () => {
       return;
     }
     try {
+      console.log('API URL for reset password:', axios.defaults.baseURL + '/auth/reset-password');
       await axios.post('/auth/reset-password', { token, password });
       setIsReset(true);
     } catch (error) {

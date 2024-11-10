@@ -18,6 +18,7 @@ const ForgotPassword = () => {
     setIsLoading(true);
 
     try {
+      console.log('API URL for forgot password:', axios.defaults.baseURL + '/auth/forgot-password');
       await axios.post('/auth/forgot-password', { email });
       setIsSubmitted(true);
     } catch (error) {
