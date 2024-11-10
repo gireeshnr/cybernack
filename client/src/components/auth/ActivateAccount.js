@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api'; // Centralized Axios instance import
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Logo from '../../statics/Logo.png';
@@ -26,8 +26,7 @@ const ActivateAccount = () => {
     }
 
     try {
-      const apiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'; // Use localhost for testing
-      await axios.post(`${apiUrl}/auth/activate-account`, { token, password });
+      await api.post('/auth/activate-account', { token, password });
       toast.success('Account activated successfully! Redirecting to login...');
 
       setTimeout(() => {

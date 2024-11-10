@@ -54,14 +54,17 @@ export const activateAccount = async (req, res) => {
   const { token, password } = req.body;
 
   if (!token || !password) {
+    logger.error('Token or password missing in request body');
     return res.status(400).send('Token and password are required');
   }
 
   try {
     const decoded = jwt.verify(token, config.jwt_secret);
-    const user = await User.findOne({ email: decoded.email, activationToken: token });
+    logger.debug('Token decoded successfully:', decoded);
 
+    const user = await User.findOne({ email: decoded.email, activationToken: token });
     if (!user || !user.activationToken) {
+      logger.warn('Invalid or expired token');
       return res.status(400).send('Invalid or expired token');
     }
 
@@ -70,8 +73,10 @@ export const activateAccount = async (req, res) => {
     user.activationToken = null;
 
     await user.save();
+    logger.info(`User ${user.email} activated successfully`);
     res.status(200).send('Account activated successfully');
   } catch (error) {
+    logger.error('Error during account activation:', error);
     res.status(500).send('Error activating account');
   }
 };
