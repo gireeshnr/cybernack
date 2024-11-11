@@ -5,6 +5,9 @@ export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false
-    })
+      serializableCheck: false,
+    }).concat((storeAPI) => (next) => (action) => {
+      console.log('Dispatching action:', action);
+      return next(action);
+    }),
 });

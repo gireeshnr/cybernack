@@ -22,22 +22,83 @@ import {
 
 // Sign-in functionality
 export function signUserIn(data) {
+  console.log('signUserIn action invoked with data:', data);
   return function (dispatch) {
     return axios
       .post('/auth/signin', data)
       .then((res) => {
+        console.log('Sign-in successful, token received:', res.data.token);
         dispatch({ type: AUTH_USER });
         localStorage.setItem('auth_jwt_token', res.data.token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
         dispatch(getUserProfile());
-        window.location = '/#account';
+        return Promise.resolve();
       })
       .catch((error) => {
+        console.error('Sign-in error:', error.response || error.message);
         dispatch({ type: AUTH_ERROR, payload: 'Invalid login credentials.' });
+        return Promise.reject(error);
+      });
+  };
+}
+
+// Sign-out functionality
+export function signUserOut() {
+  return function (dispatch) {
+    dispatch({ type: UNAUTH_USER });
+    localStorage.removeItem('auth_jwt_token');
+    delete axios.defaults.headers.common['Authorization'];
+  };
+}
+
+// Fetch user profile
+export function getUserProfile() {
+  return function (dispatch) {
+    return axios
+      .get('/user/profile')
+      .then((response) => {
+        dispatch({
+          type: GET_USER_PROFILE,
+          payload: response.data,
+        });
+      })
+      .catch((err) => {
+        console.error('Profile fetch error:', err);
+      });
+  };
+}
+
+// Update user profile
+export function updateUserProfile(data) {
+  return function (dispatch) {
+    return axios
+      .post('/user/profile', data)
+      .then((response) => {
+        dispatch({
+          type: UPDATE_USER_PROFILE,
+          payload: response.data,
+        });
+      })
+      .catch((error) => {
+        console.error('Error updating user profile:', error);
         throw error;
       });
   };
 }
+
+// Sign-up functionality
+export const signUserUp = (userData) => async (dispatch) => {
+  try {
+    const response = await axios.post('/auth/signup', userData);
+    dispatch({ type: SIGNUP_USER, payload: response.data });
+    alert('Signup successful! Please check your email for the activation link.');
+    // Redirect should be handled at the component level
+  } catch (error) {
+    console.error('Error during sign up:', error);
+    dispatch({ type: AUTH_ERROR, payload: 'Error signing up. Please try again.' });
+    throw error;
+  }
+};
 
 // Fetch subscriptions
 export const getSubscriptions = () => (dispatch) => {
@@ -105,64 +166,6 @@ export const deleteSubscriptions = (subIds) => (dispatch) => {
       throw error;
     });
 };
-
-// Sign-up functionality
-export const signUserUp = (userData) => async (dispatch) => {
-  try {
-    const response = await axios.post('/auth/signup', userData);
-    dispatch({ type: SIGNUP_USER, payload: response.data });
-    alert('Signup successful! Please check your email for the activation link.');
-    window.location = '/#/signin';
-  } catch (error) {
-    console.error('Error during sign up:', error);
-    dispatch({ type: AUTH_ERROR, payload: 'Error signing up. Please try again.' });
-    throw error;
-  }
-};
-
-// Sign-out functionality
-export function signUserOut() {
-  return function (dispatch) {
-    dispatch({ type: UNAUTH_USER });
-    localStorage.removeItem('auth_jwt_token');
-    delete axios.defaults.headers.common['Authorization'];
-  };
-}
-
-// Fetch user profile
-export function getUserProfile() {
-  return function (dispatch) {
-    return axios
-      .get('/user/profile')
-      .then((response) => {
-        dispatch({
-          type: GET_USER_PROFILE,
-          payload: response.data,
-        });
-      })
-      .catch((err) => {
-        console.error('Profile fetch error:', err);
-      });
-  };
-}
-
-// Update user profile
-export function updateUserProfile(data) {
-  return function (dispatch) {
-    return axios
-      .post('/user/profile', data)
-      .then((response) => {
-        dispatch({
-          type: UPDATE_USER_PROFILE,
-          payload: response.data,
-        });
-      })
-      .catch((error) => {
-        console.error('Error updating user profile:', error);
-        throw error;
-      });
-  };
-}
 
 // Fetch users for an organization
 export function getUsers() {
@@ -248,7 +251,7 @@ export function deleteOrganizations(orgIds) {
   return function (dispatch) {
     return axios
       .post('/organization/delete', { orgIds })
-      .then((response) => {
+      .then(() => {
         dispatch({
           type: DELETE_ORGANIZATIONS_SUCCESS,
           payload: orgIds,
@@ -296,7 +299,7 @@ export function deleteUsers(userIds) {
   return function (dispatch) {
     return axios
       .post('/user/delete', { userIds })
-      .then((response) => {
+      .then(() => {
         dispatch({ type: DELETE_USERS_SUCCESS, payload: userIds });
       })
       .catch((error) => {

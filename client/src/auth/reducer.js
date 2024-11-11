@@ -1,5 +1,3 @@
-// client/src/auth/reducer.js
-
 import {
   AUTH_USER,
   AUTH_ERROR,
@@ -16,8 +14,8 @@ const INITIAL_STATE = {
   authenticated: !!localStorage.getItem('auth_jwt_token'),
   errorMessage: '',
   profile: null,
-  organizations: [],  // Stores organizations
-  users: [],          // Stores users
+  organizations: [],
+  users: [],
 };
 
 export default function (state = INITIAL_STATE, action) {
@@ -26,8 +24,9 @@ export default function (state = INITIAL_STATE, action) {
       return { ...state, authenticated: true, errorMessage: '' };
     case UNAUTH_USER:
       return { ...state, authenticated: false, errorMessage: '', profile: null };
-    case AUTH_ERROR:
-      return { ...state, errorMessage: action.payload };
+      case AUTH_ERROR:
+        console.warn('AUTH_ERROR action triggered, updating state with error message:', action.payload);
+        return { ...state, authenticated: false, errorMessage: action.payload };
     case GET_USER_PROFILE:
       return { ...state, profile: action.payload };
     case UPDATE_USER_PROFILE:
@@ -39,9 +38,9 @@ export default function (state = INITIAL_STATE, action) {
     case CREATE_ORGANIZATION_SUCCESS:
       return { ...state, organizations: [...state.organizations, action.payload.organization] };
     case DELETE_ORGANIZATIONS_SUCCESS:
-      return { 
-        ...state, 
-        organizations: state.organizations.filter(org => !action.payload.includes(org._id)) 
+      return {
+        ...state,
+        organizations: state.organizations.filter(org => !action.payload.includes(org._id))
       };
     default:
       return state;
