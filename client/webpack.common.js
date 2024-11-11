@@ -3,6 +3,8 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
+console.log('API Base URL (common):', process.env.REACT_APP_API_BASE_URL);
+
 module.exports = {
   entry: {
     app: './src/app.js',
@@ -13,7 +15,7 @@ module.exports = {
     ]
   },
   output: {
-    path: path.resolve(__dirname, '../docs/'),
+    path: path.resolve(__dirname, 'build'),
     filename: "js/[name].[chunkhash].js"
   },
   module: {
@@ -40,9 +42,7 @@ module.exports = {
       'process.env': {
         'NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
         'REACT_APP_API_BASE_URL': JSON.stringify(
-          process.env.NODE_ENV === 'production'
-            ? process.env.PROD_APP_URL // Ensure this points to the correct production URL
-            : process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000' // Fallback for development
+          process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'
         ),
       }
     }),
