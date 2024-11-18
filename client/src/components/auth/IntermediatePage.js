@@ -1,7 +1,8 @@
 // client/src/components/auth/IntermediatePage.js
 
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import useLocation from 'react-router-dom/useLocation'; // Direct import
+import useNavigate from 'react-router-dom/useNavigate'; // Direct import
 import Logo from '../../statics/Logo.png';
 
 const IntermediatePage = () => {

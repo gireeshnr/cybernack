@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { getSubscriptions, createSubscription, updateSubscription, deleteSubscriptions } from '../../auth/actions';
-import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa'; // Corrected import statement
 import { ToastContainer, toast } from 'react-toastify';
 import ConfirmModal from '../ConfirmModal';
 import 'react-toastify/dist/ReactToastify.css';

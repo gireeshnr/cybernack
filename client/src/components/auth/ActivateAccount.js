@@ -1,12 +1,11 @@
 // client/src/components/auth/ActivateAccount.js
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Import from 'react-router-dom'
+import { ToastContainer, toast } from 'react-toastify'; // Correct import from 'react-toastify'
 import api from '../../api'; // Centralized Axios instance import
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import Logo from '../../statics/Logo.png';
-
+import 'react-toastify/dist/ReactToastify.css'; // CSS for Toastify
+import Logo from '../../statics/Logo.png'; // Logo import
 const ActivateAccount = () => {
   const { token } = useParams();
   const [password, setPassword] = useState('');

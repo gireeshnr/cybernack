@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { getUsers, addUser, updateUser, deleteUsers } from '../../auth/actions';
 import CenterCard from '../CenterCard';
-import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa'; // Corrected import
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ConfirmModal from '../ConfirmModal'; // Custom confirmation modal

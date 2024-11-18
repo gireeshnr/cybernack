@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
-import { getUserProfile, updateUserProfile } from '../../auth/actions';
+import { connect } from 'react-redux'; // Ensure this import is correct
+import { getUserProfile, updateUserProfile } from '../../auth/actions'; // Correct path
 import CenterCard from '../CenterCard';
 import useForm from '../../use-form-react';
 import axios from 'axios';
+
 
 const Account = ({ profile, getUserProfile, updateUserProfile }) => {
   const [editing, setEditing] = useState(false);

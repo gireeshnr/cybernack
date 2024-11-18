@@ -1,3 +1,4 @@
+// /Users/gireesh/Cybernack/mern/client/webpack.prod.js
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const path = require('path');
@@ -8,7 +9,7 @@ module.exports = merge(common, {
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: 'bundle.[contenthash].js',
-    publicPath: '/', // Ensure assets are correctly served in production
+    publicPath: '/',
   },
   optimization: {
     splitChunks: {
@@ -18,7 +19,7 @@ module.exports = merge(common, {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify('production'),
+      'process.env.NODE_ENV': JSON.stringify('production'), // Ensure only one definition for production
       'process.env.REACT_APP_API_BASE_URL': JSON.stringify('https://app.cybernack.com'),
     }),
   ],

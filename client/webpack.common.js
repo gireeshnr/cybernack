@@ -1,9 +1,8 @@
+// /Users/gireesh/Cybernack/mern/client/webpack.common.js
 const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
-console.log('API Base URL (common):', process.env.REACT_APP_API_BASE_URL);
 
 module.exports = {
   entry: {
@@ -38,14 +37,6 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({ template: path.resolve(__dirname, 'src/index.html') }),
-    new webpack.DefinePlugin({
-      'process.env': {
-        'NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-        'REACT_APP_API_BASE_URL': JSON.stringify(
-          process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'
-        ),
-      }
-    }),
     new MiniCssExtractPlugin({
       filename: 'styles/style.css'
     })

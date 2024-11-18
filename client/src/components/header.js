@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
+import connect from 'react-redux/es/connect/connect'; // Direct import
 import { NavLink } from 'react-router-dom';
-import PlaceholderLogo from '../statics/placeholder.png';
-
+import PlaceholderLogo from '../statics/placeholder.png'; // Adjust the path if necessary
 const Header = ({ authenticated, role, organization }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [logo, setLogo] = useState(PlaceholderLogo);

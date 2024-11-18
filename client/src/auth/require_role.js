@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { connect } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import connect from 'react-redux/es/connect/connect'; // Direct import
+import useNavigate from 'react-router-dom/useNavigate'; // Direct import
 
 const RequireRole = ({ Component, authenticated, role, allowedRoles, ...props }) => {
   const navigate = useNavigate();

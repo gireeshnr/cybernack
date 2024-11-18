@@ -7,7 +7,7 @@ import {
   updateOrganization,
   getSubscriptions,
 } from '../../auth/actions';
-import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa'; // Corrected import
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ConfirmModal from '../ConfirmModal';
