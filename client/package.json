@@ -31,7 +31,7 @@
     "react-loader-spinner": "^6.1.6",
     "react-redux": "^7.2.6",
     "react-router-dom": "^6.28.0",
-    "react-toastify": "^8.2.0",
+    "react-toastify": "^10.0.6",
     "redux": "^4.1.2",
     "shodan-client": "^3.2.0"
   },
@@ -48,7 +48,7 @@
     "sass": "^1.77.6",
     "sass-loader": "^12.6.0",
     "style-loader": "^3.3.4",
-    "webpack": "^5.93.0",
+    "webpack": "^5.96.1",
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.15.2"
