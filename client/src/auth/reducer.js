@@ -24,9 +24,9 @@ export default function (state = INITIAL_STATE, action) {
       return { ...state, authenticated: true, errorMessage: '' };
     case UNAUTH_USER:
       return { ...state, authenticated: false, errorMessage: '', profile: null };
-      case AUTH_ERROR:
-        console.warn('AUTH_ERROR action triggered, updating state with error message:', action.payload);
-        return { ...state, authenticated: false, errorMessage: action.payload };
+    case AUTH_ERROR:
+      console.warn('AUTH_ERROR action triggered, updating state with error message:', action.payload);
+      return { ...state, authenticated: false, errorMessage: action.payload };
     case GET_USER_PROFILE:
       return { ...state, profile: action.payload };
     case UPDATE_USER_PROFILE:

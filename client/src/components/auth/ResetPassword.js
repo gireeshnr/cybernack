@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from '../../api'; // Use configured axios instance
+import axios from '../../api';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import Logo from '../../statics/Logo.png';
 
 const ResetPassword = () => {
@@ -10,7 +9,7 @@ const ResetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isReset, setIsReset] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(''); // State for user-friendly error message
+  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {

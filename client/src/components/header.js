@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import connect from 'react-redux/es/connect/connect'; // Direct import
+import { connect } from 'react-redux';
 import { NavLink } from 'react-router-dom';
-import PlaceholderLogo from '../statics/placeholder.png'; // Adjust the path if necessary
+import PlaceholderLogo from '../statics/placeholder.png';
+
 const Header = ({ authenticated, role, organization }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [logo, setLogo] = useState(PlaceholderLogo);
@@ -56,11 +57,7 @@ const Header = ({ authenticated, role, organization }) => {
   return (
     <nav className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <button className="toggle-btn" onClick={toggleSidebar}>
-        {collapsed ? (
-          <i className="fas fa-chevron-right"></i>
-        ) : (
-          <i className="fas fa-chevron-left"></i>
-        )}
+        {collapsed ? <i className="fas fa-chevron-right"></i> : <i className="fas fa-chevron-left"></i>}
       </button>
       {authenticated && (
         <div className="logo-upload">
@@ -85,7 +82,6 @@ const Header = ({ authenticated, role, organization }) => {
           </NavLink>
         </li>
 
-        {/* User Settings Section for Super Admins */}
         {authenticated && role === 'superadmin' && organization === 'Cybernack' && (
           <li className="nav-item">
             <div className="nav-link">

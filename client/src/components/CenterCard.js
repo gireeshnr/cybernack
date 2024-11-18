@@ -1,7 +1,5 @@
-// client/src/components/CenterCard.js
-
 import React from 'react';
-import Logo from '../statics/Logo.png'; // Ensure the correct path to the logo
+import Logo from '../statics/Logo.png';
 
 const CenterCard = (props) => (
   <div className="center-container">

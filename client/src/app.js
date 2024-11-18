@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { Provider, useDispatch } from 'react-redux'; // Import useDispatch from 'react-redux'
-import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom'; // Import all from 'react-router-dom'
-import { ToastContainer } from 'react-toastify'; // Correct import from 'react-toastify'
+import { Provider, useDispatch } from 'react-redux';
+import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 import Header from './components/header';
-import Account from './components/auth/account';
+import Account from './components/auth/account'; // Ensure this import is correct
 import ManageUsers from './components/auth/ManageUsers';
 import Signin from './components/auth/signin';
 import Signup from './components/auth/signup';
@@ -20,7 +20,7 @@ import { AUTH_USER } from './actions/types';
 import { getUserProfile } from './auth/actions';
 import { store } from './store';
 import './style/style.scss';
-import 'react-toastify/dist/ReactToastify.css'; // CSS for Toastify
+import 'react-toastify/dist/ReactToastify.css';
 
 const token = localStorage.getItem('auth_jwt_token');
 if (token) {
