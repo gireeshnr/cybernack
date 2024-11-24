@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { getOrganizations, getUsers, addUser, updateUser, deleteUsers } from '../../auth/actions';
-import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa'; // Corrected import
-import { ToastContainer, toast } from 'react-toastify';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrashAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
+import toast from 'react-hot-toast';
 import ConfirmModal from '../ConfirmModal';
-import 'react-toastify/dist/ReactToastify.css';
 
-const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, organizations, users }) => {
+const Users = ({
+  getOrganizations,
+  getUsers,
+  addUser,
+  updateUser,
+  deleteUsers,
+  organizations,
+  users,
+}) => {
   const initialUserData = {
     firstName: '',
     lastName: '',
@@ -125,10 +134,10 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
           onClick={() => setShowConfirmDelete(true)}
           disabled={selectedUsers.length === 0}
         >
-          <FaTrashAlt /> Delete Selected
+          <FontAwesomeIcon icon={faTrashAlt} /> Delete Selected
         </button>
         <button className="btn btn-success" onClick={handleAddUserClick}>
-          <FaPlus /> Add New User
+          <FontAwesomeIcon icon={faPlus} /> Add New User
         </button>
       </div>
 
@@ -164,7 +173,7 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
                 <td>{user.isActive ? 'Active' : 'Inactive'}</td>
                 <td>
                   <button className="btn btn-secondary btn-sm" onClick={() => handleEditClick(user)}>
-                    <FaEdit /> Edit
+                    <FontAwesomeIcon icon={faEdit} /> Edit
                   </button>
                 </td>
               </tr>
@@ -180,28 +189,20 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
             <form onSubmit={showAddForm ? handleAddUser : handleUpdateUser}>
               <div className="form-group">
                 <label>Organization:</label>
-                {showAddForm ? (
-                  <select
-                    name="organizationId"
-                    value={userData.organizationId}
-                    onChange={handleChange}
-                    required
-                    className="form-control"
-                  >
-                    <option value="">Select Organization</option>
-                    {organizations.map((org) => (
-                      <option key={org._id} value={org._id}>{org.name}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    name="organizationName"
-                    value={organizations.find((org) => org._id === userData.organizationId)?.name || 'N/A'}
-                    readOnly
-                    className="form-control"
-                  />
-                )}
+                <select
+                  name="organizationId"
+                  value={userData.organizationId}
+                  onChange={handleChange}
+                  required
+                  className="form-control"
+                >
+                  <option value="">Select Organization</option>
+                  {organizations.map((org) => (
+                    <option key={org._id} value={org._id}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>First Name:</label>
@@ -281,13 +282,25 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
                       name="confirmPassword"
                       value={userData.confirmPassword}
                       onChange={handleChange}
-                      required={showAddForm}                      className="form-control"
-                      />
-                    </div>
-                  </>
-                )}
-                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                  {isSubmitting ? (showAddForm ? 'Adding...' : 'Updating...') : showAddForm ? 'Add User' : 'Update User'}
+                      required={showAddForm}
+                      className="form-control"
+                    />
+                  </div>
+                </>
+              )}
+              <div className="d-flex justify-content-end mt-3">
+                <button
+                  type="submit"
+                  className="btn btn-primary me-2"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? showAddForm
+                      ? 'Adding...'
+                      : 'Updating...'
+                    : showAddForm
+                    ? 'Add User'
+                    : 'Update User'}
                 </button>
                 <button
                   type="button"
@@ -300,27 +313,66 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
                 >
                   Cancel
                 </button>
-              </form>
-            </div>
+              </div>
+            </form>
           </div>
-        )}
-  
-        <ToastContainer />
-  
-        {showConfirmDelete && (
-          <ConfirmModal
-            message={`Are you sure you want to delete ${selectedUsers.length} user(s)?`}
-            onConfirm={handleDelete}
-            onCancel={() => setShowConfirmDelete(false)}
-          />
-        )}
-      </div>
-    );
-  };
-  
-  const mapStateToProps = (state) => ({
-    organizations: state.auth.organizations || [],
-    users: state.auth.users || [],
-  });
-  
-  export default connect(mapStateToProps, { getOrganizations, getUsers, addUser, updateUser, deleteUsers })(Users);
+        </div>
+      )}
+
+      {/* Confirmation modal for deleting users */}
+      {showConfirmDelete && (
+        <ConfirmModal
+          message={`Are you sure you want to delete ${selectedUsers.length} user(s)?`}
+          onConfirm={handleDelete}
+          onCancel={() => setShowConfirmDelete(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+// PropTypes validation
+Users.propTypes = {
+  getOrganizations: PropTypes.func.isRequired,
+  getUsers: PropTypes.func.isRequired,
+  addUser: PropTypes.func.isRequired,
+  updateUser: PropTypes.func.isRequired,
+  deleteUsers: PropTypes.func.isRequired,
+  organizations: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  users: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.shape({
+        first: PropTypes.string.isRequired,
+        last: PropTypes.string.isRequired,
+      }).isRequired,
+      email: PropTypes.string.isRequired,
+      role: PropTypes.string.isRequired,
+      org: PropTypes.shape({
+        _id: PropTypes.string,
+        name: PropTypes.string,
+      }),
+      isActive: PropTypes.bool.isRequired,
+    })
+  ).isRequired,
+};
+
+// Map state to props
+const mapStateToProps = (state) => ({
+  organizations: state.auth.organizations || [],
+  users: state.auth.users || [],
+});
+
+// Export connected component
+export default connect(mapStateToProps, {
+  getOrganizations,
+  getUsers,
+  addUser,
+  updateUser,
+  deleteUsers,
+})(Users);

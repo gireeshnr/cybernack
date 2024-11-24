@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { connect } from 'react-redux';
-import { createOrganization } from '../../auth/actions';  // Action to create org
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { createOrganization } from '../../auth/actions'; // Action to create org
+import { toast } from 'react-hot-toast'; // Replaced react-toastify with react-hot-toast
 import { useNavigate } from 'react-router-dom';
 
-const CreateOrganization = (props) => {
+const CreateOrganization = ({ createOrganization }) => {
   const [formData, setFormData] = useState({
     orgName: '',
     adminFirstName: '',
     adminLastName: '',
     adminEmail: '',
-    adminPassword: '',  // Password if bypassing activation
-    bypassActivation: false  // Toggle state
+    adminPassword: '', // Password if bypassing activation
+    bypassActivation: false, // Toggle state
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -31,9 +31,9 @@ const CreateOrganization = (props) => {
     setIsSubmitting(true);
 
     try {
-      await props.createOrganization(formData);
+      await createOrganization(formData);
       toast.success('Organization created successfully!');
-      navigate('/superadmin/dashboard');  // Redirect after success
+      navigate('/superadmin/dashboard'); // Redirect after success
     } catch (error) {
       toast.error('Error creating organization. Please try again.');
     } finally {
@@ -116,9 +116,13 @@ const CreateOrganization = (props) => {
           {isSubmitting ? 'Submitting...' : 'Create Organization'}
         </button>
       </form>
-      <ToastContainer />
     </div>
   );
+};
+
+// Add PropTypes validation
+CreateOrganization.propTypes = {
+  createOrganization: PropTypes.func.isRequired, // Function to create an organization
 };
 
 export default connect(null, { createOrganization })(CreateOrganization);

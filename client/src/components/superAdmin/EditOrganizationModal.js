@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { connect } from 'react-redux';
 import { updateOrganization } from '../../auth/actions';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-hot-toast'; // Replaced react-toastify with react-hot-toast
 
 const EditOrganizationModal = ({ organization, onClose, updateOrganization }) => {
   const [orgName, setOrgName] = useState(organization.name || '');
@@ -11,6 +11,7 @@ const EditOrganizationModal = ({ organization, onClose, updateOrganization }) =>
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // Sync modal state with the provided organization
     setOrgName(organization.name || '');
     setSubscription(organization.subscription || 'Standard');
     setIsActive(organization.isActive || false);
@@ -81,9 +82,21 @@ const EditOrganizationModal = ({ organization, onClose, updateOrganization }) =>
           </button>
         </form>
       </div>
-      <ToastContainer />
     </div>
   );
 };
 
+// Add PropTypes validation
+EditOrganizationModal.propTypes = {
+  organization: PropTypes.shape({
+    _id: PropTypes.string.isRequired, // Organization ID
+    name: PropTypes.string,           // Organization Name
+    subscription: PropTypes.string,   // Subscription Plan
+    isActive: PropTypes.bool,         // Active Status
+  }).isRequired,                      // Organization prop is required
+  onClose: PropTypes.func.isRequired, // Callback to close the modal
+  updateOrganization: PropTypes.func.isRequired, // Action to update organization
+};
+
+// Connect to Redux and export
 export default connect(null, { updateOrganization })(EditOrganizationModal);

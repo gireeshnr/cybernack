@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { getSubscriptions, createSubscription, updateSubscription, deleteSubscriptions } from '../../auth/actions';
-import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa'; // Corrected import statement
-import { ToastContainer, toast } from 'react-toastify';
+import PropTypes from 'prop-types';
+import {
+  getSubscriptions,
+  createSubscription,
+  updateSubscription,
+  deleteSubscriptions,
+} from '../../auth/actions';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrashAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
+import toast from 'react-hot-toast'; // Using react-hot-toast
 import ConfirmModal from '../ConfirmModal';
-import 'react-toastify/dist/ReactToastify.css';
 
 const ManageSubscriptions = ({
   subscriptions,
@@ -47,7 +53,7 @@ const ManageSubscriptions = ({
   };
 
   const handleAddClick = () => {
-    setNewSubscription(initialSubscriptionState); // Reset form data
+    setNewSubscription(initialSubscriptionState);
     setShowAddForm(true);
     setShowEditForm(false);
   };
@@ -58,12 +64,12 @@ const ManageSubscriptions = ({
 
     try {
       await createSubscription(newSubscription);
-      toast.success('Subscription added successfully');
+      toast.success('Subscription added successfully!');
       setNewSubscription(initialSubscriptionState);
       await getSubscriptions();
       setShowAddForm(false);
     } catch (error) {
-      toast.error('Error adding subscription');
+      toast.error('Error adding subscription. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -90,11 +96,11 @@ const ManageSubscriptions = ({
 
     try {
       await updateSubscription(editingSub._id, newSubscription);
-      toast.success('Subscription updated successfully');
+      toast.success('Subscription updated successfully!');
       await getSubscriptions();
       setShowEditForm(false);
     } catch (error) {
-      toast.error('Error updating subscription');
+      toast.error('Error updating subscription. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -108,7 +114,7 @@ const ManageSubscriptions = ({
       setShowConfirmDelete(false);
       await getSubscriptions();
     } catch (error) {
-      toast.error('Error deleting subscriptions');
+      toast.error('Error deleting subscriptions. Please try again.');
     }
   };
 
@@ -122,10 +128,10 @@ const ManageSubscriptions = ({
           onClick={() => setShowConfirmDelete(true)}
           disabled={selectedSubs.length === 0}
         >
-          <FaTrashAlt /> Delete Selected
+          <FontAwesomeIcon icon={faTrashAlt} /> Delete Selected
         </button>
         <button className="btn btn-success" onClick={handleAddClick}>
-          <FaPlus /> Add New Subscription
+          <FontAwesomeIcon icon={faPlus} /> Add New Subscription
         </button>
       </div>
 
@@ -161,7 +167,7 @@ const ManageSubscriptions = ({
                 <td>{sub.isActive ? 'Yes' : 'No'}</td>
                 <td>
                   <button className="btn btn-secondary btn-sm" onClick={() => handleEditClick(sub)}>
-                    <FaEdit /> Edit
+                    <FontAwesomeIcon icon={faEdit} /> Edit
                   </button>
                 </td>
               </tr>
@@ -170,7 +176,6 @@ const ManageSubscriptions = ({
         </table>
       </div>
 
-      {/* Add and Edit Subscription Form Modal */}
       {(showAddForm || showEditForm) && (
         <div className="modal">
           <div className="modal-content">
@@ -274,8 +279,6 @@ const ManageSubscriptions = ({
         </div>
       )}
 
-      <ToastContainer />
-
       {showConfirmDelete && (
         <ConfirmModal
           message={`Are you sure you want to delete ${selectedSubs.length} subscription(s)?`}
@@ -287,10 +290,21 @@ const ManageSubscriptions = ({
   );
 };
 
+// PropTypes validation
+ManageSubscriptions.propTypes = {
+  subscriptions: PropTypes.array.isRequired,
+  getSubscriptions: PropTypes.func.isRequired,
+  createSubscription: PropTypes.func.isRequired,
+  updateSubscription: PropTypes.func.isRequired,
+  deleteSubscriptions: PropTypes.func.isRequired,
+};
+
+// Map state to props
 const mapStateToProps = (state) => ({
-  subscriptions: state.subscription.subscriptions,
+  subscriptions: state.subscription.subscriptions || [],
 });
 
+// Export connected component
 export default connect(mapStateToProps, {
   getSubscriptions,
   createSubscription,

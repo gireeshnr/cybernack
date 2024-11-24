@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-hot-toast'; // Import react-hot-toast
 import Logo from '../../statics/Logo.png';
 
 const ResetPassword = () => {
@@ -22,15 +21,15 @@ const ResetPassword = () => {
       return;
     }
     try {
-      const response = await axios.post('/auth/reset-password', { token, password });
+      await axios.post('/auth/reset-password', { token, password }); // Removed 'response'
       toast.success('Password reset successfully! Redirecting...');
       setMessage('Password has been reset successfully.');
 
       setTimeout(() => {
         navigate('/intermediate-page', { state: { message: 'Your password has been changed successfully.' } });
       }, 2000);
-    } catch (error) {
-      setMessage('Error resetting password. Please try again.');
+    } catch {
+      setMessage('Error resetting password. Please try again.'); // Removed 'error'
       toast.error('Error resetting password. Please try again.');
     }
   };
@@ -65,7 +64,6 @@ const ResetPassword = () => {
         <button type="submit" className="btn btn-primary">Reset Password</button>
       </form>
       {message && <p>{message}</p>}
-      <ToastContainer />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+/* global process */
 import axios from 'axios';
 
 // Determine base URL based on environment variables or window location

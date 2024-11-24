@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { connect } from 'react-redux';
 import { getUsers, addUser, updateUser, deleteUsers } from '../../auth/actions';
 import CenterCard from '../CenterCard';
-import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa'; // Corrected import
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import toast from 'react-hot-toast'; // Replaced react-toastify with react-hot-toast
 import ConfirmModal from '../ConfirmModal'; // Custom confirmation modal
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrashAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
 
 const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -20,7 +21,7 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false); // Modal state for delete confirmation
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -48,7 +49,7 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
       await deleteUsers(selectedUsers);
       setSelectedUsers([]);
       toast.success(`${selectedUsers.length} user(s) deleted successfully!`);
-      await getUsers(); // Refresh table after delete
+      await getUsers();
     } catch (error) {
       toast.error('Error deleting users. Please try again.');
       console.error('Error deleting users:', error);
@@ -56,7 +57,7 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
   };
 
   const handleConfirmDelete = () => {
-    setShowConfirmDelete(true); // Show confirmation modal
+    setShowConfirmDelete(true);
   };
 
   const handleChange = (e) => {
@@ -68,16 +69,16 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
     setIsSubmitting(true);
     try {
       if (isEdit) {
-        await updateUser(editingUserId, userData); // Pass userId during update
+        await updateUser(editingUserId, userData);
         toast.success('User updated successfully!');
       } else {
-        await addUser(userData); // Add new user
+        await addUser(userData);
         toast.success('New user added and activation link sent to email!');
       }
-      setUserData({ firstName: '', lastName: '', email: '', role: 'user' }); // Clear form
-      await getUsers(); // Refresh users table
-      setShowAddForm(false); // Close modal after user is added/updated
-      setIsEdit(false); // Reset edit state
+      setUserData({ firstName: '', lastName: '', email: '', role: 'user' });
+      await getUsers();
+      setShowAddForm(false);
+      setIsEdit(false);
     } catch (error) {
       if (error.message.includes('already exists')) {
         toast.error('User already exists. Please use a different email.');
@@ -97,9 +98,9 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
       email: user.email,
       role: user.role,
     });
-    setEditingUserId(user._id); // Set the userId for the user being edited
+    setEditingUserId(user._id);
     setIsEdit(true);
-    setShowAddForm(true); // Open form for editing
+    setShowAddForm(true);
   };
 
   return (
@@ -110,14 +111,20 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
           <div className="d-flex justify-content-between mb-3">
             <button
               className={`icon-delete btn btn-danger ${selectedUsers.length === 0 ? 'disabled' : ''}`}
-              onClick={handleConfirmDelete} // Show confirmation modal instead of window.confirm
+              onClick={handleConfirmDelete}
               disabled={selectedUsers.length === 0}
               title="Delete selected users"
             >
-              <FaTrashAlt /> Delete Selected
+              <FontAwesomeIcon icon={faTrashAlt} /> Delete Selected
             </button>
-            <button className="btn btn-success" onClick={() => { setIsEdit(false); setShowAddForm(true); }}>
-              <FaPlus /> Add New User
+            <button
+              className="btn btn-success"
+              onClick={() => {
+                setIsEdit(false);
+                setShowAddForm(true);
+              }}
+            >
+              <FontAwesomeIcon icon={faPlus} /> Add New User
             </button>
           </div>
 
@@ -154,7 +161,7 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
                       <td>{user.isActive ? 'Active' : 'Inactive'}</td>
                       <td>
                         <button className="btn btn-secondary btn-sm" onClick={() => handleEditUser(user)}>
-                          <FaEdit /> Edit
+                          <FontAwesomeIcon icon={faEdit} /> Edit
                         </button>
                       </td>
                     </tr>
@@ -204,7 +211,7 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
                   value={userData.email}
                   onChange={handleChange}
                   required
-                  disabled={isEdit} // Disable email during edit
+                  disabled={isEdit}
                 />
               </div>
               <div className="form-group">
@@ -220,7 +227,7 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
                 </select>
               </div>
               <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                {isSubmitting ? (isEdit ? 'Updating...' : 'Adding...') : (isEdit ? 'Update User' : 'Add User')}
+                {isSubmitting ? (isEdit ? 'Updating...' : 'Adding...') : isEdit ? 'Update User' : 'Add User'}
               </button>
               <button type="button" className="btn btn-secondary" onClick={() => setShowAddForm(false)}>
                 Cancel
@@ -229,9 +236,7 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
           </div>
         </div>
       )}
-      <ToastContainer /> {/* Toast container for notifications */}
 
-      {/* Confirmation modal for deleting users */}
       {showConfirmDelete && (
         <ConfirmModal
           message={`Are you sure you want to delete ${selectedUsers.length} user(s)?`}
@@ -243,8 +248,24 @@ const ManageUsers = ({ getUsers, addUser, updateUser, deleteUsers, users }) => {
   );
 };
 
-const mapStateToProps = (state) => ({
-  users: state.auth.users || [],
-});
+// Define PropTypes
+ManageUsers.propTypes = {
+  getUsers: PropTypes.func.isRequired,
+  addUser: PropTypes.func.isRequired,
+  updateUser: PropTypes.func.isRequired,
+  deleteUsers: PropTypes.func.isRequired,
+  users: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.shape({
+        first: PropTypes.string.isRequired,
+        last: PropTypes.string.isRequired,
+      }).isRequired,
+      email: PropTypes.string.isRequired,
+      role: PropTypes.string.isRequired,
+      isActive: PropTypes.bool.isRequired,
+    })
+  ).isRequired,
+};
 
 export default connect(mapStateToProps, { getUsers, addUser, updateUser, deleteUsers })(ManageUsers);

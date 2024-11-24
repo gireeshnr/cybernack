@@ -1,45 +1,51 @@
 import React, { useEffect } from 'react';
 import { Provider, useDispatch } from 'react-redux';
 import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import toast, { Toaster } from 'react-hot-toast';
 import Header from './components/header';
-import Account from './components/auth/account'; // Ensure this import is correct
-import ManageUsers from './components/auth/ManageUsers';
-import Signin from './components/auth/signin';
-import Signup from './components/auth/signup';
-import Signout from './components/auth/signout';
-import ActivateAccount from './components/auth/ActivateAccount';
-import ForgotPassword from './components/auth/ForgotPassword';
-import ResetPassword from './components/auth/ResetPassword';
-import AuthComponent from './components/auth/require_auth';
-import CreateOrganization from './components/superAdmin/CreateOrganization';
-import SuperAdminDashboard from './components/superAdmin/SuperAdminDashboard';
-import Users from './components/superAdmin/Users';
-import ManageSubscriptions from './components/superAdmin/manageSubscriptions';
 import { AUTH_USER } from './actions/types';
 import { getUserProfile } from './auth/actions';
 import { store } from './store';
 import './style/style.scss';
-import 'react-toastify/dist/ReactToastify.css';
+
+// Lazy load components
+const LazySignup = React.lazy(() => import('./components/auth/signup'));
+const LazySignin = React.lazy(() => import('./components/auth/signin'));
+const LazyForgotPassword = React.lazy(() => import('./components/auth/ForgotPassword'));
+const LazyResetPassword = React.lazy(() => import('./components/auth/ResetPassword'));
+const LazyActivateAccount = React.lazy(() => import('./components/auth/ActivateAccount'));
+const LazyAccount = React.lazy(() => import('./components/auth/account'));
+const LazyManageUsers = React.lazy(() => import('./components/auth/ManageUsers'));
+const LazyCreateOrganization = React.lazy(() => import('./components/superAdmin/CreateOrganization'));
+const LazySuperAdminDashboard = React.lazy(() => import('./components/superAdmin/SuperAdminDashboard'));
+const LazyUsers = React.lazy(() => import('./components/superAdmin/Users'));
+const LazyManageSubscriptions = React.lazy(() => import('./components/superAdmin/manageSubscriptions'));
+const LazySignout = React.lazy(() => import('./components/auth/signout'));
+const LazyAuthComponent = React.lazy(() => import('./components/auth/require_auth'));
 
 const token = localStorage.getItem('auth_jwt_token');
 if (token) {
   store.dispatch({ type: AUTH_USER });
 }
 
+// Fallback loader for lazy components
+const FallbackLoader = () => <div className="fallback-loader">Loading...</div>;
+
 const App = () => {
   return (
     <Provider store={store}>
       <HashRouter>
-        <ToastContainer />
-        <Routes>
-          <Route path="/signin" element={<Signin />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/activate-account/:token" element={<ActivateAccount />} />
-          <Route path="*" element={<ProtectedApp />} />
-        </Routes>
+        <Toaster position="top-center" />
+        <React.Suspense fallback={<FallbackLoader />}>
+          <Routes>
+            <Route path="/signin" element={<LazySignin />} />
+            <Route path="/signup" element={<LazySignup />} />
+            <Route path="/forgot-password" element={<LazyForgotPassword />} />
+            <Route path="/reset-password/:token" element={<LazyResetPassword />} />
+            <Route path="/activate-account/:token" element={<LazyActivateAccount />} />
+            <Route path="*" element={<ProtectedApp />} />
+          </Routes>
+        </React.Suspense>
       </HashRouter>
     </Provider>
   );
@@ -61,15 +67,29 @@ const ProtectedApp = () => {
     <div className="app">
       <Header />
       <div className="content">
-        <Routes>
-          <Route path="/account" element={<AuthComponent Component={Account} />} />
-          <Route path="/users" element={<AuthComponent Component={ManageUsers} allowedRoles={['admin']} />} />
-          <Route path="/superadmin/dashboard" element={<AuthComponent Component={SuperAdminDashboard} allowedRoles={['superadmin']} />} />
-          <Route path="/superadmin/create-organization" element={<AuthComponent Component={CreateOrganization} allowedRoles={['superadmin']} />} />
-          <Route path="/superadmin/users" element={<AuthComponent Component={Users} allowedRoles={['superadmin']} />} />
-          <Route path="/superadmin/manage-subscriptions" element={<AuthComponent Component={ManageSubscriptions} allowedRoles={['superadmin']} />} />
-          <Route path="/signout" element={<Signout />} />
-        </Routes>
+        <React.Suspense fallback={<FallbackLoader />}>
+          <Routes>
+            <Route path="/account" element={<LazyAuthComponent Component={LazyAccount} />} />
+            <Route path="/users" element={<LazyAuthComponent Component={LazyManageUsers} allowedRoles={['admin']} />} />
+            <Route
+              path="/superadmin/dashboard"
+              element={<LazyAuthComponent Component={LazySuperAdminDashboard} allowedRoles={['superadmin']} />}
+            />
+            <Route
+              path="/superadmin/create-organization"
+              element={<LazyAuthComponent Component={LazyCreateOrganization} allowedRoles={['superadmin']} />}
+            />
+            <Route
+              path="/superadmin/users"
+              element={<LazyAuthComponent Component={LazyUsers} allowedRoles={['superadmin']} />}
+            />
+            <Route
+              path="/superadmin/manage-subscriptions"
+              element={<LazyAuthComponent Component={LazyManageSubscriptions} allowedRoles={['superadmin']} />}
+            />
+            <Route path="/signout" element={<LazySignout />} />
+          </Routes>
+        </React.Suspense>
       </div>
     </div>
   );

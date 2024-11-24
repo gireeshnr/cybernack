@@ -1,11 +1,9 @@
-// client/src/components/auth/ActivateAccount.js
-
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Import from 'react-router-dom'
-import { ToastContainer, toast } from 'react-toastify'; // Correct import from 'react-toastify'
+import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast'; // Import from react-hot-toast
 import api from '../../api'; // Centralized Axios instance import
-import 'react-toastify/dist/ReactToastify.css'; // CSS for Toastify
 import Logo from '../../statics/Logo.png'; // Logo import
+
 const ActivateAccount = () => {
   const { token } = useParams();
   const [password, setPassword] = useState('');
@@ -73,7 +71,6 @@ const ActivateAccount = () => {
         </div>
         <button type="submit" className="btn btn-primary btn-lg btn-block">Activate Account</button>
       </form>
-      <ToastContainer />
     </div>
   );
 };

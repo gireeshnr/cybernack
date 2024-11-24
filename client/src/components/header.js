@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { connect } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 import PlaceholderLogo from '../statics/placeholder.png';
@@ -50,6 +51,7 @@ const Header = ({ authenticated, role, organization }) => {
     setCollapsed(!collapsed);
   };
 
+  // Show nothing if role or organization is missing
   if (!role || !organization) {
     return null;
   }
@@ -117,6 +119,14 @@ const Header = ({ authenticated, role, organization }) => {
   );
 };
 
+// Add PropTypes validation
+Header.propTypes = {
+  authenticated: PropTypes.bool.isRequired, // Validating authenticated as a boolean
+  role: PropTypes.string, // Role is optional but must be a string if provided
+  organization: PropTypes.string, // Organization is optional but must be a string if provided
+};
+
+// Map Redux state to component props
 const mapStateToProps = (state) => ({
   authenticated: state.auth.authenticated,
   role: state.auth.profile?.role,

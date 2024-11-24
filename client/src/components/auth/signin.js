@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { connect } from 'react-redux';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import useForm from '../../use-form-react';
@@ -86,6 +87,12 @@ const Signin = ({ signUserIn, authError }) => {
       </div>
     </CenterCard>
   );
+};
+
+// Add PropTypes validation
+Signin.propTypes = {
+  signUserIn: PropTypes.func.isRequired, // Function for signing in the user
+  authError: PropTypes.string, // Optional string for authentication error messages
 };
 
 const mapStateToProps = (state) => ({

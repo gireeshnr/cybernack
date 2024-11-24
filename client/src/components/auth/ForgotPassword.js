@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import axios from '../../api'; // Configured axios instance
-import { toast } from 'react-toastify'; // Correct import from 'react-toastify'
+import { toast } from 'react-hot-toast'; // Replaced react-toastify with react-hot-toast
 import { useNavigate } from 'react-router-dom'; // Correct import for useNavigate
-import 'react-toastify/dist/ReactToastify.css'; // CSS for Toastify
 import Logo from '../../statics/Logo.png'; // Logo import
 
 const ForgotPassword = () => {

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { connect } from 'react-redux';
 import { signUserUp } from '../../auth/actions';
 import CenterCard from '../CenterCard'; // Use the new consolidated CenterCard component
 import useForm from '../../use-form-react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-hot-toast'; // Import react-hot-toast
 import { useNavigate } from 'react-router-dom';
-import { ThreeDots } from 'react-loader-spinner'; // Import the specific loader
 
-const Signup = (props) => {
+const Signup = ({ signUserUp }) => { // Destructure signUserUp for cleaner code
   const [errMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false); // Loading state
   const navigate = useNavigate();
@@ -18,43 +17,28 @@ const Signup = (props) => {
       firstName: '',
       lastName: '',
       email: '',
-      org: ''
+      org: '',
     },
     callback: (inputs, e) => {
       if (e) e.preventDefault(); // Ensure the event is passed correctly to prevent default form behavior
 
       setLoading(true); // Start loading
-      props.signUserUp({ ...inputs })
+      signUserUp({ ...inputs })
         .then(() => {
           setLoading(false); // Stop loading
 
-          // Show success toast with an OK button
-          toast.success(
-            <div>
-              <p>You signed up successfully! Please check your email to activate your account.</p>
-              <button
-                onClick={() => {
-                  toast.dismiss(); // Close the toast
-                  navigate('/signin'); // Redirect to sign-in page
-                }}
-                className="btn btn-primary"
-              >
-                OK
-              </button>
-            </div>, {
-            position: 'top-center',
-            autoClose: false, // Keep open until user clicks OK
-            closeOnClick: false,
-            draggable: false,
-            hideProgressBar: true, // Hide the progress bar
+          // Show success toast with a redirect
+          toast.success('You signed up successfully! Please check your email to activate your account.', {
+            duration: 5000,
           });
+          setTimeout(() => navigate('/signin'), 5000);
         })
-        .catch(err => {
+        .catch((err) => {
           setLoading(false); // Stop loading
           setErrorMsg(err.response?.data || 'Error signing up. Please try again.');
         });
     },
-    debug: false
+    debug: false,
   };
 
   const { onSubmit, onChange, inputs, dirty, submitting } = useForm('SignupForm', options);
@@ -73,7 +57,8 @@ const Signup = (props) => {
               onChange={onChange}
               className="form-control form-control-lg"
               placeholder="First Name"
-              required />
+              required
+            />
           </div>
           <div className="form-group">
             <label>Last Name:</label>
@@ -84,7 +69,8 @@ const Signup = (props) => {
               onChange={onChange}
               className="form-control form-control-lg"
               placeholder="Last Name"
-              required />
+              required
+            />
           </div>
           <div className="form-group">
             <label>Email:</label>
@@ -95,7 +81,8 @@ const Signup = (props) => {
               onChange={onChange}
               className="form-control form-control-lg"
               placeholder="sample@email.com"
-              required />
+              required
+            />
           </div>
           <div className="form-group">
             <label>Organization:</label>
@@ -109,28 +96,39 @@ const Signup = (props) => {
               required
             />
           </div>
-          {errMsg && <div className="alert alert-warning">
-            <strong>Oops!</strong> {errMsg}
-          </div>}
+          {errMsg && (
+            <div className="alert alert-warning">
+              <strong>Oops!</strong> {errMsg}
+            </div>
+          )}
           <div style={{ paddingTop: '30px' }}>
             <button
               type="submit"
               className="btn btn-primary btn-lg btn-block"
-              disabled={!dirty || submitting || loading}> {/* Disable button when loading */}
+              disabled={!dirty || submitting || loading}
+            >
               {loading ? (
-                <ThreeDots // Use the specific loader component
-                  height={20}
-                  width={30}
-                  color="#fff"
-                />
-              ) : 'Sign Up'}
+                <div
+                  className="spinner-border text-light"
+                  role="status"
+                  style={{ width: '20px', height: '20px' }}
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              ) : (
+                'Sign Up'
+              )}
             </button>
           </div>
         </form>
-        <ToastContainer /> {/* Toast container for notifications */}
       </div>
     </CenterCard>
   );
-}
+};
+
+// Add PropTypes validation
+Signup.propTypes = {
+  signUserUp: PropTypes.func.isRequired, // Function to sign up a user
+};
 
 export default connect(null, { signUserUp })(Signup);

@@ -12,7 +12,7 @@
     "precommit": "npm test",
     "prepush": "npm test",
     "install": "npm install --prefix client && npm install --prefix server",
-    "build": "npm run build --prefix client"
+    "build": "GENERATE_SOURCEMAP=true webpack --config client/webpack.config.js --mode production"
   },
   "engines": {
     "node": ">=16.0.0",
@@ -31,12 +31,19 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.26.0",
     "@babel/eslint-parser": "^7.25.9",
     "@babel/preset-react": "^7.25.9",
-    "concurrently": "^6.5.1",
-    "eslint": "^9.14.0",
+    "eslint": "^9.15.0",
     "eslint-plugin-react": "^7.37.2",
-    "husky": "^0.14.3",
     "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.1",
+    "@fortawesome/free-solid-svg-icons": "^6.7.1",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.4.1"
   }
 }

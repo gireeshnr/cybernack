@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from '../../api';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast'; // Replaced react-toastify
 import Logo from '../../statics/Logo.png';
 
 const ResetPassword = () => {
@@ -21,6 +21,7 @@ const ResetPassword = () => {
     try {
       console.log('API URL for reset password:', axios.defaults.baseURL + '/auth/reset-password');
       await axios.post('/auth/reset-password', { token, password });
+      toast.success('Password reset successfully!');
       setIsReset(true);
     } catch (error) {
       if (error.response && error.response.status === 400) {

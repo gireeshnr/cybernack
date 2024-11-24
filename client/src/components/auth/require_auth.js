@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes for validation
 import { connect } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +15,13 @@ const AuthComponent = ({ Component, authenticated, allowedRoles, role, ...props 
   }, [authenticated, role, allowedRoles, navigate]);
 
   return authenticated ? <Component {...props} /> : null;
+};
+
+AuthComponent.propTypes = {
+  Component: PropTypes.elementType.isRequired, // Ensure Component is a valid React component
+  authenticated: PropTypes.bool.isRequired, // Ensure authenticated is a boolean
+  allowedRoles: PropTypes.arrayOf(PropTypes.string), // Validate allowedRoles as an array of strings
+  role: PropTypes.string, // Validate role as a string
 };
 
 const mapStateToProps = (state) => ({

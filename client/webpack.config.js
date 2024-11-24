@@ -23,6 +23,7 @@ module.exports = {
       buffer: require.resolve('buffer/'),
     },
   },
+  devtool: 'source-map', // Enables source maps
   module: {
     rules: [
       {
@@ -87,8 +88,8 @@ module.exports = {
   optimization: {
     splitChunks: {
       chunks: 'all',
-      minSize: 20000, // Minimum size for creating a chunk
-      maxSize: 244000, // Maximum size for chunks to help control their size
+      minSize: 20000,
+      maxSize: 244000,
       cacheGroups: {
         vendor: {
           test: /[\\/]node_modules[\\/]/,
@@ -98,9 +99,7 @@ module.exports = {
       },
     },
     minimize: true,
-    minimizer: [
-      `...`, // Extend default TerserPlugin settings for minification
-    ],
+    minimizer: [`...`], // Default TerserPlugin configuration
   },
   stats: {
     assets: true,

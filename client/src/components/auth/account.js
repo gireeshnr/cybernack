@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux'; // Ensure this import is correct
+import PropTypes from 'prop-types'; // Import PropTypes for validation
 import { getUserProfile, updateUserProfile } from '../../auth/actions'; // Correct path
 import CenterCard from '../CenterCard';
 import useForm from '../../use-form-react';
-import axios from 'axios';
-
 
 const Account = ({ profile, getUserProfile, updateUserProfile }) => {
   const [editing, setEditing] = useState(false);
@@ -28,7 +27,7 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
           setSuccessMsg('Profile updated successfully.');
           setEditing(false);
           setShowPasswordField(false);
-          getUserProfile();  // Fetch updated profile
+          getUserProfile(); // Fetch updated profile
         })
         .catch((e) => {
           setErrMsg(`${e.response.data}. Please try again.`);
@@ -51,7 +50,7 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
         email: profile.email,
         role: profile.role,
         password: '',
-        org: profile.org,  // Use org directly from the profile
+        org: profile.org, // Use org directly from the profile
       });
     }
   }, [profile, setInputs]);
@@ -71,7 +70,7 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
     setShowPasswordField(false);
     setSuccessMsg('');
     reset();
-    getUserProfile();  // Fetch user profile on cancel
+    getUserProfile(); // Fetch user profile on cancel
   };
 
   const renderButtons = () => {
@@ -159,7 +158,7 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
             readOnly
             type="text"
             name="org"
-            value={inputs.org || 'No organization'}  // Display org directly
+            value={inputs.org || 'No organization'} // Display org directly
             className="form-control form-control-lg"
             placeholder="Organization"
           />
@@ -204,6 +203,20 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
       </div>
     </CenterCard>
   );
+};
+
+Account.propTypes = {
+  profile: PropTypes.shape({
+    name: PropTypes.shape({
+      first: PropTypes.string.isRequired,
+      last: PropTypes.string.isRequired,
+    }).isRequired,
+    email: PropTypes.string.isRequired,
+    role: PropTypes.string.isRequired,
+    org: PropTypes.string,
+  }),
+  getUserProfile: PropTypes.func.isRequired,
+  updateUserProfile: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
