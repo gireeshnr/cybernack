@@ -8,10 +8,11 @@ import {
   updateOrganization,
   getSubscriptions,
 } from '../../auth/actions';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import ConfirmModal from '../ConfirmModal';
 import OrganizationTable from './OrganizationTable';
 import OrganizationForm from './OrganizationForm';
+// Import only the required FontAwesome components/icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
 
@@ -42,7 +43,7 @@ const SuperAdminDashboard = ({
     const fetchData = async () => {
       try {
         await Promise.all([getOrganizations(), getSubscriptions()]);
-      } catch (error) {
+      } catch {
         toast.error('Error fetching data. Please try again.');
       }
     };
@@ -73,7 +74,7 @@ const SuperAdminDashboard = ({
       resetForm();
       await getOrganizations();
       setFormState((prev) => ({ ...prev, showAddForm: false }));
-    } catch (error) {
+    } catch {
       toast.error('Error adding organization. Please try again.');
     } finally {
       setFormState((prev) => ({ ...prev, isSubmitting: false }));
@@ -99,7 +100,7 @@ const SuperAdminDashboard = ({
       resetForm();
       await getOrganizations();
       setFormState((prev) => ({ ...prev, showEditForm: false }));
-    } catch (error) {
+    } catch {
       toast.error('Error updating organization. Please try again.');
     } finally {
       setFormState((prev) => ({ ...prev, isSubmitting: false }));
@@ -113,7 +114,7 @@ const SuperAdminDashboard = ({
       toast.success(`${selectedOrgs.length} organization(s) deleted successfully!`);
       await getOrganizations();
       setFormState((prev) => ({ ...prev, showConfirmDelete: false }));
-    } catch (error) {
+    } catch {
       toast.error('Error deleting organizations. Please try again.');
     }
   };
@@ -178,7 +179,6 @@ const SuperAdminDashboard = ({
   );
 };
 
-// Enhanced PropTypes validation
 SuperAdminDashboard.propTypes = {
   getOrganizations: PropTypes.func.isRequired,
   getSubscriptions: PropTypes.func.isRequired,

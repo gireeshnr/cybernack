@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux'; // Ensure this import is correct
-import PropTypes from 'prop-types'; // Import PropTypes for validation
-import { getUserProfile, updateUserProfile } from '../../auth/actions'; // Correct path
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
+import { getUserProfile, updateUserProfile } from '../../auth/actions';
 import CenterCard from '../CenterCard';
 import useForm from '../../use-form-react';
 
 const Account = ({ profile, getUserProfile, updateUserProfile }) => {
   const [editing, setEditing] = useState(false);
   const [errMsg, setErrMsg] = useState('');
-  const [status, setStatus] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [showPasswordField, setShowPasswordField] = useState(false);
 
@@ -30,7 +29,7 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
           getUserProfile(); // Fetch updated profile
         })
         .catch((e) => {
-          setErrMsg(`${e.response.data}. Please try again.`);
+          setErrMsg(`${e.response?.data || 'An error occurred'}. Please try again.`);
         });
     },
     debug: false,
@@ -73,26 +72,22 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
     getUserProfile(); // Fetch user profile on cancel
   };
 
-  const renderButtons = () => {
-    if (editing) {
-      return (
-        <div className="form-group">
-          <button disabled={!dirty} type="submit" className="btn-lg btn btn-light btn-block">
-            Save Change
-          </button>
-          <button className="btn-lg btn btn-secondary btn-block" onClick={cancelForm}>
-            Cancel
-          </button>
-        </div>
-      );
-    } else {
-      return (
-        <button className="btn btn-light btn-lg btn-block" onClick={switchEditing}>
-          Update Information
+  const renderButtons = () => (
+    editing ? (
+      <div className="form-group">
+        <button disabled={!dirty} type="submit" className="btn-lg btn btn-light btn-block">
+          Save Changes
         </button>
-      );
-    }
-  };
+        <button type="button" className="btn-lg btn btn-secondary btn-block" onClick={cancelForm}>
+          Cancel
+        </button>
+      </div>
+    ) : (
+      <button type="button" className="btn btn-light btn-lg btn-block" onClick={switchEditing}>
+        Update Information
+      </button>
+    )
+  );
 
   const renderProfileForm = () => {
     if (!profile) return null;
@@ -132,11 +127,9 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
             readOnly
             type="email"
             name="email"
-            onChange={handleChange}
             value={inputs.email}
             className="form-control form-control-lg"
             placeholder="sample@email.com"
-            required
           />
         </div>
         <div className="form-group">
@@ -158,7 +151,7 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
             readOnly
             type="text"
             name="org"
-            value={inputs.org || 'No organization'} // Display org directly
+            value={inputs.org || 'No organization'}
             className="form-control form-control-lg"
             placeholder="Organization"
           />
@@ -171,11 +164,7 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
               name="password"
               onChange={handleChange}
               value={inputs.password}
-              className={
-                errMsg
-                  ? 'form-control form-control-lg is-invalid'
-                  : 'form-control form-control-lg'
-              }
+              className={`form-control form-control-lg ${errMsg ? 'is-invalid' : ''}`}
               placeholder="Your password"
               required
             />
@@ -192,7 +181,6 @@ const Account = ({ profile, getUserProfile, updateUserProfile }) => {
       <div className="card border-secondary">
         <h4 className="card-header">Account</h4>
         <div className="card-body">
-          <p className="text-muted">Server status: {status} ☀</p>
           {successMsg && (
             <div className="alert alert-success">
               <strong>Success!</strong> {successMsg}

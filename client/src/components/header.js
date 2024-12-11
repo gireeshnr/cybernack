@@ -1,76 +1,42 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types'; // Import PropTypes
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { NavLink } from 'react-router-dom';
-import PlaceholderLogo from '../statics/placeholder.png';
+import { NavLink, useNavigate } from 'react-router-dom';
+import AppLogo from '../statics/Logo.png'; // Application logo
 
 const Header = ({ authenticated, role, organization }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [logo, setLogo] = useState(PlaceholderLogo);
-
-  const handleLogoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setLogo(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const renderSignButton = () => {
-    if (authenticated) {
-      return (
-        <li className="nav-item">
-          <NavLink className="nav-link" to="/signout">
-            <i className="fas fa-sign-out-alt"></i>
-            <span className="menu-text"> Sign out</span>
-          </NavLink>
-        </li>
-      );
-    } else {
-      return (
-        <>
-          <li className="nav-item">
-            <NavLink to="/signin" className="nav-link">
-              Sign in
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink to="/signup" className="nav-link">
-              Sign Up
-            </NavLink>
-          </li>
-        </>
-      );
-    }
-  };
+  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
   };
 
-  // Show nothing if role or organization is missing
+  const handleSignOut = () => {
+    navigate('/signin'); // Redirect to the sign-in page
+  };
+
   if (!role || !organization) {
     return null;
   }
 
   return (
     <nav className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      {/* Collapse/Expand Button */}
       <button className="toggle-btn" onClick={toggleSidebar}>
         {collapsed ? <i className="fas fa-chevron-right"></i> : <i className="fas fa-chevron-left"></i>}
       </button>
-      {authenticated && (
-        <div className="logo-upload">
-          <img src={logo} alt="Company Logo" className="logo" />
-          <label htmlFor="logo-upload" className="edit-icon">
-            <i className="fas fa-edit"></i>
-          </label>
-          <input type="file" id="logo-upload" onChange={handleLogoUpload} />
+
+      {/* Logo Section */}
+      {!collapsed && (
+        <div className="logo-container">
+          <img src={AppLogo} alt="Company Logo" className="logo" />
         </div>
       )}
+
+      {/* Menu Items */}
       <ul className="navbar-nav">
+        {/* Standard Menu Items */}
         <li className="nav-item">
           <NavLink className="nav-link" to="/">
             <i className="fas fa-tachometer-alt"></i>
@@ -84,49 +50,60 @@ const Header = ({ authenticated, role, organization }) => {
           </NavLink>
         </li>
 
+        {/* Super Admin Specific Menu Items */}
         {authenticated && role === 'superadmin' && organization === 'Cybernack' && (
-          <li className="nav-item">
-            <div className="nav-link">
-              <i className="fas fa-cog"></i>
-              <span className="menu-text"> User Settings</span>
-            </div>
-            <ul className="submenu">
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/superadmin/dashboard">
-                  <i className="fas fa-user-shield"></i>
-                  <span className="menu-text"> Super Admin</span>
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/superadmin/users">
-                  <i className="fas fa-users"></i>
-                  <span className="menu-text"> Users</span>
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/superadmin/manage-subscriptions">
-                  <i className="fas fa-list-alt"></i>
-                  <span className="menu-text"> Manage Subscriptions</span>
-                </NavLink>
-              </li>
-            </ul>
-          </li>
+          <>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/superadmin/dashboard">
+                <i className="fas fa-user-shield"></i>
+                <span className="menu-text"> Super Admin Dashboard</span>
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/superadmin/users">
+                <i className="fas fa-users"></i>
+                <span className="menu-text"> Manage Users</span>
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/superadmin/manage-subscriptions">
+                <i className="fas fa-list-alt"></i>
+                <span className="menu-text"> Manage Subscriptions</span>
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/superadmin/reports">
+                <i className="fas fa-chart-line"></i>
+                <span className="menu-text"> Reports</span>
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/superadmin/settings">
+                <i className="fas fa-cogs"></i>
+                <span className="menu-text"> Admin Settings</span>
+              </NavLink>
+            </li>
+          </>
         )}
 
-        {renderSignButton()}
+        {/* Sign Out */}
+        <li className="nav-item">
+          <button className="nav-link signout-btn" onClick={handleSignOut}>
+            <i className="fas fa-sign-out-alt"></i>
+            <span className="menu-text"> Sign out</span>
+          </button>
+        </li>
       </ul>
     </nav>
   );
 };
 
-// Add PropTypes validation
 Header.propTypes = {
-  authenticated: PropTypes.bool.isRequired, // Validating authenticated as a boolean
-  role: PropTypes.string, // Role is optional but must be a string if provided
-  organization: PropTypes.string, // Organization is optional but must be a string if provided
+  authenticated: PropTypes.bool.isRequired,
+  role: PropTypes.string,
+  organization: PropTypes.string,
 };
 
-// Map Redux state to component props
 const mapStateToProps = (state) => ({
   authenticated: state.auth.authenticated,
   role: state.auth.profile?.role,

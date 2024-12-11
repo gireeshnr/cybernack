@@ -1,0 +1,30 @@
+// _table.scss
+@use 'variables';
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: variables.$base-spacing;
+    text-align: left;
+  }
+
+  th {
+    background-color: variables.$secondary-color;
+    font-weight: bold;
+  }
+
+  tr:nth-child(even) {
+    background-color: variables.$table-row-even-bg;
+  }
+
+  tr:nth-child(odd) {
+    background-color: variables.$table-row-odd-bg;
+  }
+
+  tr:hover {
+    background-color: variables.$hover-bg;
+  }
+}

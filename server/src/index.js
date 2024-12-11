@@ -1,4 +1,3 @@
-// server/src/index.js
 import express from 'express';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
@@ -31,8 +30,8 @@ mongoose.Promise = global.Promise;
 mongoose.connection.on('disconnected', () => logger.warn('MongoDB disconnected! Attempting to reconnect...'));
 mongoose.connection.on('reconnected', () => logger.info('MongoDB reconnected!'));
 
-const allowedOrigins = process.env.CORS_ORIGIN 
-  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) 
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
   : ['http://localhost:9000', 'https://app.cybernack.com'];
 
 const corsOptions = {
@@ -54,6 +53,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Routes
 app.use('/auth', authRoutes);
 app.use('/auth-ping', authMiddleware, (req, res) => res.send('connected'));
 app.use('/user', authMiddleware, UserRoutes);
@@ -64,7 +64,11 @@ app.use('/subscription', authMiddleware, SubscriptionRoutes);
 if (process.env.NODE_ENV === 'production') {
   const __dirname = path.resolve();
   app.use(express.static(path.join(__dirname, 'client/build')));
-  app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'client/build', 'index.html')));
+  
+  app.get('*', (req, res) => {
+    const filePath = path.join(__dirname, 'client/build', 'index.html');
+    res.sendFile(filePath);
+  });
 }
 
 app.use((err, req, res, next) => {

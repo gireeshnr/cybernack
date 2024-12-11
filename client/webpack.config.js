@@ -1,17 +1,18 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const webpack = require('webpack');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 module.exports = {
-  mode: process.env.NODE_ENV || 'production',
+  mode: process.env.NODE_ENV || 'development',
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: '[name].[contenthash].js',
-    chunkFilename: '[name].[contenthash].js', // Helps with code splitting
+    chunkFilename: '[name].[contenthash].js',
     clean: true,
     publicPath: '/',
   },
@@ -23,7 +24,7 @@ module.exports = {
       buffer: require.resolve('buffer/'),
     },
   },
-  devtool: 'source-map', // Enables source maps
+  devtool: process.env.NODE_ENV === 'production' ? false : 'eval-source-map',
   module: {
     rules: [
       {
@@ -42,7 +43,15 @@ module.exports = {
           MiniCssExtractPlugin.loader,
           'css-loader',
           'postcss-loader',
-          'sass-loader',
+          {
+            loader: 'sass-loader',
+            options: {
+              implementation: require('sass'),
+              sassOptions: {
+                quietDeps: true,
+              },
+            },
+          },
         ],
       },
       {
@@ -50,10 +59,17 @@ module.exports = {
         use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
       },
       {
-        test: /\.(png|jpe?g|gif|svg)$/,
+        test: /\.(png|jpe?g|gif|svg)$/i,
         type: 'asset/resource',
         generator: {
-          filename: 'statics/[name][ext]',
+          filename: 'statics/images/[name][ext]',
+        },
+      },
+      {
+        test: /\.(woff|woff2|eot|ttf|otf)$/i,
+        type: 'asset/resource',
+        generator: {
+          filename: 'statics/fonts/[name][ext]',
         },
       },
     ],
@@ -67,31 +83,30 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css',
     }),
-    new CopyWebpackPlugin({
-      patterns: [{ from: 'src/statics', to: 'statics' }],
+    new CompressionPlugin({
+      filename: '[path][base].gz',
+      algorithm: 'gzip',
+      test: /\.(js|css|html|svg)$/,
+      threshold: 10240,
+      minRatio: 0.8,
     }),
     new webpack.ProvidePlugin({
       process: 'process/browser',
       Buffer: ['buffer', 'Buffer'],
     }),
-    new webpack.ProgressPlugin({
-      handler: (percentage, message, ...args) => {
-        console.log(`${(percentage * 100).toFixed(2)}%: ${message}`, ...args);
-      },
-    }),
     new BundleAnalyzerPlugin({
-      analyzerMode: process.env.NODE_ENV === 'production' ? 'disabled' : 'static',
-      reportFilename: 'report.html',
-      openAnalyzer: process.env.NODE_ENV !== 'production',
+      analyzerMode: process.env.BUNDLE_ANALYZER === 'true' ? 'static' : 'disabled',
+      reportFilename: 'bundle-report.html',
+      openAnalyzer: false,
     }),
   ],
   optimization: {
     splitChunks: {
       chunks: 'all',
       minSize: 20000,
-      maxSize: 244000,
+      maxSize: 240000,
       cacheGroups: {
-        vendor: {
+        defaultVendors: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendors',
           chunks: 'all',
@@ -99,22 +114,28 @@ module.exports = {
       },
     },
     minimize: true,
-    minimizer: [`...`], // Default TerserPlugin configuration
+    minimizer: [
+      '...',
+      new CssMinimizerPlugin(),
+    ],
   },
   stats: {
     assets: true,
-    modules: true,
+    modules: false,
     errors: true,
     warnings: true,
     errorDetails: true,
     colors: true,
-    reasons: true,
   },
   devServer: {
-    static: path.resolve(__dirname, 'build'),
+    static: path.resolve(__dirname, 'src'),
     port: 9000,
     historyApiFallback: true,
     hot: true,
     open: process.env.AUTO_OPEN === 'true',
+    client: {
+      logging: 'warn',
+    },
+    allowedHosts: 'all',
   },
 };

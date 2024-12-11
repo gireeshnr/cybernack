@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { getOrganizations, getUsers, addUser, updateUser, deleteUsers } from '../../auth/actions';
+// Import only the required FontAwesome components/icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
@@ -46,7 +47,9 @@ const Users = ({
 
   const handleRowClick = (userId) => {
     setSelectedUsers((prevSelected) =>
-      prevSelected.includes(userId) ? prevSelected.filter((id) => id !== userId) : [...prevSelected, userId]
+      prevSelected.includes(userId)
+        ? prevSelected.filter((id) => id !== userId)
+        : [...prevSelected, userId]
     );
   };
 
@@ -76,8 +79,6 @@ const Users = ({
       toast.success('New user added successfully and activated!');
       setShowAddForm(false);
       await refreshUsers();
-    } catch (error) {
-      toast.error('Error adding user. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -105,8 +106,6 @@ const Users = ({
       toast.success('User updated successfully!');
       setShowEditForm(false);
       await refreshUsers();
-    } catch (error) {
-      toast.error('Error updating user. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -119,8 +118,8 @@ const Users = ({
       toast.success(`${selectedUsers.length} user(s) deleted successfully!`);
       setShowConfirmDelete(false);
       await refreshUsers();
-    } catch (error) {
-      toast.error('Error deleting users. Please try again.');
+    } finally {
+      // Ensure no additional code execution in case of errors
     }
   };
 
@@ -271,7 +270,7 @@ const Users = ({
                       name="password"
                       value={userData.password}
                       onChange={handleChange}
-                      required={showAddForm}
+                      required
                       className="form-control"
                     />
                   </div>
@@ -282,7 +281,7 @@ const Users = ({
                       name="confirmPassword"
                       value={userData.confirmPassword}
                       onChange={handleChange}
-                      required={showAddForm}
+                      required
                       className="form-control"
                     />
                   </div>
@@ -298,9 +297,9 @@ const Users = ({
                     ? showAddForm
                       ? 'Adding...'
                       : 'Updating...'
-                    : showAddForm
-                    ? 'Add User'
-                    : 'Update User'}
+                      : showAddForm
+                      ? 'Add User'
+                      : 'Update User'}
                 </button>
                 <button
                   type="button"

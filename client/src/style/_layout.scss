@@ -1,0 +1,38 @@
+// _layout.scss
+@use 'variables';
+
+body {
+  background-color: variables.$white-color;
+}
+
+.container {
+  padding: variables.$base-spacing;
+  padding-top: variables.$base-spacing * 3;
+}
+
+.content {
+  margin-left: 220px;
+  padding: variables.$base-spacing * 2;
+  transition: margin-left 0.3s ease;
+
+  .sidebar.collapsed + & {
+    margin-left: 80px;
+  }
+}
+
+.center-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+
+  .centered-form {
+    width: 100%;
+    max-width: 1200px;
+    padding: variables.$base-spacing * 2;
+    background-color: variables.$secondary-color;
+    border: 1px solid #e1e1e1;
+    border-radius: variables.$border-radius;
+    box-shadow: variables.$shadow;
+  }
+}

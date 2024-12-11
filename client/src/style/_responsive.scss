@@ -1,0 +1,16 @@
+// _responsive.scss
+@media (max-width: 543px) {
+    .sidebar {
+      width: 100%;
+      height: auto;
+      position: relative;
+    }
+  
+    .content {
+      margin-left: 0;
+    }
+  
+    .centered-form {
+      max-width: 100%;
+    }
+  }

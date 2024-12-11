@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, memo } from 'react';
 import { Provider, useDispatch } from 'react-redux';
 import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom';
-import toast, { Toaster } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 import Header from './components/header';
 import { AUTH_USER } from './actions/types';
 import { getUserProfile } from './auth/actions';
@@ -23,14 +23,21 @@ const LazyManageSubscriptions = React.lazy(() => import('./components/superAdmin
 const LazySignout = React.lazy(() => import('./components/auth/signout'));
 const LazyAuthComponent = React.lazy(() => import('./components/auth/require_auth'));
 
+// Check if token exists and dispatch auth action
 const token = localStorage.getItem('auth_jwt_token');
 if (token) {
   store.dispatch({ type: AUTH_USER });
 }
 
 // Fallback loader for lazy components
-const FallbackLoader = () => <div className="fallback-loader">Loading...</div>;
+const FallbackLoader = () => (
+  <div className="fallback-loader">
+    <div className="spinner"></div>
+    <span>Loading...</span>
+  </div>
+);
 
+// Main App component
 const App = () => {
   return (
     <Provider store={store}>
@@ -38,11 +45,14 @@ const App = () => {
         <Toaster position="top-center" />
         <React.Suspense fallback={<FallbackLoader />}>
           <Routes>
+            {/* Public Routes */}
             <Route path="/signin" element={<LazySignin />} />
             <Route path="/signup" element={<LazySignup />} />
             <Route path="/forgot-password" element={<LazyForgotPassword />} />
             <Route path="/reset-password/:token" element={<LazyResetPassword />} />
             <Route path="/activate-account/:token" element={<LazyActivateAccount />} />
+
+            {/* Protected Routes */}
             <Route path="*" element={<ProtectedApp />} />
           </Routes>
         </React.Suspense>
@@ -51,12 +61,14 @@ const App = () => {
   );
 };
 
-const ProtectedApp = () => {
+// Protected App Component
+const ProtectedApp = memo(() => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!localStorage.getItem('auth_jwt_token')) {
+    const token = localStorage.getItem('auth_jwt_token');
+    if (!token) {
       navigate('/signin');
     } else {
       dispatch(getUserProfile());
@@ -65,7 +77,10 @@ const ProtectedApp = () => {
 
   return (
     <div className="app">
+      {/* Application Header */}
       <Header />
+
+      {/* Protected Routes */}
       <div className="content">
         <React.Suspense fallback={<FallbackLoader />}>
           <Routes>
@@ -93,6 +108,6 @@ const ProtectedApp = () => {
       </div>
     </div>
   );
-};
+});
 
 export default App;

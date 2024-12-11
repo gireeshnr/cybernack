@@ -6,8 +6,5 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }).concat((storeAPI) => (next) => (action) => {
-      console.log('Dispatching action:', action);
-      return next(action);
     }),
 });

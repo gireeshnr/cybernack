@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types'; // Import PropTypes
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { createOrganization } from '../../auth/actions'; // Action to create org
-import { toast } from 'react-hot-toast'; // Replaced react-toastify with react-hot-toast
+import { createOrganization } from '../../auth/actions';
+import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
 const CreateOrganization = ({ createOrganization }) => {
@@ -11,19 +11,24 @@ const CreateOrganization = ({ createOrganization }) => {
     adminFirstName: '',
     adminLastName: '',
     adminEmail: '',
-    adminPassword: '', // Password if bypassing activation
-    bypassActivation: false, // Toggle state
+    adminPassword: '',
+    bypassActivation: false,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleToggle = () => {
-    setFormData({ ...formData, bypassActivation: !formData.bypassActivation });
+    setFormData((prev) => ({
+      ...prev,
+      bypassActivation: !prev.bypassActivation,
+      adminPassword: '', // Reset adminPassword when toggling off
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -33,9 +38,10 @@ const CreateOrganization = ({ createOrganization }) => {
     try {
       await createOrganization(formData);
       toast.success('Organization created successfully!');
-      navigate('/superadmin/dashboard'); // Redirect after success
+      navigate('/superadmin/dashboard');
     } catch (error) {
-      toast.error('Error creating organization. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Error creating organization. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -53,6 +59,7 @@ const CreateOrganization = ({ createOrganization }) => {
             value={formData.orgName}
             onChange={handleChange}
             className="form-control"
+            placeholder="Enter organization name"
             required
           />
         </div>
@@ -64,6 +71,7 @@ const CreateOrganization = ({ createOrganization }) => {
             value={formData.adminFirstName}
             onChange={handleChange}
             className="form-control"
+            placeholder="Enter admin's first name"
             required
           />
         </div>
@@ -75,6 +83,7 @@ const CreateOrganization = ({ createOrganization }) => {
             value={formData.adminLastName}
             onChange={handleChange}
             className="form-control"
+            placeholder="Enter admin's last name"
             required
           />
         </div>
@@ -86,16 +95,19 @@ const CreateOrganization = ({ createOrganization }) => {
             value={formData.adminEmail}
             onChange={handleChange}
             className="form-control"
+            placeholder="Enter admin's email"
             required
           />
         </div>
-        <div className="form-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={formData.bypassActivation}
-              onChange={handleToggle}
-            />
+        <div className="form-group form-check">
+          <input
+            type="checkbox"
+            id="bypassActivation"
+            className="form-check-input"
+            checked={formData.bypassActivation}
+            onChange={handleToggle}
+          />
+          <label htmlFor="bypassActivation" className="form-check-label">
             Bypass Email Verification
           </label>
         </div>
@@ -108,6 +120,7 @@ const CreateOrganization = ({ createOrganization }) => {
               value={formData.adminPassword}
               onChange={handleChange}
               className="form-control"
+              placeholder="Set admin password"
               required
             />
           </div>
@@ -120,9 +133,9 @@ const CreateOrganization = ({ createOrganization }) => {
   );
 };
 
-// Add PropTypes validation
+// PropTypes validation
 CreateOrganization.propTypes = {
-  createOrganization: PropTypes.func.isRequired, // Function to create an organization
+  createOrganization: PropTypes.func.isRequired,
 };
 
 export default connect(null, { createOrganization })(CreateOrganization);

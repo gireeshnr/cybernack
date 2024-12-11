@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import PropTypes from 'prop-types';
-import {
-  getSubscriptions,
-  createSubscription,
-  updateSubscription,
-  deleteSubscriptions,
-} from '../../auth/actions';
+import { connect } from 'react-redux';
+import { getSubscriptions, createSubscription, updateSubscription, deleteSubscriptions } from '../../auth/actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
-import toast from 'react-hot-toast'; // Using react-hot-toast
-import ConfirmModal from '../ConfirmModal';
+import toast from 'react-hot-toast';
+
+// Lazy load ConfirmModal
+const ConfirmModal = lazy(() => import('../ConfirmModal'));
 
 const ManageSubscriptions = ({
   subscriptions,
@@ -37,6 +34,7 @@ const ManageSubscriptions = ({
   const [editingSub, setEditingSub] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
+  // Fetch subscriptions on mount
   useEffect(() => {
     getSubscriptions();
   }, [getSubscriptions]);
@@ -68,7 +66,7 @@ const ManageSubscriptions = ({
       setNewSubscription(initialSubscriptionState);
       await getSubscriptions();
       setShowAddForm(false);
-    } catch (error) {
+    } catch {
       toast.error('Error adding subscription. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -99,7 +97,7 @@ const ManageSubscriptions = ({
       toast.success('Subscription updated successfully!');
       await getSubscriptions();
       setShowEditForm(false);
-    } catch (error) {
+    } catch {
       toast.error('Error updating subscription. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -113,7 +111,7 @@ const ManageSubscriptions = ({
       toast.success(`${selectedSubs.length} subscription(s) deleted successfully!`);
       setShowConfirmDelete(false);
       await getSubscriptions();
-    } catch (error) {
+    } catch {
       toast.error('Error deleting subscriptions. Please try again.');
     }
   };
@@ -122,6 +120,7 @@ const ManageSubscriptions = ({
     <div className="container">
       <h2>Manage Subscriptions</h2>
 
+      {/* Action Buttons */}
       <div className="d-flex justify-content-between mb-3">
         <button
           className={`icon-delete btn btn-danger ${selectedSubs.length === 0 ? 'disabled' : ''}`}
@@ -135,6 +134,7 @@ const ManageSubscriptions = ({
         </button>
       </div>
 
+      {/* Subscriptions Table */}
       <div className="table-responsive">
         <table className="table table-hover">
           <thead>
@@ -176,6 +176,7 @@ const ManageSubscriptions = ({
         </table>
       </div>
 
+      {/* Add/Edit Form */}
       {(showAddForm || showEditForm) && (
         <div className="modal">
           <div className="modal-content">
@@ -263,13 +264,27 @@ const ManageSubscriptions = ({
                 />
               </div>
               <div className="d-flex mt-3">
-                <button type="submit" className="btn btn-primary me-2" disabled={isSubmitting}>
-                  {isSubmitting ? (showAddForm ? 'Adding...' : 'Updating...') : showAddForm ? 'Add Subscription' : 'Update Subscription'}
+                <button
+                  type="submit"
+                  className="btn btn-primary me-2"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? showAddForm
+                      ? 'Adding...'
+                      : 'Updating...'
+                    :                  showAddForm
+                    ? 'Add Subscription'
+                    : 'Update Subscription'}
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => (showAddForm ? setShowAddForm(false) : setShowEditForm(false))}
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setShowEditForm(false);
+                    setNewSubscription(initialSubscriptionState);
+                  }}
                 >
                   Cancel
                 </button>
@@ -279,12 +294,15 @@ const ManageSubscriptions = ({
         </div>
       )}
 
+      {/* Confirmation Modal */}
       {showConfirmDelete && (
-        <ConfirmModal
-          message={`Are you sure you want to delete ${selectedSubs.length} subscription(s)?`}
-          onConfirm={handleDelete}
-          onCancel={() => setShowConfirmDelete(false)}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <ConfirmModal
+            message={`Are you sure you want to delete ${selectedSubs.length} subscription(s)?`}
+            onConfirm={handleDelete}
+            onCancel={() => setShowConfirmDelete(false)}
+          />
+        </Suspense>
       )}
     </div>
   );
@@ -292,7 +310,18 @@ const ManageSubscriptions = ({
 
 // PropTypes validation
 ManageSubscriptions.propTypes = {
-  subscriptions: PropTypes.array.isRequired,
+  subscriptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      description: PropTypes.string,
+      priceMonthly: PropTypes.number.isRequired,
+      priceYearly: PropTypes.number.isRequired,
+      features: PropTypes.arrayOf(PropTypes.string),
+      modules: PropTypes.arrayOf(PropTypes.string),
+      isActive: PropTypes.bool.isRequired,
+    })
+  ).isRequired,
   getSubscriptions: PropTypes.func.isRequired,
   createSubscription: PropTypes.func.isRequired,
   updateSubscription: PropTypes.func.isRequired,

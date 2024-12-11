@@ -1,0 +1,17 @@
+// _toast.scss
+@use 'variables';
+
+.Toastify__toast-container {
+  z-index: 3000;
+}
+
+.Toastify__toast {
+  font-size: 1rem;
+  color: variables.$text-color;
+  background-color: variables.$primary-color;
+  border-radius: variables.$border-radius;
+}
+
+.Toastify__close-button {
+  color: variables.$text-color;
+}

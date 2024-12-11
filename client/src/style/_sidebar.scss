@@ -1,0 +1,92 @@
+@use 'variables';
+@use 'sass:color'; // Import the sass:color module
+
+.sidebar {
+  width: 200px;
+  background-color: variables.$primary-color;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  color: variables.$text-color;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: width 0.3s ease;
+
+  &.collapsed {
+    width: 60px;
+
+    .nav-link {
+      justify-content: center;
+
+      .menu-text {
+        display: none;
+      }
+    }
+  }
+
+  .toggle-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: none;
+    border: none;
+    color: variables.$text-color;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 1000;
+  }
+
+  .logo-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+
+    .logo {
+      width: 80px;
+      height: auto;
+      border-radius: 50%;
+    }
+  }
+
+  .navbar-nav {
+    margin-top: 60px;
+    padding: 0;
+    width: 100%;
+
+    .nav-item {
+      width: 100%;
+      padding: 10px 15px;
+
+      .nav-link {
+        color: variables.$text-color;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+
+        &:hover {
+          background-color: color.scale(variables.$primary-color, $lightness: 10%);
+        }
+
+        i {
+          margin-right: 10px;
+        }
+      }
+
+      .signout-btn {
+        background: none;
+        border: none;
+        color: variables.$text-color;
+        font-size: 1rem;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover {
+          background-color: color.scale(variables.$primary-color, $lightness: 10%);
+        }
+      }
+    }
+  }
+}
