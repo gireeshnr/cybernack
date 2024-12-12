@@ -1,4 +1,3 @@
-// _signin.scss
 @use 'variables';
 
 .signin-container {
@@ -8,12 +7,15 @@
   align-items: center;
   height: 100vh;
   background-color: variables.$secondary-color;
+  position: relative; /* To allow positioning of the logo */
 
   .signin-logo {
-    margin-bottom: 20px;
-
+    position: absolute; /* Position the logo */
+    top: 20px; /* Adjust vertical position */
+    left: 20px; /* Adjust horizontal position */
+    
     img {
-      width: 150px;
+      width: 100px; /* Reduced logo size */
       height: auto;
     }
   }
@@ -29,7 +31,7 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
     h2 {
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       font-size: 1.5rem;
     }
 
