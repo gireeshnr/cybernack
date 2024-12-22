@@ -1,16 +1,20 @@
 import express from 'express';
 import UserController from '../user/controller.js';
-import authMiddleware from '../auth/authMiddleware.js';
+import { authMiddleware } from '../auth/authMiddleware.js'; // Named import for authentication middleware
 
 const router = express.Router();
 
-router.get('/profile', authMiddleware, UserController.getProfile);
-router.post('/profile', authMiddleware, UserController.updateProfile);
-router.post('/add', authMiddleware, UserController.addUser);
-router.post('/update/:userId', authMiddleware, UserController.updateUser); // Route to update a user
-router.get('/list', authMiddleware, UserController.getUsers);
-router.post('/delete', authMiddleware, UserController.deleteUsers);
+// User profile routes
+router.get('/profile', authMiddleware, UserController.getProfile); // Fetch user profile
+router.post('/profile', authMiddleware, UserController.updateProfile); // Update user profile
 
-router.get('/organization/:orgId', authMiddleware, UserController.getOrganizationById);
+// User management routes
+router.post('/add', authMiddleware, UserController.addUser); // Add a new user
+router.post('/update/:userId', authMiddleware, UserController.updateUser); // Update user details
+router.get('/list', authMiddleware, UserController.getUsers); // List all users
+router.post('/delete', authMiddleware, UserController.deleteUsers); // Delete selected users
+
+// Organization-related routes
+router.get('/organization/:orgId', authMiddleware, UserController.getOrganizationById); // Fetch organization details by ID
 
 export default router;

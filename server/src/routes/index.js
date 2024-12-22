@@ -1,14 +1,20 @@
 import express from 'express';
-import authRoutes from '../auth/authRoutes.js'; 
+import authRoutes from '../auth/authRoutes.js';
 import organizationRoutes from './organizationRoutes.js';
-import userRoutes from './userRoutes.js';  // Updated path for user routes
-import discoveryRoutes from './discovery'; 
+import userRoutes from './userRoutes.js';
+import discoveryRoutes from './discovery.js';
 
 const router = express.Router();
 
-router.use('/auth', authRoutes); 
-router.use('/organization', organizationRoutes);
-router.use('/user', userRoutes);  // Now using the relocated user routes
-router.use('/discovery', discoveryRoutes);
+// Mount route modules
+router.use('/auth', authRoutes); // Routes for authentication
+router.use('/organization', organizationRoutes); // Routes for organization management
+router.use('/user', userRoutes); // Routes for user management
+router.use('/discovery', discoveryRoutes); // Routes for discovery operations
+
+// Catch-all route for unmatched routes (404)
+router.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+});
 
 export default router;

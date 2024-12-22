@@ -2,8 +2,6 @@ import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
 import Organization from '../models/Organization.js';
 
-// Small comment added for re-trigger
-
 export default {
   // Get user profile
   getProfile: async (req, res) => {
@@ -21,7 +19,6 @@ export default {
         emailVerified: user.emailVerified,
       });
     } catch (err) {
-      console.error('Error fetching profile:', err);
       res.status(500).send('Internal server error');
     }
   },
@@ -31,7 +28,6 @@ export default {
     try {
       const user = await User.findById(req.user.id).exec();
       if (!user) {
-        console.error('User not found');
         return res.status(404).send('User not found');
       }
       user.name.first = req.body.firstName;
@@ -39,7 +35,6 @@ export default {
       const updatedUser = await user.save();
       res.send(updatedUser);
     } catch (err) {
-      console.error('Error occurred while updating profile:', err);
       res.status(500).send('Internal Server Error');
     }
   },
@@ -57,7 +52,6 @@ export default {
       }
       res.status(200).json(users);
     } catch (error) {
-      console.error('Error fetching users:', error);
       res.status(500).json({ error: 'Error fetching users' });
     }
   },
@@ -71,7 +65,6 @@ export default {
       }
       res.status(200).json(organization);
     } catch (err) {
-      console.error('Error fetching organization:', err);
       res.status(500).json({ error: 'Error fetching organization' });
     }
   },
@@ -102,7 +95,6 @@ export default {
       await newUser.save();
       res.status(201).json({ message: 'User added successfully and activated.' });
     } catch (error) {
-      console.error('Error while adding user:', error);
       res.status(500).json({ error: 'Server error while adding user. Please try again later.' });
     }
   },
@@ -128,7 +120,6 @@ export default {
       const updatedUser = await user.save();
       res.status(200).json({ message: 'User updated successfully.', user: updatedUser });
     } catch (error) {
-      console.error('Error while updating user:', error);
       res.status(500).json({ error: 'Error while updating user. Please try again later.' });
     }
   },
@@ -147,7 +138,6 @@ export default {
       }
       res.status(200).json({ message: `${result.deletedCount} users deleted successfully.` });
     } catch (error) {
-      console.error('Error deleting users:', error);
       res.status(500).json({ error: 'Error deleting users. Please try again later.' });
     }
   },

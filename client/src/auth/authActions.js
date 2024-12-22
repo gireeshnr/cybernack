@@ -35,7 +35,7 @@ export const getUserProfile = () => async (dispatch) => {
     const response = await axios.get('/user/profile');
     dispatch({ type: GET_USER_PROFILE, payload: response.data });
   } catch (error) {
-    console.error('Profile fetch error:', error);
+    // Handle error silently or log to a server-side logging service
   }
 };
 
@@ -45,8 +45,7 @@ export const updateUserProfile = (data) => async (dispatch) => {
     const response = await axios.post('/user/profile', data);
     dispatch({ type: UPDATE_USER_PROFILE, payload: response.data });
   } catch (error) {
-    console.error('Error updating user profile:', error);
-    throw error;
+    throw error; // Error handling remains as is
   }
 };
 

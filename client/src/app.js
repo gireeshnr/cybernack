@@ -23,6 +23,11 @@ const LazyManageSubscriptions = React.lazy(() => import('./components/superAdmin
 const LazySignout = React.lazy(() => import('./components/auth/signout'));
 const LazyAuthComponent = React.lazy(() => import('./components/auth/require_auth'));
 
+// NEW: Import IndustryPage (replaces EntityPage)
+const LazyIndustryPage = React.lazy(() =>
+  import('./components/AppSettings/Industries/IndustryPage')
+);
+
 // Check if token exists and dispatch auth action
 const token = localStorage.getItem('auth_jwt_token');
 if (token) {
@@ -84,24 +89,60 @@ const ProtectedApp = memo(() => {
       <div className="content">
         <React.Suspense fallback={<FallbackLoader />}>
           <Routes>
+            {/* Account */}
             <Route path="/account" element={<LazyAuthComponent Component={LazyAccount} />} />
-            <Route path="/users" element={<LazyAuthComponent Component={LazyManageUsers} allowedRoles={['admin']} />} />
+            
+            {/* Admin Settings */}
             <Route
               path="/superadmin/dashboard"
-              element={<LazyAuthComponent Component={LazySuperAdminDashboard} allowedRoles={['superadmin']} />}
+              element={
+                <LazyAuthComponent
+                  Component={LazySuperAdminDashboard}
+                  allowedRoles={['superadmin']}
+                />
+              }
             />
             <Route
               path="/superadmin/create-organization"
-              element={<LazyAuthComponent Component={LazyCreateOrganization} allowedRoles={['superadmin']} />}
+              element={
+                <LazyAuthComponent
+                  Component={LazyCreateOrganization}
+                  allowedRoles={['superadmin']}
+                />
+              }
             />
             <Route
               path="/superadmin/users"
-              element={<LazyAuthComponent Component={LazyUsers} allowedRoles={['superadmin']} />}
+              element={
+                <LazyAuthComponent
+                  Component={LazyUsers}
+                  allowedRoles={['superadmin']}
+                />
+              }
             />
             <Route
               path="/superadmin/manage-subscriptions"
-              element={<LazyAuthComponent Component={LazyManageSubscriptions} allowedRoles={['superadmin']} />}
+              element={
+                <LazyAuthComponent
+                  Component={LazyManageSubscriptions}
+                  allowedRoles={['superadmin']}
+                />
+              }
             />
+
+            {/* Application Settings */}
+            {/* Old: /application/settings/entities => /application/settings/industries */}
+            <Route
+              path="/application/settings/industries"
+              element={
+                <LazyAuthComponent
+                  Component={LazyIndustryPage}
+                  allowedRoles={['superadmin']}
+                />
+              }
+            />
+
+            {/* Sign Out */}
             <Route path="/signout" element={<LazySignout />} />
           </Routes>
         </React.Suspense>

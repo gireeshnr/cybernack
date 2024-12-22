@@ -11,9 +11,8 @@ export const getUsers = () => async (dispatch) => {
   try {
     const response = await axios.get('/user/list');
     dispatch({ type: GET_USERS_SUCCESS, payload: response.data });
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    throw error;
+  } catch {
+    throw new Error('Error fetching users.');
   }
 };
 
@@ -22,9 +21,8 @@ export const addUser = (userData) => async (dispatch) => {
   try {
     const response = await axios.post('/user/add', userData);
     dispatch({ type: ADD_USER_SUCCESS, payload: response.data });
-  } catch (error) {
-    console.error('Error adding user:', error);
-    throw error;
+  } catch {
+    throw new Error('Error adding user.');
   }
 };
 
@@ -33,9 +31,8 @@ export const updateUser = (userId, userData) => async (dispatch) => {
   try {
     const response = await axios.post(`/user/update/${userId}`, userData);
     dispatch({ type: UPDATE_USER_SUCCESS, payload: response.data });
-  } catch (error) {
-    console.error('Error updating user:', error);
-    throw error;
+  } catch {
+    throw new Error('Error updating user.');
   }
 };
 
@@ -44,8 +41,7 @@ export const deleteUsers = (userIds) => async (dispatch) => {
   try {
     await axios.post('/user/delete', { userIds });
     dispatch({ type: DELETE_USERS_SUCCESS, payload: userIds });
-  } catch (error) {
-    console.error('Error deleting users:', error);
-    throw error;
+  } catch {
+    throw new Error('Error deleting users.');
   }
 };

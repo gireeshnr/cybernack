@@ -4,30 +4,30 @@ import {
   createOrganization,
   getAllOrganizations,
   deleteOrganization,
-  deleteOrganizations, // Import the delete multiple organizations function
-  updateOrganization, // Import the update organization details function
+  deleteOrganizations,
+  updateOrganization,
 } from '../controllers/organizationController.js';
-import authMiddleware from '../auth/authMiddleware.js';
+import { authMiddleware } from '../auth/authMiddleware.js';
 import { allowRoles } from '../auth/rbacMiddleware.js';
 
 const router = express.Router();
 
-// Route to fetch organization by ID
+// Fetch organization by ID
 router.get('/:orgId', authMiddleware, getOrganizationById);
 
-// Route to create a new organization (restricted to 'superadmin' role)
+// Create a new organization (restricted to 'superadmin' role)
 router.post('/create', authMiddleware, allowRoles('superadmin'), createOrganization);
 
-// Route to fetch all organizations (restricted to 'superadmin' role)
+// Fetch all organizations (restricted to 'superadmin' role)
 router.get('/', authMiddleware, allowRoles('superadmin'), getAllOrganizations);
 
-// Route to update the organization details
+// Update organization details (restricted to 'superadmin' role)
 router.post('/update', authMiddleware, allowRoles('superadmin'), updateOrganization);
 
-// Route to delete an organization (restricted to 'superadmin' role)
+// Delete a single organization by ID (restricted to 'superadmin' role)
 router.delete('/:orgId', authMiddleware, allowRoles('superadmin'), deleteOrganization);
 
-// Route to delete multiple organizations (restricted to 'superadmin' role)
+// Delete multiple organizations (restricted to 'superadmin' role)
 router.post('/delete', authMiddleware, allowRoles('superadmin'), deleteOrganizations);
 
 export default router;

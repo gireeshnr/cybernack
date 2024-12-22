@@ -1,5 +1,5 @@
 @use 'variables';
-@use 'sass:color'; // Import the sass:color module
+@use 'sass:color';
 
 .sidebar {
   width: 200px;
@@ -24,18 +24,32 @@
         display: none;
       }
     }
+
+    .submenu {
+      display: none;
+    }
   }
 
   .toggle-btn {
     position: absolute;
-    top: 10px;
+    top: 15px;
     left: 10px;
-    background: none;
+    background-color: color.scale(variables.$primary-color, $lightness: 20%);
     border: none;
+    border-radius: 50%;
     color: variables.$text-color;
-    font-size: 1.5rem;
+    font-size: 1rem;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
-    z-index: 1000;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+      background-color: color.scale(variables.$primary-color, $lightness: 40%);
+    }
   }
 
   .logo-container {
@@ -55,16 +69,34 @@
     margin-top: 60px;
     padding: 0;
     width: 100%;
+    overflow-y: auto;
+
+    // Scrollbar styling
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: variables.$primary-color;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: color.scale(variables.$primary-color, $lightness: -20%);
+      border-radius: 4px;
+      border: 2px solid variables.$primary-color;
+    }
 
     .nav-item {
       width: 100%;
-      padding: 10px 15px;
+      position: relative;
 
       .nav-link {
         color: variables.$text-color;
         display: flex;
         align-items: center;
         text-decoration: none;
+        padding: 8px 15px; // Standard left alignment
+        transition: background-color 0.3s ease;
 
         &:hover {
           background-color: color.scale(variables.$primary-color, $lightness: 10%);
@@ -75,18 +107,64 @@
         }
       }
 
-      .signout-btn {
-        background: none;
-        border: none;
-        color: variables.$text-color;
-        font-size: 1rem;
-        text-align: left;
-        cursor: pointer;
+      // Submenu Styling
+      .submenu {
+        list-style: none;
+        margin-left: 20px;
+        padding-left: 15px; // Indent submenu items further
+        border-left: 2px solid variables.$text-color; // Set line color to white
+        margin-top: 5px;
 
-        &:hover {
-          background-color: color.scale(variables.$primary-color, $lightness: 10%);
+        .nav-link {
+          padding: 5px 15px; // Standard left alignment for submenus
+          font-size: 0.9rem;
+          color: color.scale(variables.$text-color, $lightness: 20%);
+
+          &:hover {
+            background-color: color.scale(variables.$primary-color, $lightness: 10%);
+            color: variables.$text-color;
+          }
         }
       }
+
+      .submenu-icon {
+        margin-left: auto; // Chevron icon aligned to the far right
+        transition: transform 0.3s ease;
+
+        &.collapsed {
+          transform: rotate(-90deg); // Rotate chevron when collapsed
+        }
+      }
+    }
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8rem;
+    color: color.scale(variables.$text-color, $lightness: 30%);
+  }
+
+  // Styling for Sign Out
+  .signout-btn {
+    color: variables.$text-color;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    border: none;
+    background: none;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+    i {
+      margin-right: 10px;
+    }
+
+    &:hover {
+      background-color: color.scale(variables.$primary-color, $lightness: 10%);
     }
   }
 }
