@@ -2,45 +2,38 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const baseURL =
+  process.env.REACT_APP_API_BASE_URL ||
+  (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
 const API_URL = `${baseURL}/industry`;
 
-// Authorization helper
+// Auth
 const getAuthHeaders = () => {
   const token = localStorage.getItem('auth_jwt_token');
-  return {
-    headers: { Authorization: `Bearer ${token}` },
-  };
+  return { headers: { Authorization: `Bearer ${token}` } };
 };
 
 // Thunks
-
-export const fetchIndustries = createAsyncThunk(
-  'industries/fetchIndustries',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(API_URL, getAuthHeaders());
-      return response.data;
-    } catch (error) {
-      toast.error('Error fetching industries.');
-      return rejectWithValue(error.message);
-    }
+export const fetchIndustries = createAsyncThunk('industries/fetchIndustries', async (_, { rejectWithValue }) => {
+  try {
+    const response = await axios.get(API_URL, getAuthHeaders());
+    return response.data;
+  } catch (error) {
+    toast.error('Error fetching industries.');
+    return rejectWithValue(error.message);
   }
-);
+});
 
-export const createIndustry = createAsyncThunk(
-  'industries/createIndustry',
-  async (industryData, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(API_URL, industryData, getAuthHeaders());
-      toast.success('Industry created successfully!');
-      return response.data;
-    } catch (error) {
-      toast.error('Error creating industry.');
-      return rejectWithValue(error.message);
-    }
+export const createIndustry = createAsyncThunk('industries/createIndustry', async (industryData, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(API_URL, industryData, getAuthHeaders());
+    toast.success('Industry created successfully!');
+    return response.data;
+  } catch (error) {
+    toast.error('Error creating industry.');
+    return rejectWithValue(error.message);
   }
-);
+});
 
 export const updateIndustry = createAsyncThunk(
   'industries/updateIndustry',
@@ -72,11 +65,7 @@ export const deleteIndustry = createAsyncThunk(
 
 const industrySlice = createSlice({
   name: 'industries',
-  initialState: {
-    industries: [],
-    loading: false,
-    error: null,
-  },
+  initialState: { industries: [], loading: false, error: null },
   reducers: {
     clearIndustryError(state) {
       state.error = null;

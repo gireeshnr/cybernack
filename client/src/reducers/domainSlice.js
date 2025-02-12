@@ -2,7 +2,14 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+/**
+ * Attempt to unify with REACT_APP_API_BASE_URL,
+ * fallback to 'http://localhost:8000' if running on localhost dev.
+ */
+const baseURL =
+  process.env.REACT_APP_API_BASE_URL ||
+  (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
+
 const API_URL = `${baseURL}/domain`;
 
 const getAuthHeaders = () => {
@@ -10,6 +17,7 @@ const getAuthHeaders = () => {
   return { headers: { Authorization: `Bearer ${token}` } };
 };
 
+// Thunks
 export const fetchDomains = createAsyncThunk('domains/fetchDomains', async (_, { rejectWithValue }) => {
   try {
     const response = await axios.get(API_URL, getAuthHeaders());
@@ -56,6 +64,7 @@ export const deleteDomain = createAsyncThunk('domains/deleteDomain', async (id, 
   }
 });
 
+// Slice
 const domainSlice = createSlice({
   name: 'domains',
   initialState: { domains: [], loading: false, error: null },
@@ -78,6 +87,7 @@ const domainSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
+
       // Create
       .addCase(createDomain.pending, (state) => {
         state.loading = true;
@@ -90,6 +100,7 @@ const domainSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
+
       // Update
       .addCase(updateDomain.pending, (state) => {
         state.loading = true;
@@ -105,6 +116,7 @@ const domainSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
+
       // Delete
       .addCase(deleteDomain.pending, (state) => {
         state.loading = true;

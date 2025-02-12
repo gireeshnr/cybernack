@@ -2,34 +2,27 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-// Base URL
-const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const baseURL =
+  process.env.REACT_APP_API_BASE_URL ||
+  (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
 const API_URL = `${baseURL}/subject`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('auth_jwt_token');
-  return {
-    headers: { Authorization: `Bearer ${token}` },
-  };
+  return { headers: { Authorization: `Bearer ${token}` } };
 };
 
 // Thunks
-
-// Fetch all subjects
-export const fetchSubjects = createAsyncThunk(
-  'subjects/fetchSubjects',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(API_URL, getAuthHeaders());
-      return response.data;
-    } catch (error) {
-      toast.error('Error fetching subjects.');
-      return rejectWithValue(error.message);
-    }
+export const fetchSubjects = createAsyncThunk('subjects/fetchSubjects', async (_, { rejectWithValue }) => {
+  try {
+    const response = await axios.get(API_URL, getAuthHeaders());
+    return response.data;
+  } catch (error) {
+    toast.error('Error fetching subjects.');
+    return rejectWithValue(error.message);
   }
-);
+});
 
-// Create a new subject
 export const createSubject = createAsyncThunk(
   'subjects/createSubject',
   async (data, { rejectWithValue }) => {
@@ -44,7 +37,6 @@ export const createSubject = createAsyncThunk(
   }
 );
 
-// Update a subject
 export const updateSubject = createAsyncThunk(
   'subjects/updateSubject',
   async ({ id, subjectData }, { rejectWithValue }) => {
@@ -59,13 +51,11 @@ export const updateSubject = createAsyncThunk(
   }
 );
 
-// Delete a subject
 export const deleteSubject = createAsyncThunk(
   'subjects/deleteSubject',
   async (id, { rejectWithValue }) => {
     try {
       await axios.delete(`${API_URL}/${id}`, getAuthHeaders());
-      // Return the subject's _id so we can remove it from state
       return id;
     } catch (error) {
       toast.error('Error deleting subject.');
@@ -74,14 +64,9 @@ export const deleteSubject = createAsyncThunk(
   }
 );
 
-// Slice
 const subjectSlice = createSlice({
   name: 'subjects',
-  initialState: {
-    subjects: [],
-    loading: false,
-    error: null,
-  },
+  initialState: { subjects: [], loading: false, error: null },
   reducers: {
     clearSubjectError(state) {
       state.error = null;

@@ -2,49 +2,39 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-// Typically read from environment variables
-const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Use REACT_APP_API_BASE_URL
+const baseURL =
+  process.env.REACT_APP_API_BASE_URL ||
+  (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
 const API_URL = `${baseURL}/question`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('auth_jwt_token');
-  return {
-    headers: { Authorization: `Bearer ${token}` },
-  };
+  return { headers: { Authorization: `Bearer ${token}` } };
 };
 
 // Thunks
-
-// Fetch all questions
-export const fetchQuestions = createAsyncThunk(
-  'questions/fetchQuestions',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(API_URL, getAuthHeaders());
-      return response.data;
-    } catch (error) {
-      toast.error('Error fetching questions.');
-      return rejectWithValue(error.message);
-    }
+export const fetchQuestions = createAsyncThunk('questions/fetchQuestions', async (_, { rejectWithValue }) => {
+  try {
+    const response = await axios.get(API_URL, getAuthHeaders());
+    return response.data;
+  } catch (error) {
+    toast.error('Error fetching questions.');
+    return rejectWithValue(error.message);
   }
-);
+});
 
-// Create question
-export const createQuestion = createAsyncThunk(
-  'questions/createQuestion',
-  async (data, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(API_URL, data, getAuthHeaders());
-      toast.success('Question created successfully!');
-      return response.data;
-    } catch (error) {
-      toast.error('Error creating question.');
-      return rejectWithValue(error.message);
-    }
+export const createQuestion = createAsyncThunk('questions/createQuestion', async (data, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(API_URL, data, getAuthHeaders());
+    toast.success('Question created successfully!');
+    return response.data;
+  } catch (error) {
+    toast.error('Error creating question.');
+    return rejectWithValue(error.message);
   }
-);
+});
 
-// Update question
 export const updateQuestion = createAsyncThunk(
   'questions/updateQuestion',
   async ({ id, questionData }, { rejectWithValue }) => {
@@ -59,13 +49,11 @@ export const updateQuestion = createAsyncThunk(
   }
 );
 
-// Delete question
 export const deleteQuestion = createAsyncThunk(
   'questions/deleteQuestion',
   async (id, { rejectWithValue }) => {
     try {
       await axios.delete(`${API_URL}/${id}`, getAuthHeaders());
-      // We'll show a single toast in the UI for bulk deletes
       return id;
     } catch (error) {
       toast.error('Error deleting question.');
@@ -77,11 +65,7 @@ export const deleteQuestion = createAsyncThunk(
 // Slice
 const questionSlice = createSlice({
   name: 'questions',
-  initialState: {
-    questions: [],
-    loading: false,
-    error: null,
-  },
+  initialState: { questions: [], loading: false, error: null },
   reducers: {
     clearQuestionError(state) {
       state.error = null;

@@ -1,13 +1,12 @@
 // client/src/api.js
 import axios from 'axios';
 
-// If REACT_APP_API_BASE_URL is set, use it.
-// Otherwise, if we are on localhost, default to a local dev server.
-// If we are in some other environment but no env var is set, you can decide a fallback or error.
-const baseURL = process.env.REACT_APP_API_BASE_URL ||
-  (window.location.hostname === 'localhost'
-    ? 'http://localhost:8000'
-    : '');
+// Prefer REACT_APP_API_BASE_URL.
+// If not defined AND we're on localhost, use 'http://localhost:8000'.
+// Otherwise, use empty string (which will likely fail if not set).
+const baseURL =
+  process.env.REACT_APP_API_BASE_URL ||
+  (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
 
 if (!baseURL) {
   console.warn(
