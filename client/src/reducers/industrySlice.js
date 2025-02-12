@@ -1,20 +1,20 @@
-// industrySlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-// Base URL from environment variable (or fallback):
 const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 const API_URL = `${baseURL}/industry`;
 
+// Authorization helper
 const getAuthHeaders = () => {
   const token = localStorage.getItem('auth_jwt_token');
-  return { headers: { Authorization: `Bearer ${token}` } };
+  return {
+    headers: { Authorization: `Bearer ${token}` },
+  };
 };
 
 // Thunks
 
-// Fetch all industries
 export const fetchIndustries = createAsyncThunk(
   'industries/fetchIndustries',
   async (_, { rejectWithValue }) => {
@@ -28,13 +28,12 @@ export const fetchIndustries = createAsyncThunk(
   }
 );
 
-// Create a new industry
 export const createIndustry = createAsyncThunk(
   'industries/createIndustry',
-  async (data, { rejectWithValue }) => {
+  async (industryData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(API_URL, data, getAuthHeaders());
-      toast.success('Industry created!');
+      const response = await axios.post(API_URL, industryData, getAuthHeaders());
+      toast.success('Industry created successfully!');
       return response.data;
     } catch (error) {
       toast.error('Error creating industry.');
@@ -43,7 +42,6 @@ export const createIndustry = createAsyncThunk(
   }
 );
 
-// Update an industry
 export const updateIndustry = createAsyncThunk(
   'industries/updateIndustry',
   async ({ id, industryData }, { rejectWithValue }) => {
@@ -58,7 +56,6 @@ export const updateIndustry = createAsyncThunk(
   }
 );
 
-// Delete an industry
 export const deleteIndustry = createAsyncThunk(
   'industries/deleteIndustry',
   async (id, { rejectWithValue }) => {
@@ -73,12 +70,15 @@ export const deleteIndustry = createAsyncThunk(
   }
 );
 
-// Slice
 const industrySlice = createSlice({
   name: 'industries',
-  initialState: { industries: [], loading: false, error: null },
+  initialState: {
+    industries: [],
+    loading: false,
+    error: null,
+  },
   reducers: {
-    clearIndustriesError(state) {
+    clearIndustryError(state) {
       state.error = null;
     },
   },
@@ -89,47 +89,50 @@ const industrySlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchIndustries.fulfilled, (state, { payload }) => {
-        state.industries = payload;
         state.loading = false;
+        state.industries = payload;
       })
       .addCase(fetchIndustries.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })
+
       // Create
       .addCase(createIndustry.pending, (state) => {
         state.loading = true;
       })
       .addCase(createIndustry.fulfilled, (state, { payload }) => {
-        state.industries.push(payload);
         state.loading = false;
+        state.industries.push(payload);
       })
       .addCase(createIndustry.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })
+
       // Update
       .addCase(updateIndustry.pending, (state) => {
         state.loading = true;
       })
       .addCase(updateIndustry.fulfilled, (state, { payload }) => {
+        state.loading = false;
         const index = state.industries.findIndex((i) => i._id === payload._id);
         if (index !== -1) {
           state.industries[index] = payload;
         }
-        state.loading = false;
       })
       .addCase(updateIndustry.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })
+
       // Delete
       .addCase(deleteIndustry.pending, (state) => {
         state.loading = true;
       })
       .addCase(deleteIndustry.fulfilled, (state, { payload }) => {
-        state.industries = state.industries.filter((i) => i._id !== payload);
         state.loading = false;
+        state.industries = state.industries.filter((i) => i._id !== payload);
       })
       .addCase(deleteIndustry.rejected, (state, { payload }) => {
         state.loading = false;
@@ -138,5 +141,5 @@ const industrySlice = createSlice({
   },
 });
 
-export const { clearIndustriesError } = industrySlice.actions;
+export const { clearIndustryError } = industrySlice.actions;
 export default industrySlice.reducer;

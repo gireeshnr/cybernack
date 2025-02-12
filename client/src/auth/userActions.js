@@ -1,3 +1,4 @@
+// client/src/auth/userActions.js
 import axios from '../api';
 import {
   GET_USERS_SUCCESS,
@@ -20,8 +21,9 @@ export const getUsers = () => async (dispatch) => {
 export const addUser = (userData) => async (dispatch) => {
   try {
     const response = await axios.post('/user/add', userData);
-    dispatch({ type: ADD_USER_SUCCESS, payload: response.data });
-  } catch {
+    dispatch({ type: ADD_USER_SUCCESS, payload: response.data.user });
+  } catch (error) {
+    console.error('Error adding user:', error); // Debug log
     throw new Error('Error adding user.');
   }
 };
@@ -37,10 +39,22 @@ export const updateUser = (userId, userData) => async (dispatch) => {
 };
 
 // Delete users from an organization
-export const deleteUsers = (userIds) => async (dispatch) => {
+export const deleteUsers = (userIds) => async (dispatch, getState) => {
   try {
-    await axios.post('/user/delete', { userIds });
-    dispatch({ type: DELETE_USERS_SUCCESS, payload: userIds });
+    const { auth } = getState();
+    const loggedInUserId = auth.profile?.id;
+
+    // Filter out the logged-in user's ID from the list of users to delete
+    const filteredUserIds = userIds.filter((id) => id !== loggedInUserId);
+
+    if (filteredUserIds.length === 0) {
+      toast.error('You cannot delete your own account.');
+      return;
+    }
+
+    await axios.post('/user/delete', { userIds: filteredUserIds });
+    dispatch({ type: DELETE_USERS_SUCCESS, payload: filteredUserIds });
+    toast.success(`${filteredUserIds.length} user(s) deleted successfully!`);
   } catch {
     throw new Error('Error deleting users.');
   }

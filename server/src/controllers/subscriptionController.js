@@ -1,6 +1,8 @@
 import Subscription from '../models/Subscription.js';
 
-// Fetch all subscriptions
+/**
+ * Fetch all subscriptions from the database.
+ */
 export const getAllSubscriptions = async (req, res) => {
   try {
     const subscriptions = await Subscription.find({});
@@ -11,11 +13,12 @@ export const getAllSubscriptions = async (req, res) => {
   }
 };
 
-// Create a new subscription
+/**
+ * Create a new subscription in the database.
+ */
 export const createSubscription = async (req, res) => {
   const { name, description, priceMonthly, priceYearly, features, modules, isActive } = req.body;
 
-  // Validate required fields
   if (!name || !priceMonthly || !priceYearly) {
     return res.status(400).json({ message: 'Name, monthly price, and yearly price are required.' });
   }
@@ -26,21 +29,34 @@ export const createSubscription = async (req, res) => {
       return res.status(400).json({ message: 'Subscription name already exists.' });
     }
 
-    const newSubscription = new Subscription({ name, description, priceMonthly, priceYearly, features, modules, isActive });
+    const newSubscription = new Subscription({
+      name,
+      description,
+      priceMonthly,
+      priceYearly,
+      features,
+      modules,
+      isActive,
+    });
+
     await newSubscription.save();
-    res.status(201).json({ message: 'Subscription created successfully', subscription: newSubscription });
+    res.status(201).json({
+      message: 'Subscription created successfully',
+      subscription: newSubscription,
+    });
   } catch (error) {
     console.error('Error creating subscription:', error);
     res.status(500).json({ message: 'Error creating subscription' });
   }
 };
 
-// Update subscription
+/**
+ * Update an existing subscription in the database.
+ */
 export const updateSubscription = async (req, res) => {
   const { name, description, priceMonthly, priceYearly, features, modules, isActive } = req.body;
   const subId = req.params.subId;
 
-  // Validate required fields
   if (!name || !priceMonthly || !priceYearly) {
     return res.status(400).json({ message: 'Name, monthly price, and yearly price are required.' });
   }
@@ -65,16 +81,21 @@ export const updateSubscription = async (req, res) => {
     existingSubscription.features = features;
     existingSubscription.modules = modules;
     existingSubscription.isActive = isActive;
-    const updatedSubscription = await existingSubscription.save();
 
-    res.status(200).json({ message: 'Subscription updated successfully', subscription: updatedSubscription });
+    const updatedSubscription = await existingSubscription.save();
+    res.status(200).json({
+      message: 'Subscription updated successfully',
+      subscription: updatedSubscription,
+    });
   } catch (error) {
     console.error('Error updating subscription:', error);
     res.status(500).json({ message: 'Error updating subscription' });
   }
 };
 
-// Delete subscriptions
+/**
+ * Delete multiple subscriptions from the database.
+ */
 export const deleteSubscriptions = async (req, res) => {
   const { subIds } = req.body;
 

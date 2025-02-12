@@ -9,7 +9,7 @@ const subscriptionReducer = (state = initialState, action) => {
     case GET_SUBSCRIPTIONS_SUCCESS:
       return {
         ...state,
-        subscriptions: action.payload,
+        subscriptions: action.payload, // Store all fetched subscriptions
       };
     default:
       return state;

@@ -17,9 +17,9 @@ const INITIAL_STATE = {
   profile: null,
   organizations: [],
   users: [],
-  subscriptions: [], // Added subscriptions to state
-  loadingOrganizations: false, // Added loading state for organizations
-  loadingSubscriptions: false, // Added loading state for subscriptions
+  subscriptions: [],
+  loadingOrganizations: false,
+  loadingSubscriptions: false,
 };
 
 export default function (state = INITIAL_STATE, action) {
@@ -31,13 +31,14 @@ export default function (state = INITIAL_STATE, action) {
     case AUTH_ERROR:
       return { ...state, authenticated: false, errorMessage: action.payload };
     case GET_USER_PROFILE:
+      console.log('Profile received:', action.payload); // Debug: Ensure profile is correct
       return { ...state, profile: action.payload };
     case UPDATE_USER_PROFILE:
       return { ...state, profile: action.payload };
     case GET_USERS_SUCCESS:
       return { ...state, users: action.payload };
     case GET_ORGANIZATIONS_SUCCESS:
-      return { ...state, organizations: action.payload, loadingOrganizations: false }; // Set loading to false
+      return { ...state, organizations: action.payload, loadingOrganizations: false };
     case CREATE_ORGANIZATION_SUCCESS:
       return { ...state, organizations: [...state.organizations, action.payload.organization] };
     case DELETE_ORGANIZATIONS_SUCCESS:
@@ -46,11 +47,12 @@ export default function (state = INITIAL_STATE, action) {
         organizations: state.organizations.filter((org) => !action.payload.includes(org._id)),
       };
     case GET_SUBSCRIPTIONS_SUCCESS:
-      return { ...state, subscriptions: action.payload, loadingSubscriptions: false }; // Set loading to false
+      console.log('Subscriptions loaded:', action.payload); // Debug: Ensure subscriptions are loaded
+      return { ...state, subscriptions: action.payload, loadingSubscriptions: false };
     case 'ORGANIZATIONS_LOADING':
-      return { ...state, loadingOrganizations: action.payload }; // Handle loading state
+      return { ...state, loadingOrganizations: action.payload };
     case 'SUBSCRIPTIONS_LOADING':
-      return { ...state, loadingSubscriptions: action.payload }; // Handle loading state
+      return { ...state, loadingSubscriptions: action.payload };
     default:
       return state;
   }

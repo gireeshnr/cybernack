@@ -1,24 +1,32 @@
+// client/src/components/ConfirmModal.js
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const ConfirmModal = ({ message, onConfirm, onCancel }) => {
-  return (
-    <div className="confirm-modal-overlay">
-      <div className="confirm-modal">
-        <h4>Confirm Action</h4>
-        <p>{message}</p>
-        <div className="confirm-modal-actions">
-          <button className="btn btn-danger" onClick={onConfirm}>
-            Confirm
+const ConfirmModal = ({ message, onConfirm, onCancel }) => (
+  <div className="modal show d-block" tabIndex="-1" role="dialog">
+    <div className="modal-dialog modal-dialog-centered" role="document">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">Confirm</h5>
+          <button type="button" className="close" onClick={onCancel}>
+            <span>&times;</span>
           </button>
+        </div>
+        <div className="modal-body">
+          <p>{message}</p>
+        </div>
+        <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onCancel}>
             Cancel
+          </button>
+          <button className="btn btn-danger" onClick={onConfirm}>
+            Delete
           </button>
         </div>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 ConfirmModal.propTypes = {
   message: PropTypes.string.isRequired,

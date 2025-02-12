@@ -71,30 +71,35 @@ export default {
 
   // Add a new user to an organization
   addUser: async (req, res) => {
-    const { firstName, lastName, email, role = 'admin', organizationId, password } = req.body;
+    const { firstName, lastName, email, role = 'user', password } = req.body;
     try {
-      const existingUser = await User.findOne({ email, org: organizationId });
+      // Check if a user with the same email already exists in the organization
+      const existingUser = await User.findOne({ email, org: req.user.org });
       if (existingUser) {
-        return res.status(400).json({ error: 'A user with this email already exists in the selected organization.' });
+        return res.status(400).json({ error: 'A user with this email already exists in your organization.' });
       }
 
-      const organization = await Organization.findById(organizationId);
+      // Fetch the organization to ensure it exists
+      const organization = await Organization.findById(req.user.org);
       if (!organization) {
-        return res.status(404).json({ error: 'Selected organization not found.' });
+        return res.status(404).json({ error: 'Organization not found.' });
       }
 
+      // Create the new user
       const newUser = new User({
         name: { first: firstName, last: lastName },
         email,
         role,
-        org: organizationId,
+        org: req.user.org, // Assign the user to the admin's organization
         isActive: true,
         password,
       });
 
+      // Save the new user
       await newUser.save();
-      res.status(201).json({ message: 'User added successfully and activated.' });
+      res.status(201).json({ message: 'User added successfully and activated.', user: newUser });
     } catch (error) {
+      console.error('Error adding user:', error); // Debug log
       res.status(500).json({ error: 'Server error while adding user. Please try again later.' });
     }
   },
@@ -128,8 +133,15 @@ export default {
   deleteUsers: async (req, res) => {
     const { userIds } = req.body;
     try {
+      // Filter out the logged-in user's ID
+      const filteredUserIds = userIds.filter((id) => id !== req.user.id);
+
+      if (filteredUserIds.length === 0) {
+        return res.status(400).json({ error: 'You cannot delete your own account.' });
+      }
+
       const query = {
-        _id: { $in: userIds },
+        _id: { $in: filteredUserIds },
         ...(req.user.role !== 'superadmin' && { org: req.user.org }),
       };
       const result = await User.deleteMany(query);

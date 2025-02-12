@@ -9,7 +9,6 @@ import { authMiddleware, isSuperAdmin } from '../auth/authMiddleware.js';
 
 const router = express.Router();
 
-// CRUD Routes
 router.post('/', authMiddleware, isSuperAdmin, createIndustry);
 router.get('/', authMiddleware, isSuperAdmin, getIndustries);
 router.put('/:id', authMiddleware, isSuperAdmin, updateIndustry);

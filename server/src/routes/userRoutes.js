@@ -1,20 +1,24 @@
+// server/src/routes/userRoutes.js
 import express from 'express';
 import UserController from '../user/controller.js';
-import { authMiddleware } from '../auth/authMiddleware.js'; // Named import for authentication middleware
+import { authMiddleware } from '../auth/authMiddleware.js';
+import { getUserProfile } from '../auth/authController.js';
 
 const router = express.Router();
 
-// User profile routes
-router.get('/profile', authMiddleware, UserController.getProfile); // Fetch user profile
-router.post('/profile', authMiddleware, UserController.updateProfile); // Update user profile
+/**
+ *  GET /user/profile
+ *  -> Uses getUserProfile to return both "org" (string)
+ *     and "organization" (object) in the same JSON.
+ */
+router.get('/profile', authMiddleware, getUserProfile);
 
-// User management routes
-router.post('/add', authMiddleware, UserController.addUser); // Add a new user
-router.post('/update/:userId', authMiddleware, UserController.updateUser); // Update user details
-router.get('/list', authMiddleware, UserController.getUsers); // List all users
-router.post('/delete', authMiddleware, UserController.deleteUsers); // Delete selected users
-
-// Organization-related routes
-router.get('/organization/:orgId', authMiddleware, UserController.getOrganizationById); // Fetch organization details by ID
+// Keep the rest of your user-related routes:
+router.post('/profile', authMiddleware, UserController.updateProfile);
+router.post('/add', authMiddleware, UserController.addUser);
+router.post('/update/:userId', authMiddleware, UserController.updateUser);
+router.get('/list', authMiddleware, UserController.getUsers);
+router.post('/delete', authMiddleware, UserController.deleteUsers);
+router.get('/organization/:orgId', authMiddleware, UserController.getOrganizationById);
 
 export default router;

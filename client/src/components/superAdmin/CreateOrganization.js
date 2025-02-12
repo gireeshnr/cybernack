@@ -35,12 +35,20 @@ const CreateOrganization = ({ createOrganization }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Trim orgName before sending
+    const trimmedData = {
+      ...formData,
+      orgName: formData.orgName.trim(),
+    };
+
     try {
-      await createOrganization(formData);
+      await createOrganization(trimmedData);
       toast.success('Organization created successfully!');
       navigate('/superadmin/dashboard');
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error creating organization. Please try again.';
+      const errorMessage =
+        error.response?.data?.message ||
+        'Error creating organization. Please try again.';
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -63,6 +71,7 @@ const CreateOrganization = ({ createOrganization }) => {
             required
           />
         </div>
+
         <div className="form-group">
           <label>Admin First Name:</label>
           <input
@@ -75,6 +84,7 @@ const CreateOrganization = ({ createOrganization }) => {
             required
           />
         </div>
+
         <div className="form-group">
           <label>Admin Last Name:</label>
           <input
@@ -87,6 +97,7 @@ const CreateOrganization = ({ createOrganization }) => {
             required
           />
         </div>
+
         <div className="form-group">
           <label>Admin Email:</label>
           <input
@@ -99,6 +110,7 @@ const CreateOrganization = ({ createOrganization }) => {
             required
           />
         </div>
+
         <div className="form-group form-check">
           <input
             type="checkbox"
@@ -111,6 +123,7 @@ const CreateOrganization = ({ createOrganization }) => {
             Bypass Email Verification
           </label>
         </div>
+
         {formData.bypassActivation && (
           <div className="form-group">
             <label>Admin Password:</label>
@@ -125,7 +138,12 @@ const CreateOrganization = ({ createOrganization }) => {
             />
           </div>
         )}
-        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? 'Submitting...' : 'Create Organization'}
         </button>
       </form>
@@ -133,7 +151,6 @@ const CreateOrganization = ({ createOrganization }) => {
   );
 };
 
-// PropTypes validation
 CreateOrganization.propTypes = {
   createOrganization: PropTypes.func.isRequired,
 };

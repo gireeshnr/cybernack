@@ -4,30 +4,40 @@ import { connect } from 'react-redux';
 import { updateOrganization } from '../../auth/actions';
 import { toast } from 'react-hot-toast';
 
-const EditOrganizationModal = ({ organization, onClose, updateOrganization }) => {
+const EditOrganizationModal = ({ organization, onClose, updateOrganization, subscriptions }) => {
   const [formState, setFormState] = useState({
     orgName: '',
-    subscription: 'Standard',
+    subscription: '',
     isActive: false,
+    billingTerm: '',
+    subscriptionStartDate: '',
+    subscriptionEndDate: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Sync form state with the organization details when the modal opens
+    // On open, sync with the org details
     if (organization) {
       setFormState({
         orgName: organization.name || '',
-        subscription: organization.subscription || 'Standard',
+        subscription: organization.subscription?._id || '',
         isActive: organization.isActive || false,
+        billingTerm: organization.billingTerm || '',
+        subscriptionStartDate: organization.subscriptionStartDate
+          ? organization.subscriptionStartDate.slice(0, 10)  // 'YYYY-MM-DD'
+          : '',
+        subscriptionEndDate: organization.subscriptionEndDate
+          ? organization.subscriptionEndDate.slice(0, 10)
+          : '',
       });
     }
   }, [organization]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormState((prev) => ({
       ...prev,
-      [name]: name === 'isActive' ? value === 'true' : value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -36,16 +46,19 @@ const EditOrganizationModal = ({ organization, onClose, updateOrganization }) =>
     setIsSubmitting(true);
 
     try {
-      // Send update request
       await updateOrganization(organization._id, {
-        name: formState.orgName,
+        orgName: formState.orgName,
         subscription: formState.subscription,
         isActive: formState.isActive,
+        billingTerm: formState.billingTerm,
+        subscriptionStartDate: formState.subscriptionStartDate,
+        subscriptionEndDate: formState.subscriptionEndDate,
       });
       toast.success('Organization updated successfully!');
-      onClose(); // Close the modal after successful update
+      onClose();
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error updating organization. Please try again.';
+      const errorMessage =
+        error.response?.data?.message || 'Error updating organization. Please try again.';
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -69,6 +82,7 @@ const EditOrganizationModal = ({ organization, onClose, updateOrganization }) =>
               required
             />
           </div>
+
           <div className="form-group">
             <label>Subscription Plan:</label>
             <select
@@ -77,23 +91,71 @@ const EditOrganizationModal = ({ organization, onClose, updateOrganization }) =>
               value={formState.subscription}
               onChange={handleChange}
             >
-              <option value="Standard">Standard</option>
-              <option value="Premium">Premium</option>
-              <option value="Enterprise">Enterprise</option>
+              <option value="">Select Subscription</option>
+              {subscriptions.map((sub) => (
+                <option key={sub._id} value={sub._id}>
+                  {sub.name}
+                </option>
+              ))}
             </select>
           </div>
+
           <div className="form-group">
             <label>Active Status:</label>
             <select
               name="isActive"
               className="form-control"
               value={formState.isActive ? 'true' : 'false'}
-              onChange={handleChange}
+              onChange={(e) =>
+                setFormState((prev) => ({
+                  ...prev,
+                  isActive: e.target.value === 'true',
+                }))
+              }
             >
               <option value="true">Active</option>
               <option value="false">Inactive</option>
             </select>
           </div>
+
+          {/* NEW FIELDS */}
+          <div className="form-group">
+            <label>Billing Term</label>
+            <select
+              name="billingTerm"
+              className="form-control"
+              value={formState.billingTerm}
+              onChange={handleChange}
+            >
+              <option value="">(none)</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Subscription Start Date</label>
+            <input
+              type="date"
+              name="subscriptionStartDate"
+              className="form-control"
+              value={formState.subscriptionStartDate}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Subscription End Date</label>
+            <input
+              type="date"
+              name="subscriptionEndDate"
+              className="form-control"
+              value={formState.subscriptionEndDate}
+              onChange={handleChange}
+            />
+          </div>
+          {/* END NEW FIELDS */}
+
           <div className="modal-actions">
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               {isSubmitting ? 'Saving...' : 'Save Changes'}
@@ -112,11 +174,18 @@ EditOrganizationModal.propTypes = {
   organization: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     name: PropTypes.string,
-    subscription: PropTypes.string,
+    subscription: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object,
+    ]),
     isActive: PropTypes.bool,
+    billingTerm: PropTypes.string,
+    subscriptionStartDate: PropTypes.string,
+    subscriptionEndDate: PropTypes.string,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
   updateOrganization: PropTypes.func.isRequired,
+  subscriptions: PropTypes.array.isRequired,
 };
 
 export default connect(null, { updateOrganization })(EditOrganizationModal);

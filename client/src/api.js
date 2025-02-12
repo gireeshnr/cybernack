@@ -1,18 +1,17 @@
-/* global process */
+// client/src/api.js
 import axios from 'axios';
 
-// Determine base URL based on environment variables or window location
-const baseURL = process.env.REACT_APP_API_BASE_URL || 
-                (window.location.hostname === 'localhost'
-                ? 'http://localhost:8000'
-                : 'https://app.cybernack.com');
+const baseURL =
+  process.env.REACT_APP_API_BASE_URL ||
+  (window.location.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : 'https://your-production-url.com');
 
-// Create an axios instance with the base URL
 const instance = axios.create({ baseURL });
 
-// Request interceptor to add token to headers
 instance.interceptors.request.use(
   (config) => {
+    // If you store a token in localStorage:
     const token = localStorage.getItem('auth_jwt_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -22,13 +21,13 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for handling errors
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      console.warn('401 Unauthorized error received. Ensure the UI handles this state appropriately.');
-      // Optionally, you can trigger a Redux action here to handle logout or error state.
+      // e.g. redirect to login
+      localStorage.removeItem('auth_jwt_token');
+      window.location.href = '/signin';
     }
     return Promise.reject(error);
   }

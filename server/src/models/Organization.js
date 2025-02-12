@@ -14,11 +14,25 @@ const OrganizationSchema = new Schema({
   },
   isActive: {
     type: Boolean,
-    default: true, // Default to true for newly created organizations
+    default: true,
+  },
+  // If subscription is canceled in the future
+  subscriptionEndDate: {
+    type: Date,
+    default: null,
+  },
+  // monthly/yearly tracking
+  billingTerm: {
+    type: String,
+    default: '',
+  },
+  subscriptionStartDate: {
+    type: Date,
+    default: Date.now,
   },
 });
 
-// Check if the model already exists to avoid re-compilation
-const Organization = mongoose.models.Organization || mongoose.model('Organization', OrganizationSchema);
+const Organization =
+  mongoose.models.Organization || mongoose.model('Organization', OrganizationSchema);
 
 export default Organization;

@@ -1,7 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const IndustryForm = ({ isEditing, data, setData, onSubmit, isSubmitting, onCancel }) => {
+const IndustryForm = ({
+  isEditing,
+  data,
+  setData,
+  onSubmit,
+  isSubmitting,
+  onCancel,
+  allSubscriptions, // NEW
+}) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({ ...prev, [name]: value }));
@@ -9,7 +17,6 @@ const IndustryForm = ({ isEditing, data, setData, onSubmit, isSubmitting, onCanc
 
   return (
     <div className="card p-3 mb-4">
-      <h4>{isEditing ? 'Edit Industry' : 'Add New Industry'}</h4>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -17,26 +24,49 @@ const IndustryForm = ({ isEditing, data, setData, onSubmit, isSubmitting, onCanc
         }}
       >
         <div className="form-group">
-          <label>Name</label>
+          <label>Industry Name</label>
           <input
             type="text"
             name="name"
             className="form-control"
-            value={data.name}
+            value={data.name || ''}
             onChange={handleChange}
             required
           />
         </div>
+
         <div className="form-group">
           <label>Description</label>
           <textarea
             name="description"
             className="form-control"
-            value={data.description}
+            value={data.description || ''}
             onChange={handleChange}
-            rows="3"
+            rows="2"
           />
         </div>
+
+        {/* NEW: Subscription Dropdown */}
+        <div className="form-group">
+          <label>Subscription</label>
+          <select
+            name="subscription_id"
+            className="form-control"
+            value={data.subscription_id || ''}
+            onChange={handleChange}
+          >
+            <option value="">-- Select Subscription --</option>
+            {allSubscriptions.map((sub) => (
+              <option key={sub._id} value={sub._id}>
+                {sub.name}
+              </option>
+            ))}
+          </select>
+          <small className="form-text text-muted">
+            Choose which subscription this industry belongs to.
+          </small>
+        </div>
+
         <div className="d-flex justify-content-end">
           <button
             type="button"
@@ -46,7 +76,11 @@ const IndustryForm = ({ isEditing, data, setData, onSubmit, isSubmitting, onCanc
           >
             Cancel
           </button>
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
@@ -58,13 +92,20 @@ const IndustryForm = ({ isEditing, data, setData, onSubmit, isSubmitting, onCanc
 IndustryForm.propTypes = {
   isEditing: PropTypes.bool.isRequired,
   data: PropTypes.shape({
-    name: PropTypes.string.isRequired,
+    name: PropTypes.string,
     description: PropTypes.string,
+    subscription_id: PropTypes.string, // NEW
   }).isRequired,
   setData: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   isSubmitting: PropTypes.bool.isRequired,
   onCancel: PropTypes.func.isRequired,
+  allSubscriptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string,
+      name: PropTypes.string,
+    })
+  ).isRequired,
 };
 
 export default IndustryForm;

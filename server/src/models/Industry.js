@@ -1,18 +1,21 @@
 import mongoose from 'mongoose';
 
-const industrySchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    description: { type: String },
-    // If you no longer need 'subjects', you can remove it:
-    // subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subject' }],
+const industrySchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true, // Industry names must be unique
   },
-  {
-    timestamps: true,
-    // Uncomment if you want a custom collection name:
-    // collection: 'industries',
-  }
-);
+  description: {
+    type: String,
+  },
+  // NEW: reference to Subscription
+  subscription_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subscription',
+    required: false, // or true if you want it mandatory
+  },
+}, { timestamps: true });
 
 const Industry = mongoose.model('Industry', industrySchema);
 

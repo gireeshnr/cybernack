@@ -6,6 +6,9 @@ import {
   UPDATE_ORGANIZATION_STATUS_SUCCESS,
 } from '../actions/types';
 
+// Import getUserProfile from your authActions
+import { getUserProfile } from './authActions';
+
 // Fetch organizations
 export const getOrganizations = () => async (dispatch) => {
   try {
@@ -36,9 +39,22 @@ export const updateOrganization = (orgId, data) => async (dispatch) => {
       name: data.orgName,
       isActive: data.isActive,
       subscription: data.subscription,
+     billingTerm: data.billingTerm,
+     subscriptionStartDate: data.subscriptionStartDate,
+     subscriptionEndDate: data.subscriptionEndDate,
     };
+
+    console.log('[CLIENT] updateOrganization -> sending updatedData:', updatedData);
+
     const response = await axios.post('/organization/update', updatedData);
-    dispatch({ type: UPDATE_ORGANIZATION_STATUS_SUCCESS, payload: response.data.organization });
+    dispatch({
+      type: UPDATE_ORGANIZATION_STATUS_SUCCESS,
+      payload: response.data.organization,
+    });
+
+    // Possibly console.log out the response
+    console.log('[CLIENT] updateOrganization -> server responded with:', response.data);
+
   } catch (error) {
     console.error('Error updating organization:', error);
     throw error;
@@ -52,6 +68,39 @@ export const deleteOrganizations = (orgIds) => async (dispatch) => {
     dispatch({ type: DELETE_ORGANIZATIONS_SUCCESS, payload: orgIds });
   } catch (error) {
     console.error('Error deleting organizations:', error);
+    throw error;
+  }
+};
+
+/********************************************************
+ * UPGRADE Organization Subscription
+ ********************************************************/
+export const upgradeOrganizationSubscription =
+  (orgId, newSubscriptionId, term) => async (dispatch) => {
+    try {
+      await axios.post('/organization/upgrade-subscription', {
+        orgId,
+        newSubscriptionId,
+        term,
+      });
+      // Immediately refresh user profile so UI sees the new subscription
+      dispatch(getUserProfile());
+    } catch (error) {
+      console.error('Error upgrading organization subscription:', error);
+      throw error;
+    }
+  };
+
+/********************************************************
+ * CANCEL Organization Subscription
+ ********************************************************/
+export const cancelOrganizationSubscription = (orgId) => async (dispatch) => {
+  try {
+    await axios.post('/organization/cancel-subscription', { orgId });
+    // Immediately refresh user profile so UI sees canceled sub
+    dispatch(getUserProfile());
+  } catch (error) {
+    console.error('Error canceling organization subscription:', error);
     throw error;
   }
 };

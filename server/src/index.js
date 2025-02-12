@@ -1,3 +1,4 @@
+// server/src/index.js
 import express from 'express';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
@@ -11,9 +12,19 @@ import UserRoutes from './routes/userRoutes.js';
 import ApiRoutes from './routes/api.js';
 import OrganizationRoutes from './routes/organizationRoutes.js';
 import SubscriptionRoutes from './routes/subscriptionRoutes.js';
+import industryRoutes from './routes/industryRoutes.js';
 
-// Old: import entityRoutes from './routes/entityRoutes.js';
-import industryRoutes from './routes/industryRoutes.js'; // NEW
+// Domain Routes
+import domainRoutes from './routes/domainRoutes.js';
+
+// Subject Routes
+import subjectRoutes from './routes/subjectRoutes.js';
+
+// Question Routes
+import questionRoutes from './routes/questionRoutes.js';
+
+// Organization Settings Routes
+import organizationSettingsRoutes from './routes/organizationSettingsRoutes.js'; // Make sure we import
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -77,10 +88,13 @@ app.use('/user', authMiddleware, UserRoutes);
 app.use('/api', authMiddleware, ApiRoutes);
 app.use('/organization', authMiddleware, OrganizationRoutes);
 app.use('/subscription', authMiddleware, SubscriptionRoutes);
-
-// Old: app.use('/entity', authMiddleware, entityRoutes);
-// NEW:
 app.use('/industry', authMiddleware, industryRoutes);
+app.use('/domain', authMiddleware, domainRoutes);
+app.use('/subject', authMiddleware, subjectRoutes);
+app.use('/question', authMiddleware, questionRoutes);
+
+// Organization Settings Routes
+app.use('/organization-settings', authMiddleware, organizationSettingsRoutes);
 
 logger.info('✅ Routes successfully registered');
 
@@ -96,7 +110,9 @@ if (process.env.NODE_ENV === 'production') {
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
-  logger.error(`❌ Error occurred: ${err.message}`);
+  logger.error(
+    `❌ [${req.method} ${req.originalUrl}] Error: ${err.message}\nStack: ${err.stack}`
+  );
   res.status(err.status || 500).json({ error: err.message });
 });
 
