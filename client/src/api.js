@@ -1,17 +1,24 @@
 // client/src/api.js
 import axios from 'axios';
 
-const baseURL =
-  process.env.REACT_APP_API_BASE_URL ||
+// If REACT_APP_API_BASE_URL is set, use it.
+// Otherwise, if we are on localhost, default to a local dev server.
+// If we are in some other environment but no env var is set, you can decide a fallback or error.
+const baseURL = process.env.REACT_APP_API_BASE_URL ||
   (window.location.hostname === 'localhost'
     ? 'http://localhost:8000'
-    : 'https://your-production-url.com');
+    : '');
+
+if (!baseURL) {
+  console.warn(
+    'No REACT_APP_API_BASE_URL set, and not on localhost. Requests may fail.'
+  );
+}
 
 const instance = axios.create({ baseURL });
 
 instance.interceptors.request.use(
   (config) => {
-    // If you store a token in localStorage:
     const token = localStorage.getItem('auth_jwt_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -25,7 +32,6 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // e.g. redirect to login
       localStorage.removeItem('auth_jwt_token');
       window.location.href = '/signin';
     }
