@@ -5,8 +5,13 @@ import OrganizationSettingsController from '../controllers/organizationSettingsC
 
 const router = express.Router();
 
+// GET entire Industry->Domain->Subject->Question tree
 router.get('/hierarchy', authMiddleware, OrganizationSettingsController.getHierarchy);
+
+// Partial toggles
 router.post('/toggle', authMiddleware, OrganizationSettingsController.toggleItem);
+
+// Full doc overwrite if needed
 router.post('/hierarchy', authMiddleware, OrganizationSettingsController.updateHierarchy);
 
 export default router;

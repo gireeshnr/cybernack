@@ -57,7 +57,7 @@ const organizationSettingsSchema = new mongoose.Schema(
     /**
      * The numeric subscription tier used to build this doc:
      *   1 = Free, 2 = Standard, 3 = Enterprise
-     * Allows auto‐rebuild if the org’s subscription changes.
+     * This helps us rebuild if the org’s subscription changes.
      */
     subscriptionTier: {
       type: Number,
