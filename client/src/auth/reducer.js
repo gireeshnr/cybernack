@@ -31,7 +31,7 @@ export default function (state = INITIAL_STATE, action) {
     case AUTH_ERROR:
       return { ...state, authenticated: false, errorMessage: action.payload };
     case GET_USER_PROFILE:
-      console.log('Profile received:', action.payload); // Debug: Ensure profile is correct
+      console.log('Profile received:', action.payload);
       return { ...state, profile: action.payload };
     case UPDATE_USER_PROFILE:
       return { ...state, profile: action.payload };
@@ -47,7 +47,7 @@ export default function (state = INITIAL_STATE, action) {
         organizations: state.organizations.filter((org) => !action.payload.includes(org._id)),
       };
     case GET_SUBSCRIPTIONS_SUCCESS:
-      console.log('Subscriptions loaded:', action.payload); // Debug: Ensure subscriptions are loaded
+      console.log('Subscriptions loaded:', action.payload);
       return { ...state, subscriptions: action.payload, loadingSubscriptions: false };
     case 'ORGANIZATIONS_LOADING':
       return { ...state, loadingOrganizations: action.payload };

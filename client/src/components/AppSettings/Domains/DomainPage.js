@@ -1,56 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  fetchDomains,
-  createDomain,
-  updateDomain,
-  deleteDomain,
-} from '../../../reducers/domainSlice';
+import { fetchDomains, createDomain, updateDomain, deleteDomain } from '../../../reducers/domainSlice';
 import { fetchIndustries } from '../../../reducers/industrySlice';
-
-// Import your subscription action
 import { getSubscriptions } from '../../../auth/subscriptionActions';
-
 import DomainForm from './DomainForm';
 import ConfirmModal from '../../ConfirmModal';
+import DomainTable from './DomainTable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt, faPlus, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faTrashAlt, faPlus, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
 
 const DomainPage = () => {
   const dispatch = useDispatch();
   const { domains, loading, error } = useSelector((state) => state.domains);
   const { industries } = useSelector((state) => state.industries);
-
-  // Redux state for subscriptions
   const { subscriptions } = useSelector((state) => state.subscription);
 
   const [selectedDomains, setSelectedDomains] = useState([]);
+  const [allSelected, setAllSelected] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [showModal, setShowModal] = useState(false);
-
-  // Domain form data
   const [domainData, setDomainData] = useState({
     name: '',
     description: '',
     industries: [],
-    subscription_id: '', // NEW
+    subscription_id: '',
   });
   const [editingDomain, setEditingDomain] = useState(null);
 
-  // Fetch domains, industries, subscriptions on mount
+  // Column filters
+  const [columnFilters, setColumnFilters] = useState({
+    name: '',
+    description: '',
+    industries: '',
+    subscription: '',
+    addedBy: '',
+    createdAt: '',
+  });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
+
   useEffect(() => {
     dispatch(fetchDomains());
     dispatch(fetchIndustries());
-    dispatch(getSubscriptions()); // existing function from subscriptionActions
+    dispatch(getSubscriptions());
   }, [dispatch]);
 
-  // Display any Redux error
   useEffect(() => {
     if (error) {
       toast.error(`Error: ${error}`);
     }
   }, [error]);
+
+  // Reset current page whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [columnFilters]);
 
   const resetForm = () => {
     setDomainData({ name: '', description: '', industries: [], subscription_id: '' });
@@ -63,12 +70,24 @@ const DomainPage = () => {
   };
 
   const handleRowClick = (id) => {
-    setSelectedDomains((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    if (selectedDomains.includes(id)) {
+      setSelectedDomains(selectedDomains.filter((item) => item !== id));
+    } else {
+      setSelectedDomains([...selectedDomains, id]);
+    }
   };
 
-  // CREATE
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedDomains([]);
+      setAllSelected(false);
+    } else {
+      const allIds = filteredDomains.map((d) => d._id);
+      setSelectedDomains(allIds);
+      setAllSelected(true);
+    }
+  };
+
   const handleAddDomain = async () => {
     if (!domainData.name) {
       toast.error('Domain name is required.');
@@ -82,18 +101,38 @@ const DomainPage = () => {
       await dispatch(createDomain(domainData));
       dispatch(fetchDomains());
       closeModal();
-    } catch {
-      // error in Redux
-    }
+    } catch {}
   };
 
-  // EDIT
+  const handleUpdateDomain = async () => {
+    if (!domainData.industries || domainData.industries.length === 0) {
+      toast.error('At least one Industry is required.');
+      return;
+    }
+    try {
+      await dispatch(updateDomain({ id: editingDomain._id, domainData }));
+      dispatch(fetchDomains());
+      closeModal();
+    } catch {}
+  };
+
+  const handleDeleteDomains = async () => {
+    try {
+      for (const id of selectedDomains) {
+        await dispatch(deleteDomain(id));
+      }
+      dispatch(fetchDomains());
+      setSelectedDomains([]);
+      setAllSelected(false);
+      setShowConfirmDelete(false);
+    } catch {}
+  };
+
   const handleEditClick = (domain) => {
     const industryIds =
       Array.isArray(domain.industries)
         ? domain.industries.map((ind) => (typeof ind === 'object' ? ind._id : ind))
         : [];
-
     setDomainData({
       name: domain.name,
       description: domain.description || '',
@@ -103,54 +142,77 @@ const DomainPage = () => {
         domain.subscription_id ||
         '',
     });
-
     setEditingDomain(domain);
     setShowModal(true);
   };
 
-  // UPDATE
-  const handleUpdateDomain = async () => {
-    if (!domainData.industries || domainData.industries.length === 0) {
-      toast.error('At least one Industry is required.');
-      return;
-    }
-    try {
-      await dispatch(
-        updateDomain({ id: editingDomain._id, domainData })
-      );
-      dispatch(fetchDomains());
-      closeModal();
-    } catch {
-      // error in Redux
-    }
+  const handleColumnFilterChange = (column, value) => {
+    setColumnFilters((prev) => ({ ...prev, [column]: value }));
   };
 
-  // BULK DELETE
-  const handleDeleteDomains = async () => {
-    try {
-      for (const id of selectedDomains) {
-        await dispatch(deleteDomain(id));
-      }
-      dispatch(fetchDomains());
-      setSelectedDomains([]);
-      setShowConfirmDelete(false);
-    } catch {
-      // error in Redux
+  // Apply column filters
+  const filteredDomains = domains.filter((domain) => {
+    let match = true;
+    if (columnFilters.name && !domain.name.toLowerCase().includes(columnFilters.name.toLowerCase())) {
+      match = false;
     }
+    if (columnFilters.description && (!domain.description || !domain.description.toLowerCase().includes(columnFilters.description.toLowerCase()))) {
+      match = false;
+    }
+    if (columnFilters.industries) {
+      const indNames = Array.isArray(domain.industries)
+        ? domain.industries.map((ind) => (typeof ind === 'object' ? ind.name : '')).join(', ')
+        : '';
+      if (!indNames.toLowerCase().includes(columnFilters.industries.toLowerCase())) {
+        match = false;
+      }
+    }
+    if (columnFilters.subscription) {
+      let subName = '';
+      if (domain.subscription_id && typeof domain.subscription_id === 'object') {
+        subName = domain.subscription_id.name || '';
+      }
+      if (!subName.toLowerCase().includes(columnFilters.subscription.toLowerCase())) {
+        match = false;
+      }
+    }
+    if (columnFilters.addedBy) {
+      if (!domain.addedBy || !domain.addedBy.toLowerCase().includes(columnFilters.addedBy.toLowerCase())) {
+        match = false;
+      }
+    }
+    if (columnFilters.createdAt && domain.createdAt) {
+      const createdAtStr = new Date(domain.createdAt).toLocaleDateString();
+      if (!createdAtStr.toLowerCase().includes(columnFilters.createdAt.toLowerCase())) {
+        match = false;
+      }
+    }
+    return match;
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredDomains.length / recordsPerPage);
+  const displayedDomains = filteredDomains.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
   return (
     <div className="container">
       <h2>Manage Domains</h2>
-
-      {/* Action Buttons */}
-      <div className="d-flex justify-content-between mb-3">
+      {/* Action Buttons Row */}
+      <div className="d-flex justify-content-between mb-2">
         <button
           className={`btn btn-danger ${selectedDomains.length === 0 ? 'disabled' : ''}`}
           onClick={() => setShowConfirmDelete(true)}
           disabled={selectedDomains.length === 0}
         >
-          <FontAwesomeIcon icon={faTrashAlt} /> Delete Selected
+          <FontAwesomeIcon icon={faTrashAlt} />
         </button>
         <button
           className="btn btn-success"
@@ -159,87 +221,63 @@ const DomainPage = () => {
             setShowModal(true);
           }}
         >
-          <FontAwesomeIcon icon={faPlus} /> Add New Domain
+          <FontAwesomeIcon icon={faPlus} />
         </button>
       </div>
-
-      {/* Table */}
-      <table className="table table-hover table-striped">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Industries</th>
-            <th>Subscription</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan="6" className="text-center">
-                Loading domains...
-              </td>
-            </tr>
-          ) : domains.length > 0 ? (
-            domains.map((domain) => {
-              // Gather industries as comma-separated
-              const industryNames = Array.isArray(domain.industries)
-                ? domain.industries
-                    .map((ind) => (typeof ind === 'object' ? ind.name : ind))
-                    .join(', ')
-                : '—';
-
-              // Grab subscription name if populated
-              let subscriptionLabel = '—';
-              if (domain.subscription_id) {
-                if (typeof domain.subscription_id === 'object') {
-                  subscriptionLabel = domain.subscription_id.name || '—';
-                } else {
-                  subscriptionLabel = domain.subscription_id;
-                }
-              }
-
-              return (
-                <tr
-                  key={domain._id}
-                  className={selectedDomains.includes(domain._id) ? 'table-primary' : ''}
-                >
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedDomains.includes(domain._id)}
-                      onChange={() => handleRowClick(domain._id)}
-                    />
-                  </td>
-                  <td>{domain.name}</td>
-                  <td>{domain.description}</td>
-                  <td>{industryNames}</td>
-                  {/* Display subscription */}
-                  <td>{subscriptionLabel}</td>
-                  <td>
-                    <FontAwesomeIcon
-                      icon={faEdit}
-                      onClick={() => handleEditClick(domain)}
-                      style={{ cursor: 'pointer', fontSize: '0.9rem' }}
-                      title="Edit"
-                    />
-                  </td>
-                </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td colSpan="6" className="text-center">
-                No domains available.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      {/* Confirm Delete Modal */}
+      {/* Pagination Controls (top right) with icons only */}
+      <div className="d-flex justify-content-end mb-2">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Previous Page"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} />
+        </button>
+        <span className="align-self-center mx-2">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Next Page"
+        >
+          <FontAwesomeIcon icon={faChevronRight} />
+        </button>
+      </div>
+      <DomainTable
+        domains={displayedDomains}
+        selectedDomains={selectedDomains}
+        onRowClick={handleRowClick}
+        onEditClick={handleEditClick}
+        columnFilters={columnFilters}
+        onColumnFilterChange={handleColumnFilterChange}
+        onToggleSelectAll={toggleSelectAll}
+        allSelected={allSelected}
+      />
+      {/* Pagination Controls (bottom right) with icons only */}
+      <div className="d-flex justify-content-end mt-2">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Previous Page"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} />
+        </button>
+        <span className="align-self-center mx-2">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Next Page"
+        >
+          <FontAwesomeIcon icon={faChevronRight} />
+        </button>
+      </div>
       {showConfirmDelete && (
         <ConfirmModal
           message={`Are you sure you want to delete ${selectedDomains.length} domain(s)?`}
@@ -247,8 +285,6 @@ const DomainPage = () => {
           onCancel={() => setShowConfirmDelete(false)}
         />
       )}
-
-      {/* Add/Edit Modal */}
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" role="dialog">
           <div className="modal-dialog modal-dialog-centered" role="document">
@@ -270,7 +306,6 @@ const DomainPage = () => {
                   isSubmitting={false}
                   onCancel={closeModal}
                   allIndustries={industries}
-                  // pass subscriptions to form
                   allSubscriptions={subscriptions}
                 />
               </div>
@@ -278,6 +313,7 @@ const DomainPage = () => {
           </div>
         </div>
       )}
+      {error && <div className="alert alert-danger mt-2">{error}</div>}
     </div>
   );
 };

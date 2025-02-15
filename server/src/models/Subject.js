@@ -6,10 +6,7 @@ const subjectSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  description: {
-    type: String,
-    required: false,
-  },
+  description: String,
   domain_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Domain',
@@ -19,15 +16,24 @@ const subjectSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subscription',
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  ownerOrgId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    required: false,
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
+  // New field: auto-populated with client name or "Cybernack"
+  addedBy: {
+    type: String,
+    default: '',
   },
+}, {
+  timestamps: true,
 });
+
+subjectSchema.index({ name: 1 });
+subjectSchema.index({ domain_id: 1 });
+subjectSchema.index({ subscription_id: 1 });
+subjectSchema.index({ ownerOrgId: 1 });
 
 const Subject = mongoose.models.Subject || mongoose.model('Subject', subjectSchema);
 export default Subject;

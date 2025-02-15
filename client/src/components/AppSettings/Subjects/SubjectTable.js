@@ -8,20 +8,81 @@ const SubjectTable = ({
   selectedSubjects,
   onRowClick,
   onEditClick,
+  columnFilters,
+  onColumnFilterChange,
+  onToggleSelectAll,
+  allSelected,
 }) => {
   return (
     <div className="table-responsive">
       <table className="table table-hover table-striped">
         <thead>
           <tr>
-            <th>Select</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Domains</th>
-            {/* NEW: Subscription Column */}
+            <th></th>
+            <th>Subject Name</th>
+            <th>Domain</th>
             <th>Subscription</th>
+            <th>Added By</th>
             <th>Created At</th>
             <th>Actions</th>
+          </tr>
+          {/* Filter row with "Select All" checkbox in first column */}
+          <tr>
+            <th>
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={onToggleSelectAll}
+                style={{ marginRight: '4px' }}
+              />
+              <label style={{ fontSize: '0.8rem' }}>Select All</label>
+            </th>
+            <th>
+              <input
+                type="text"
+                placeholder="Filter Name"
+                value={columnFilters.name}
+                onChange={(e) => onColumnFilterChange('name', e.target.value)}
+                className="form-control form-control-sm"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                placeholder="Filter Domain"
+                value={columnFilters.domain}
+                onChange={(e) => onColumnFilterChange('domain', e.target.value)}
+                className="form-control form-control-sm"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                placeholder="Filter Subscription"
+                value={columnFilters.subscription}
+                onChange={(e) => onColumnFilterChange('subscription', e.target.value)}
+                className="form-control form-control-sm"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                placeholder="Filter Added By"
+                value={columnFilters.addedBy}
+                onChange={(e) => onColumnFilterChange('addedBy', e.target.value)}
+                className="form-control form-control-sm"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                placeholder="Filter Date"
+                value={columnFilters.createdAt}
+                onChange={(e) => onColumnFilterChange('createdAt', e.target.value)}
+                className="form-control form-control-sm"
+              />
+            </th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -33,30 +94,25 @@ const SubjectTable = ({
             </tr>
           ) : (
             subjects.map((subject) => {
-              // Construct domains label
-              const domainsLabel =
-                Array.isArray(subject.domains) && subject.domains.length > 0
-                  ? subject.domains
-                      .map((dom) => (typeof dom === 'object' ? dom.name : dom))
-                      .join(', ')
-                  : '—';
+              // Domain label
+              const domainLabel =
+                subject.domain_id && typeof subject.domain_id === 'object'
+                  ? subject.domain_id.name
+                  : subject.domain_id || '—';
 
-              // Construct subscription label
+              // Subscription label
               let subscriptionLabel = '—';
               if (subject.subscription_id) {
-                if (typeof subject.subscription_id === 'object') {
-                  subscriptionLabel = subject.subscription_id.name || '—';
-                } else {
-                  subscriptionLabel = subject.subscription_id;
-                }
+                subscriptionLabel =
+                  typeof subject.subscription_id === 'object'
+                    ? subject.subscription_id.name || '—'
+                    : subject.subscription_id;
               }
 
               return (
                 <tr
                   key={subject._id}
-                  className={
-                    selectedSubjects.includes(subject._id) ? 'table-primary' : ''
-                  }
+                  className={selectedSubjects.includes(subject._id) ? 'table-primary' : ''}
                 >
                   <td>
                     <input
@@ -66,25 +122,18 @@ const SubjectTable = ({
                     />
                   </td>
                   <td>{subject.name}</td>
-                  <td>{subject.description || '—'}</td>
-                  <td>{domainsLabel}</td>
-                  {/* Display subscription label */}
+                  <td>{domainLabel}</td>
                   <td>{subscriptionLabel}</td>
+                  <td>{subject.addedBy || '—'}</td>
                   <td>
-                    {subject.createdAt
-                      ? new Date(subject.createdAt).toLocaleDateString()
-                      : ''}
+                    {subject.createdAt ? new Date(subject.createdAt).toLocaleDateString() : ''}
                   </td>
                   <td>
-                    {/* Icon only, transparent background */}
                     <button
+                      className="btn btn-sm"
                       onClick={() => onEditClick(subject)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        padding: 0,
-                        cursor: 'pointer',
-                      }}
+                      title="Edit"
+                      style={{ backgroundColor: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
                     >
                       <FontAwesomeIcon icon={faEdit} style={{ fontSize: '0.8rem' }} />
                     </button>
@@ -105,22 +154,31 @@ SubjectTable.propTypes = {
       _id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
       description: PropTypes.string,
-      // Could be an array of domain IDs or domain objects
-      domains: PropTypes.array,
-      // subscription can be an object or string
+      domain_id: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.shape({ _id: PropTypes.string, name: PropTypes.string }),
+      ]),
       subscription_id: PropTypes.oneOfType([
         PropTypes.string,
-        PropTypes.shape({
-          _id: PropTypes.string,
-          name: PropTypes.string,
-        }),
+        PropTypes.shape({ _id: PropTypes.string, name: PropTypes.string }),
       ]),
       createdAt: PropTypes.string,
+      addedBy: PropTypes.string,
     })
   ).isRequired,
   selectedSubjects: PropTypes.arrayOf(PropTypes.string).isRequired,
   onRowClick: PropTypes.func.isRequired,
   onEditClick: PropTypes.func.isRequired,
+  columnFilters: PropTypes.shape({
+    name: PropTypes.string,
+    domain: PropTypes.string,
+    subscription: PropTypes.string,
+    addedBy: PropTypes.string,
+    createdAt: PropTypes.string,
+  }).isRequired,
+  onColumnFilterChange: PropTypes.func.isRequired,
+  onToggleSelectAll: PropTypes.func.isRequired,
+  allSelected: PropTypes.bool.isRequired,
 };
 
 export default SubjectTable;

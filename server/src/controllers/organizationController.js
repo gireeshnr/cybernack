@@ -3,14 +3,14 @@ import User from '../models/user.js';
 import Subscription from '../models/Subscription.js';
 
 /******************
- * Existing Code
+ * Organization Controller
  ******************/
 
-// Fetch organization by ID
+// Fetch organization by ID with subscription populated
 export const getOrganizationById = async (req, res) => {
   const orgId = req.params.orgId;
   try {
-    const organization = await Organization.findById(orgId);
+    const organization = await Organization.findById(orgId).populate('subscription');
     if (!organization) {
       return res.status(404).json({ message: 'Organization not found' });
     }
@@ -20,37 +20,58 @@ export const getOrganizationById = async (req, res) => {
   }
 };
 
-// Fetch all organizations
+// Fetch all organizations with subscription details using aggregation
 export const getAllOrganizations = async (req, res) => {
   try {
     const query = req.user.role === 'superadmin'
       ? {}
       : { name: { $ne: 'Cybernack' } };
+
+    // Aggregation pipeline to lookup subscription details and add subscriptionName field
     const organizations = await Organization.aggregate([
       { $match: query },
+      {
+        $lookup: {
+          from: 'subscriptions', // collection name for Subscription model
+          localField: 'subscription',
+          foreignField: '_id',
+          as: 'subscriptionDetails'
+        }
+      },
+      {
+        $unwind: {
+          path: '$subscriptionDetails',
+          preserveNullAndEmptyArrays: true
+        }
+      },
       {
         $lookup: {
           from: 'users',
           localField: '_id',
           foreignField: 'org',
-          as: 'users',
-        },
+          as: 'users'
+        }
       },
       {
         $addFields: {
-          numberOfUsers: { $size: '$users' },
-        },
+          subscriptionName: '$subscriptionDetails.name',
+          numberOfUsers: { $size: '$users' }
+        }
       },
+      {
+        $project: {
+          subscriptionDetails: 0,
+          users: 0
+        }
+      }
     ]);
     res.json(organizations);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Server error fetching organizations' });
+    res.status(500).json({ message: 'Server error fetching organizations' });
   }
 };
 
-// Create a new organization
+// Create a new organization and populate subscription details
 export const createOrganization = async (req, res) => {
   const {
     orgName,
@@ -71,39 +92,32 @@ export const createOrganization = async (req, res) => {
     }
 
     if (!subscription) {
-      return res
-        .status(400)
-        .json({ message: 'Subscription is required.' });
+      return res.status(400).json({ message: 'Subscription is required.' });
     }
 
     const newOrg = new Organization({
       name: trimmedName,
       subscription,
-      createdAt: new Date(),
       isActive: true,
       billingTerm: billingTerm || '',
-      subscriptionStartDate: subscriptionStartDate
-        ? new Date(subscriptionStartDate)
-        : new Date(),
-      subscriptionEndDate: subscriptionEndDate
-        ? new Date(subscriptionEndDate)
-        : null,
+      subscriptionStartDate: subscriptionStartDate ? new Date(subscriptionStartDate) : new Date(),
+      subscriptionEndDate: subscriptionEndDate ? new Date(subscriptionEndDate) : null,
     });
 
     const savedOrg = await newOrg.save();
+    // Populate the subscription field
+    const populatedOrg = await Organization.findById(savedOrg._id).populate('subscription');
     res.status(201).json({
       message: 'Organization created successfully.',
-      organization: savedOrg,
+      organization: populatedOrg,
     });
   } catch (error) {
     console.error('Error creating organization:', error);
-    res
-      .status(500)
-      .json({ message: 'Error creating organization. Try again later.' });
+    res.status(500).json({ message: 'Error creating organization. Try again later.' });
   }
 };
 
-// Update organization details
+// Update organization details and return subscription populated
 export const updateOrganization = async (req, res) => {
   console.log('---[SERVER] updateOrganization called---');
   console.log('Request body:', req.body);
@@ -119,17 +133,12 @@ export const updateOrganization = async (req, res) => {
       subscriptionEndDate,
     } = req.body;
 
-    // Find the organization
     const organization = await Organization.findById(orgId);
     if (!organization) {
       console.log('Organization not found for ID:', orgId);
       return res.status(404).json({ message: 'Organization not found' });
     }
 
-    // Log what we found
-    console.log('Current organization data:', organization);
-
-    // Overwrite fields if provided
     if (typeof name === 'string') {
       organization.name = name.trim();
     }
@@ -139,66 +148,44 @@ export const updateOrganization = async (req, res) => {
     if (subscription) {
       organization.subscription = subscription;
     }
-
-    // BillingTerm, StartDate, EndDate
     if (billingTerm !== undefined) {
       organization.billingTerm = billingTerm;
     }
     if (subscriptionStartDate !== undefined) {
-      if (subscriptionStartDate) {
-        organization.subscriptionStartDate = new Date(subscriptionStartDate);
-      } else {
-        organization.subscriptionStartDate = null;
-      }
+      organization.subscriptionStartDate = subscriptionStartDate ? new Date(subscriptionStartDate) : null;
     }
     if (subscriptionEndDate !== undefined) {
-      if (subscriptionEndDate) {
-        organization.subscriptionEndDate = new Date(subscriptionEndDate);
-      } else {
-        organization.subscriptionEndDate = null;
-      }
+      organization.subscriptionEndDate = subscriptionEndDate ? new Date(subscriptionEndDate) : null;
     }
 
     console.log('Saving updated organization...');
     const updatedOrganization = await organization.save();
-
-    console.log('---[SERVER] Updated org---\n', updatedOrganization);
-
+    const populatedOrg = await Organization.findById(updatedOrganization._id).populate('subscription');
+    console.log('---[SERVER] Updated org---\n', populatedOrg);
     return res.status(200).json({
       message: 'Organization updated successfully',
-      organization: updatedOrganization,
+      organization: populatedOrg,
     });
   } catch (error) {
     console.error('Error updating organization:', error);
-    return res
-      .status(500)
-      .json({ message: 'Error updating organization. Try again later.' });
+    return res.status(500).json({ message: 'Error updating organization. Try again later.' });
   }
 };
 
-/***********************
- * ADD SINGLE DELETE
- ***********************/
+// Delete a single organization
 export const deleteOrganization = async (req, res) => {
   try {
     const { orgId } = req.params;
-
     const org = await Organization.findById(orgId);
     if (!org) {
       return res.status(404).json({ message: 'Organization not found' });
     }
-
-    // Remove the org
     await Organization.findByIdAndDelete(orgId);
-    // Remove all users under that org
     await User.deleteMany({ org: orgId });
-
     res.status(200).json({ message: 'Organization deleted successfully' });
   } catch (error) {
     console.error('Error deleting organization:', error);
-    res
-      .status(500)
-      .json({ message: 'Error deleting organization. Try again later.' });
+    res.status(500).json({ message: 'Error deleting organization. Try again later.' });
   }
 };
 
@@ -208,56 +195,36 @@ export const deleteOrganizations = async (req, res) => {
   try {
     await Organization.deleteMany({ _id: { $in: orgIds } });
     await User.deleteMany({ org: { $in: orgIds } });
-    res
-      .status(200)
-      .json({ message: 'Organizations and users deleted successfully' });
+    res.status(200).json({ message: 'Organizations and users deleted successfully' });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error deleting organizations. Try again later.' });
+    res.status(500).json({ message: 'Error deleting organizations. Try again later.' });
   }
 };
 
-/******************
- * UPGRADE & CANCEL
- ******************/
+// Upgrade subscription
 export const upgradeSubscription = async (req, res) => {
   try {
     const { orgId, newSubscriptionId, term } = req.body;
     if (!orgId || !newSubscriptionId) {
-      return res
-        .status(400)
-        .json({ message: 'Missing orgId or newSubscriptionId' });
+      return res.status(400).json({ message: 'Missing orgId or newSubscriptionId' });
     }
-
     const organization = await Organization.findById(orgId);
     if (!organization) {
-      return res
-        .status(404)
-        .json({ message: 'Organization not found' });
+      return res.status(404).json({ message: 'Organization not found' });
     }
-
     const newSub = await Subscription.findById(newSubscriptionId);
     if (!newSub) {
-      return res
-        .status(404)
-        .json({ message: 'Subscription not found' });
+      return res.status(404).json({ message: 'Subscription not found' });
     }
-
     organization.subscription = newSub._id;
     organization.subscriptionEndDate = null;
     organization.billingTerm = term || 'monthly';
     organization.subscriptionStartDate = new Date();
-
     await organization.save();
-    res
-      .status(200)
-      .json({ message: 'Subscription upgraded successfully' });
+    res.status(200).json({ message: 'Subscription upgraded successfully' });
   } catch (error) {
     console.error('Error upgrading subscription:', error);
-    res
-      .status(500)
-      .json({ message: 'Error upgrading subscription' });
+    res.status(500).json({ message: 'Error upgrading subscription' });
   }
 };
 
@@ -265,41 +232,30 @@ export const cancelSubscription = async (req, res) => {
   try {
     const { orgId } = req.body;
     if (!orgId) {
-      return res
-        .status(400)
-        .json({ message: 'Missing orgId' });
+      return res.status(400).json({ message: 'Missing orgId' });
     }
-
     const organization = await Organization.findById(orgId).populate('subscription');
     if (!organization) {
-      return res
-        .status(404)
-        .json({ message: 'Organization not found' });
+      return res.status(404).json({ message: 'Organization not found' });
     }
-
     const currentName = organization.subscription.name.toLowerCase();
     if (currentName.includes('free')) {
       return res.status(400).json({
         message: 'Already on Free tier; no cancellation needed.',
       });
     }
-
     let daysToAdd = 30;
     if (currentName.includes('enterprise') || currentName.includes('annual')) {
       daysToAdd = 365;
     }
-
     const endDate = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000);
     organization.subscriptionEndDate = endDate;
-
     await organization.save();
     res.status(200).json({
       message: `Subscription will end on ${endDate.toDateString()}. After that, you'll revert to Free.`,
     });
   } catch (error) {
     console.error('Error canceling subscription:', error);
-    res
-      .status(500)
-      .json({ message: 'Error canceling subscription' });
+    res.status(500).json({ message: 'Error canceling subscription' });
   }
 };

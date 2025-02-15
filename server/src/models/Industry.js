@@ -1,3 +1,4 @@
+// server/src/models/Industry.js
 import mongoose from 'mongoose';
 
 const industrySchema = new mongoose.Schema({
@@ -6,17 +7,27 @@ const industrySchema = new mongoose.Schema({
     required: true,
     unique: true, // Industry names must be unique
   },
-  description: {
-    type: String,
-  },
-  // NEW: reference to Subscription
+  description: String,
   subscription_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subscription',
-    required: false, // or true if you want it mandatory
   },
-}, { timestamps: true });
+  ownerOrgId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    required: false,
+  },
+  // New field: auto-populated with the client organization name or "Cybernack" for superadmin
+  addedBy: {
+    type: String,
+    default: '',
+  },
+}, {
+  timestamps: true,
+});
+
+industrySchema.index({ subscription_id: 1 });
+industrySchema.index({ ownerOrgId: 1 });
 
 const Industry = mongoose.model('Industry', industrySchema);
-
 export default Industry;

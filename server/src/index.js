@@ -13,30 +13,23 @@ import ApiRoutes from './routes/api.js';
 import OrganizationRoutes from './routes/organizationRoutes.js';
 import SubscriptionRoutes from './routes/subscriptionRoutes.js';
 import industryRoutes from './routes/industryRoutes.js';
-
-// Domain Routes
 import domainRoutes from './routes/domainRoutes.js';
-
-// Subject Routes
 import subjectRoutes from './routes/subjectRoutes.js';
-
-// Question Routes
 import questionRoutes from './routes/questionRoutes.js';
+import organizationSettingsRoutes from './routes/organizationSettingsRoutes.js';
 
-// Organization Settings Routes
-import organizationSettingsRoutes from './routes/organizationSettingsRoutes.js'; // Make sure we import
+// NEW: Bulk upload
+import bulkUploadRoutes from './routes/bulkUploadRoutes.js';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Verify JWT secret
 if (!config.jwt_secret) {
   logger.warn('⚠️ No JWT_SECRET found in environment variables');
 }
 
 const app = express();
 
-// MongoDB Connection
 if (!config.mongoose.uri) {
   logger.error('❌ Missing MongoDB connection URI in config');
   process.exit(1);
@@ -54,7 +47,6 @@ mongoose.connection.on('reconnected', () =>
   logger.info('🔄 MongoDB reconnected!')
 );
 
-// CORS Configuration
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
   : ['http://localhost:9000', 'https://app.cybernack.com'];
@@ -73,7 +65,6 @@ const corsOptions = {
   credentials: true,
 };
 
-// Middleware
 app.use(cors(corsOptions));
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -92,23 +83,22 @@ app.use('/industry', authMiddleware, industryRoutes);
 app.use('/domain', authMiddleware, domainRoutes);
 app.use('/subject', authMiddleware, subjectRoutes);
 app.use('/question', authMiddleware, questionRoutes);
-
-// Organization Settings Routes
 app.use('/organization-settings', authMiddleware, organizationSettingsRoutes);
+
+// NEW: Bulk upload
+app.use('/bulk-upload', authMiddleware, bulkUploadRoutes);
 
 logger.info('✅ Routes successfully registered');
 
-// Serve Static Files in Production
 if (process.env.NODE_ENV === 'production') {
   const __dirname = path.resolve();
   app.use(express.static(path.join(__dirname, 'client/build')));
-
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
   });
 }
 
-// Error Handling Middleware
+// Error handling
 app.use((err, req, res, next) => {
   logger.error(
     `❌ [${req.method} ${req.originalUrl}] Error: ${err.message}\nStack: ${err.stack}`
@@ -116,6 +106,5 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message });
 });
 
-// Start Server
 const port = process.env.PORT || 8000;
 app.listen(port, () => logger.info(`🚀 Server running on port: ${port}`));

@@ -26,7 +26,7 @@ const SubjectForm = ({
           onSubmit();
         }}
       >
-        {/* Example: Subject Name */}
+        {/* Subject Name */}
         <div className="form-group">
           <label>Subject Name</label>
           <input
@@ -39,7 +39,7 @@ const SubjectForm = ({
           />
         </div>
 
-        {/* domain_id (single select) */}
+        {/* Domain Selection */}
         <div className="form-group">
           <label>Domain</label>
           <select
@@ -58,7 +58,7 @@ const SubjectForm = ({
           </select>
         </div>
 
-        {/* NEW: Subscription Dropdown */}
+        {/* Subscription Dropdown */}
         <div className="form-group">
           <label>Subscription</label>
           <select
@@ -82,17 +82,13 @@ const SubjectForm = ({
         <div className="d-flex justify-content-end">
           <button
             type="button"
-            className="btn btn-secondary mr-2"
+            className="btn btn-secondary me-2"
             onClick={onCancel}
             disabled={isSubmitting}
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isSubmitting}
-          >
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
@@ -106,7 +102,7 @@ SubjectForm.propTypes = {
   data: PropTypes.shape({
     name: PropTypes.string,
     domain_id: PropTypes.string,
-    subscription_id: PropTypes.string, // NEW
+    subscription_id: PropTypes.string,
   }).isRequired,
   setData: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,

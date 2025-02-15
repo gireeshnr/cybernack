@@ -1,3 +1,4 @@
+// client/src/components/superAdmin/SuperAdminDashboard.js
 import React, { useState, useEffect, useMemo } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -13,7 +14,7 @@ import ConfirmModal from '../ConfirmModal';
 import OrganizationTable from './OrganizationTable';
 import OrganizationForm from './OrganizationForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faTrashAlt, faPlus, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
 const SuperAdminDashboard = ({
   getOrganizations,
@@ -26,15 +27,12 @@ const SuperAdminDashboard = ({
 }) => {
   const [selectedOrgs, setSelectedOrgs] = useState([]);
   const [editingOrg, setEditingOrg] = useState(null);
-
   const [formState, setFormState] = useState({
     showAddForm: false,
     showEditForm: false,
     showConfirmDelete: false,
     isSubmitting: false,
   });
-
-  // The form data for create/edit
   const [organizationData, setOrganizationData] = useState({
     orgName: '',
     subscription: '',
@@ -43,13 +41,17 @@ const SuperAdminDashboard = ({
     subscriptionStartDate: '',
     subscriptionEndDate: '',
   });
-
-  /*************************************************
-   * Log in client console to see the updated org data
-   *************************************************/
-  useEffect(() => {
-    console.log('[CLIENT] Current organizationData in state:', organizationData);
-  }, [organizationData]);
+  const [columnFilters, setColumnFilters] = useState({
+    name: '',
+    subscription: '',
+    billingTerm: '',
+    subscriptionStartDate: '',
+    subscriptionEndDate: '',
+    isActive: '',
+  });
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +63,10 @@ const SuperAdminDashboard = ({
     };
     fetchData();
   }, [getOrganizations, getSubscriptions]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [columnFilters]);
 
   const resetForm = () => {
     setOrganizationData({
@@ -74,27 +80,25 @@ const SuperAdminDashboard = ({
     setEditingOrg(null);
   };
 
-  /************************************************************
-   * TABLE SELECTION
-   ************************************************************/
   const handleRowClick = (orgId) => {
-    // Skip selecting "Cybernack" if that's your main org
+    // Prevent selection of the main org "Cybernack"
     const org = organizations.find((o) => o._id === orgId && o.name === 'Cybernack');
     if (org) return;
-
-    setSelectedOrgs((prevSelected) =>
-      prevSelected.includes(orgId)
-        ? prevSelected.filter((id) => id !== orgId)
-        : [...prevSelected, orgId]
+    setSelectedOrgs((prev) =>
+      prev.includes(orgId) ? prev.filter((id) => id !== orgId) : [...prev, orgId]
     );
   };
 
-  /************************************************************
-   * ADD ORGANIZATION
-   ************************************************************/
-  const handleAddOrganization = async () => {
-    console.log('[CLIENT] handleAddOrganization. Data to send:', organizationData);
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedOrgs([]);
+    } else {
+      const allIds = filteredOrganizations.map((org) => org._id);
+      setSelectedOrgs(allIds);
+    }
+  };
 
+  const handleAddOrganization = async () => {
     if (!organizationData.subscription) {
       toast.error('Please select a subscription.');
       return;
@@ -104,7 +108,6 @@ const SuperAdminDashboard = ({
       await createOrganization(organizationData);
       toast.success('New organization added successfully!');
       resetForm();
-      // Re-fetch to see new org
       await getOrganizations();
       setFormState((prev) => ({ ...prev, showAddForm: false }));
     } catch (err) {
@@ -115,61 +118,33 @@ const SuperAdminDashboard = ({
     }
   };
 
-  /************************************************************
-   * EDIT ORGANIZATION
-   ************************************************************/
   const handleEditClick = (org) => {
-    console.log('[CLIENT] handleEditClick for org:', org);
-
     setEditingOrg(org);
-
-    // If org.subscription is an object, use org.subscription._id
     const subscriptionId =
       typeof org.subscription === 'object'
         ? org.subscription?._id || ''
         : org.subscription || '';
-
     setOrganizationData({
       orgName: org.name || '',
       subscription: subscriptionId,
       isActive: !!org.isActive,
       billingTerm: org.billingTerm || '',
-      subscriptionStartDate: org.subscriptionStartDate
-        ? org.subscriptionStartDate.slice(0, 10)
-        : '',
-      subscriptionEndDate: org.subscriptionEndDate
-        ? org.subscriptionEndDate.slice(0, 10)
-        : '',
+      subscriptionStartDate: org.subscriptionStartDate ? org.subscriptionStartDate.slice(0, 10) : '',
+      subscriptionEndDate: org.subscriptionEndDate ? org.subscriptionEndDate.slice(0, 10) : '',
     });
-
-    setFormState((prev) => ({
-      ...prev,
-      showAddForm: false,
-      showEditForm: true,
-    }));
+    setFormState((prev) => ({ ...prev, showAddForm: false, showEditForm: true }));
   };
 
-  /************************************************************
-   * UPDATE ORGANIZATION
-   ************************************************************/
   const handleUpdateOrganization = async () => {
     if (!editingOrg) {
       toast.error('No organization is being edited.');
       return;
     }
-
-    console.log(
-      '[CLIENT] handleUpdateOrganization. Sending data:',
-      organizationData
-    );
-
     setFormState((prev) => ({ ...prev, isSubmitting: true }));
     try {
       await updateOrganization(editingOrg._id, organizationData);
-
       toast.success('Organization updated successfully!');
       resetForm();
-      // Re-fetch to see updated fields
       await getOrganizations();
       setFormState((prev) => ({ ...prev, showEditForm: false }));
     } catch (err) {
@@ -180,12 +155,7 @@ const SuperAdminDashboard = ({
     }
   };
 
-  /************************************************************
-   * DELETE ORGANIZATIONS
-   ************************************************************/
   const handleDeleteOrganizations = async () => {
-    console.log('[CLIENT] Deleting org IDs:', selectedOrgs);
-
     try {
       await deleteOrganizations(selectedOrgs);
       setSelectedOrgs([]);
@@ -198,74 +168,156 @@ const SuperAdminDashboard = ({
     }
   };
 
-  /************************************************************
-   * TABLE DATA
-   ************************************************************/
-  const tableData = useMemo(() => {
-    return organizations.map((org) => {
-      const subscriptionId =
-        typeof org.subscription === 'object'
-          ? org.subscription?._id || ''
-          : org.subscription || '';
+  const handleColumnFilterChange = (column, value) => {
+    setColumnFilters((prev) => ({ ...prev, [column]: value }));
+  };
 
-      const subMatch = subscriptions.find((sub) => sub._id === subscriptionId);
-
-      return {
-        ...org,
-        subscriptionName: subMatch ? subMatch.name : 'Standard',
-      };
+  const filteredOrganizations = useMemo(() => {
+    return organizations.filter((org) => {
+      let match = true;
+      if (columnFilters.name && !org.name.toLowerCase().includes(columnFilters.name.toLowerCase())) {
+        match = false;
+      }
+      if (columnFilters.subscription) {
+        const subName = org.subscriptionName || '';
+        if (!subName.toLowerCase().includes(columnFilters.subscription.toLowerCase())) {
+          match = false;
+        }
+      }
+      if (columnFilters.billingTerm && (!org.billingTerm || !org.billingTerm.toLowerCase().includes(columnFilters.billingTerm.toLowerCase()))) {
+        match = false;
+      }
+      if (columnFilters.subscriptionStartDate && org.subscriptionStartDate) {
+        const startStr = new Date(org.subscriptionStartDate).toLocaleDateString();
+        if (!startStr.toLowerCase().includes(columnFilters.subscriptionStartDate.toLowerCase())) {
+          match = false;
+        }
+      }
+      if (columnFilters.subscriptionEndDate && org.subscriptionEndDate) {
+        const endStr = new Date(org.subscriptionEndDate).toLocaleDateString();
+        if (!endStr.toLowerCase().includes(columnFilters.subscriptionEndDate.toLowerCase())) {
+          match = false;
+        }
+      }
+      if (columnFilters.isActive) {
+        const activeStr = org.isActive ? 'active' : 'inactive';
+        if (!activeStr.toLowerCase().includes(columnFilters.isActive.toLowerCase())) {
+          match = false;
+        }
+      }
+      return match;
     });
-  }, [organizations, subscriptions]);
+  }, [organizations, columnFilters]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredOrganizations.length / recordsPerPage);
+  }, [filteredOrganizations, recordsPerPage]);
+
+  const displayedOrganizations = useMemo(() => {
+    const startIdx = (currentPage - 1) * recordsPerPage;
+    return filteredOrganizations.slice(startIdx, startIdx + recordsPerPage);
+  }, [filteredOrganizations, currentPage, recordsPerPage]);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const allSelected = useMemo(() => {
+    return displayedOrganizations.length > 0 && selectedOrgs.length === displayedOrganizations.length;
+  }, [displayedOrganizations, selectedOrgs]);
 
   return (
     <div className="container">
       <h2>Manage Organizations</h2>
-
+      {/* Action Buttons Row */}
       <div className="d-flex justify-content-between mb-3">
         <button
-          className={`btn btn-danger ${
-            selectedOrgs.length === 0 ? 'disabled' : ''
-          }`}
-          onClick={() =>
-            setFormState((prev) => ({ ...prev, showConfirmDelete: true }))
-          }
+          className={`btn btn-danger ${selectedOrgs.length === 0 ? 'disabled' : ''}`}
+          onClick={() => setFormState((prev) => ({ ...prev, showConfirmDelete: true }))}
           disabled={selectedOrgs.length === 0}
         >
-          <FontAwesomeIcon icon={faTrashAlt} /> Delete Selected
+          <FontAwesomeIcon icon={faTrashAlt} />
         </button>
-
         <button
           className="btn btn-success"
           onClick={() =>
-            setFormState((prev) => ({
-              ...prev,
-              showAddForm: true,
-              showEditForm: false,
-            }))
+            setFormState((prev) => ({ ...prev, showAddForm: true, showEditForm: false }))
           }
         >
-          <FontAwesomeIcon icon={faPlus} /> Add New Organization
+          <FontAwesomeIcon icon={faPlus} />
         </button>
       </div>
-
+      {/* Pagination Controls (top right) */}
+      <div className="d-flex justify-content-end mb-2">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Previous"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: '1rem' }} />
+        </button>
+        <span className="align-self-center mx-2">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages || totalPages === 0}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Next"
+        >
+          <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: '1rem' }} />
+        </button>
+      </div>
       <OrganizationTable
-        organizations={tableData}
+        organizations={displayedOrganizations}
         selectedOrgs={selectedOrgs}
         onRowClick={handleRowClick}
         onEditClick={handleEditClick}
+        columnFilters={columnFilters}
+        onColumnFilterChange={handleColumnFilterChange}
+        onToggleSelectAll={toggleSelectAll}
+        allSelected={allSelected}
       />
-
-      {/* Show the form if adding or editing */}
+      {/* Pagination Controls (bottom right) */}
+      <div className="d-flex justify-content-end mt-2">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Previous"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: '1rem' }} />
+        </button>
+        <span className="align-self-center mx-2">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages || totalPages === 0}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Next"
+        >
+          <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: '1rem' }} />
+        </button>
+      </div>
+      {formState.showConfirmDelete && (
+        <ConfirmModal
+          message={`Are you sure you want to delete ${selectedOrgs.length} organization(s)?`}
+          onConfirm={handleDeleteOrganizations}
+          onCancel={() => setFormState((prev) => ({ ...prev, showConfirmDelete: false }))}
+        />
+      )}
       {(formState.showAddForm || formState.showEditForm) && (
         <OrganizationForm
           isEditing={formState.showEditForm}
           data={organizationData}
           setData={setOrganizationData}
-          onSubmit={
-            formState.showAddForm
-              ? handleAddOrganization
-              : handleUpdateOrganization
-          }
+          onSubmit={formState.showAddForm ? handleAddOrganization : handleUpdateOrganization}
           isSubmitting={formState.isSubmitting}
           onCancel={() => {
             resetForm();
@@ -279,16 +331,6 @@ const SuperAdminDashboard = ({
           subscriptions={subscriptions}
         />
       )}
-
-      {formState.showConfirmDelete && (
-        <ConfirmModal
-          message={`Are you sure you want to delete ${selectedOrgs.length} organization(s)?`}
-          onConfirm={handleDeleteOrganizations}
-          onCancel={() =>
-            setFormState((prev) => ({ ...prev, showConfirmDelete: false }))
-          }
-        />
-      )}
     </div>
   );
 };
@@ -299,23 +341,8 @@ SuperAdminDashboard.propTypes = {
   createOrganization: PropTypes.func.isRequired,
   deleteOrganizations: PropTypes.func.isRequired,
   updateOrganization: PropTypes.func.isRequired,
-  organizations: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      subscription: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-      isActive: PropTypes.bool,
-      billingTerm: PropTypes.string,
-      subscriptionStartDate: PropTypes.string,
-      subscriptionEndDate: PropTypes.string,
-    })
-  ).isRequired,
-  subscriptions: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-    })
-  ).isRequired,
+  organizations: PropTypes.array.isRequired,
+  subscriptions: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = (state) => ({

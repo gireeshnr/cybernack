@@ -1,12 +1,23 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+// client/src/components/superAdmin/manageSubscriptions.js
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { getSubscriptions, createSubscription, updateSubscription, deleteSubscriptions } from '../../auth/actions';
+import {
+  getSubscriptions,
+  createSubscription,
+  updateSubscription,
+  deleteSubscriptions,
+} from '../../auth/actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrashAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
+import {
+  faEdit,
+  faTrashAlt,
+  faPlus,
+  faChevronLeft,
+  faChevronRight,
+} from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
 
-// Lazy load ConfirmModal
 const ConfirmModal = lazy(() => import('../ConfirmModal'));
 
 const ManageSubscriptions = ({
@@ -16,6 +27,7 @@ const ManageSubscriptions = ({
   updateSubscription,
   deleteSubscriptions,
 }) => {
+  // Initial state for a subscription record
   const initialSubscriptionState = {
     name: '',
     description: '',
@@ -26,53 +38,93 @@ const ManageSubscriptions = ({
     isActive: true,
   };
 
+  // Local component states
   const [newSubscription, setNewSubscription] = useState(initialSubscriptionState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSubs, setSelectedSubs] = useState([]);
+  const [allSelected, setAllSelected] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingSub, setEditingSub] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+
+  // Column filters state (for filtering the table)
+  const [columnFilters, setColumnFilters] = useState({
+    name: '',
+    description: '',
+    priceMonthly: '',
+    priceYearly: '',
+    features: '',
+    modules: '',
+    active: '',
+  });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
 
   // Fetch subscriptions on mount
   useEffect(() => {
     getSubscriptions();
   }, [getSubscriptions]);
 
+  // Reset pagination whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [columnFilters]);
+
+  // Toggle a single subscription selection
   const handleRowClick = (subId) => {
     setSelectedSubs((prevSelected) =>
-      prevSelected.includes(subId) ? prevSelected.filter((id) => id !== subId) : [...prevSelected, subId]
+      prevSelected.includes(subId)
+        ? prevSelected.filter((id) => id !== subId)
+        : [...prevSelected, subId]
     );
   };
 
+  // Toggle "Select All" checkbox in header
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedSubs([]);
+      setAllSelected(false);
+    } else {
+      const allIds = filteredSubscriptions.map((sub) => sub._id);
+      setSelectedSubs(allIds);
+      setAllSelected(true);
+    }
+  };
+
+  // Handle input changes for the add/edit form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNewSubscription({ ...newSubscription, [name]: value });
   };
 
+  // Handle clicks to open the add form
   const handleAddClick = () => {
     setNewSubscription(initialSubscriptionState);
     setShowAddForm(true);
     setShowEditForm(false);
   };
 
+  // Handle adding a new subscription
   const handleAddSubscription = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       await createSubscription(newSubscription);
       toast.success('Subscription added successfully!');
       setNewSubscription(initialSubscriptionState);
       await getSubscriptions();
       setShowAddForm(false);
-    } catch {
+    } catch (err) {
       toast.error('Error adding subscription. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Handle editing: load the subscription data into form and open modal
   const handleEditClick = (sub) => {
     setNewSubscription({
       name: sub.name,
@@ -88,22 +140,23 @@ const ManageSubscriptions = ({
     setShowAddForm(false);
   };
 
+  // Handle updating an existing subscription
   const handleUpdateSubscription = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       await updateSubscription(editingSub._id, newSubscription);
       toast.success('Subscription updated successfully!');
       await getSubscriptions();
       setShowEditForm(false);
-    } catch {
+    } catch (err) {
       toast.error('Error updating subscription. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Handle bulk deletion of selected subscriptions
   const handleDelete = async () => {
     try {
       await deleteSubscriptions(selectedSubs);
@@ -111,35 +164,124 @@ const ManageSubscriptions = ({
       toast.success(`${selectedSubs.length} subscription(s) deleted successfully!`);
       setShowConfirmDelete(false);
       await getSubscriptions();
-    } catch {
+    } catch (err) {
       toast.error('Error deleting subscriptions. Please try again.');
     }
+  };
+
+  // Handle column filter changes
+  const handleColumnFilterChange = (column, value) => {
+    setColumnFilters((prev) => ({ ...prev, [column]: value }));
+  };
+
+  // Filter subscriptions based on the filter inputs
+  const filteredSubscriptions = useMemo(() => {
+    return subscriptions.filter((sub) => {
+      let match = true;
+      if (columnFilters.name && !sub.name.toLowerCase().includes(columnFilters.name.toLowerCase())) {
+        match = false;
+      }
+      if (columnFilters.description && (!sub.description || !sub.description.toLowerCase().includes(columnFilters.description.toLowerCase()))) {
+        match = false;
+      }
+      if (columnFilters.priceMonthly && sub.priceMonthly.toString().indexOf(columnFilters.priceMonthly) === -1) {
+        match = false;
+      }
+      if (columnFilters.priceYearly && sub.priceYearly.toString().indexOf(columnFilters.priceYearly) === -1) {
+        match = false;
+      }
+      if (columnFilters.features) {
+        const featuresStr = sub.features.join(', ');
+        if (!featuresStr.toLowerCase().includes(columnFilters.features.toLowerCase())) {
+          match = false;
+        }
+      }
+      if (columnFilters.modules) {
+        const modulesStr = sub.modules.join(', ');
+        if (!modulesStr.toLowerCase().includes(columnFilters.modules.toLowerCase())) {
+          match = false;
+        }
+      }
+      if (columnFilters.active) {
+        const activeStr = sub.isActive ? 'yes' : 'no';
+        if (!activeStr.toLowerCase().includes(columnFilters.active.toLowerCase())) {
+          match = false;
+        }
+      }
+      return match;
+    });
+  }, [subscriptions, columnFilters]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredSubscriptions.length / recordsPerPage);
+  const displayedSubscriptions = filteredSubscriptions.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
   return (
     <div className="container">
       <h2>Manage Subscriptions</h2>
 
-      {/* Action Buttons */}
-      <div className="d-flex justify-content-between mb-3">
+      {/* Top Action Row */}
+      <div className="d-flex justify-content-between mb-2">
         <button
-          className={`icon-delete btn btn-danger ${selectedSubs.length === 0 ? 'disabled' : ''}`}
+          className={`btn btn-danger ${selectedSubs.length === 0 ? 'disabled' : ''}`}
           onClick={() => setShowConfirmDelete(true)}
           disabled={selectedSubs.length === 0}
         >
-          <FontAwesomeIcon icon={faTrashAlt} /> Delete Selected
+          <FontAwesomeIcon icon={faTrashAlt} />
         </button>
         <button className="btn btn-success" onClick={handleAddClick}>
-          <FontAwesomeIcon icon={faPlus} /> Add New Subscription
+          <FontAwesomeIcon icon={faPlus} />
         </button>
       </div>
 
-      {/* Subscriptions Table */}
+      {/* Top Pagination Controls */}
+      <div className="d-flex justify-content-end mb-2">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Previous Page"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} />
+        </button>
+        <span className="align-self-center mx-2">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Next Page"
+        >
+          <FontAwesomeIcon icon={faChevronRight} />
+        </button>
+      </div>
+
+      {/* Subscriptions Table with Filter Row */}
       <div className="table-responsive">
-        <table className="table table-hover">
+        <table className="table table-hover table-striped">
           <thead>
             <tr>
-              <th>Select</th>
+              <th>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleSelectAll}
+                  style={{ marginRight: '4px' }}
+                />
+                <label style={{ fontSize: '0.8rem', margin: 0 }}>Select All</label>
+              </th>
               <th>Subscription Name</th>
               <th>Monthly Price ($)</th>
               <th>Yearly Price ($)</th>
@@ -148,35 +290,140 @@ const ManageSubscriptions = ({
               <th>Active</th>
               <th>Actions</th>
             </tr>
+            <tr>
+              <th></th>
+              <th>
+                <input
+                  type="text"
+                  placeholder="Filter Name"
+                  value={columnFilters.name}
+                  onChange={(e) => handleColumnFilterChange('name', e.target.value)}
+                  className="form-control form-control-sm"
+                />
+              </th>
+              <th>
+                <input
+                  type="text"
+                  placeholder="Filter Monthly Price"
+                  value={columnFilters.priceMonthly}
+                  onChange={(e) => handleColumnFilterChange('priceMonthly', e.target.value)}
+                  className="form-control form-control-sm"
+                />
+              </th>
+              <th>
+                <input
+                  type="text"
+                  placeholder="Filter Yearly Price"
+                  value={columnFilters.priceYearly}
+                  onChange={(e) => handleColumnFilterChange('priceYearly', e.target.value)}
+                  className="form-control form-control-sm"
+                />
+              </th>
+              <th>
+                <input
+                  type="text"
+                  placeholder="Filter Features"
+                  value={columnFilters.features}
+                  onChange={(e) => handleColumnFilterChange('features', e.target.value)}
+                  className="form-control form-control-sm"
+                />
+              </th>
+              <th>
+                <input
+                  type="text"
+                  placeholder="Filter Modules"
+                  value={columnFilters.modules}
+                  onChange={(e) => handleColumnFilterChange('modules', e.target.value)}
+                  className="form-control form-control-sm"
+                />
+              </th>
+              <th>
+                <input
+                  type="text"
+                  placeholder="Filter Active"
+                  value={columnFilters.active}
+                  onChange={(e) => handleColumnFilterChange('active', e.target.value)}
+                  className="form-control form-control-sm"
+                />
+              </th>
+              <th></th>
+            </tr>
           </thead>
           <tbody>
-            {subscriptions.map((sub) => (
-              <tr key={sub._id} className={selectedSubs.includes(sub._id) ? 'selected' : ''}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedSubs.includes(sub._id)}
-                    onChange={() => handleRowClick(sub._id)}
-                  />
-                </td>
-                <td>{sub.name}</td>
-                <td>${sub.priceMonthly}</td>
-                <td>${sub.priceYearly}</td>
-                <td>{sub.features.join(', ')}</td>
-                <td>{sub.modules.join(', ')}</td>
-                <td>{sub.isActive ? 'Yes' : 'No'}</td>
-                <td>
-                  <button className="btn btn-secondary btn-sm" onClick={() => handleEditClick(sub)}>
-                    <FontAwesomeIcon icon={faEdit} /> Edit
-                  </button>
+            {displayedSubscriptions.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="text-center">
+                  No subscriptions available.
                 </td>
               </tr>
-            ))}
+            ) : (
+              displayedSubscriptions.map((sub) => (
+                <tr key={sub._id} className={selectedSubs.includes(sub._id) ? 'table-primary' : ''}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedSubs.includes(sub._id)}
+                      onChange={() => handleRowClick(sub._id)}
+                    />
+                  </td>
+                  <td>{sub.name}</td>
+                  <td>${sub.priceMonthly}</td>
+                  <td>${sub.priceYearly}</td>
+                  <td>{sub.features.join(', ')}</td>
+                  <td>{sub.modules.join(', ')}</td>
+                  <td>{sub.isActive ? 'Yes' : 'No'}</td>
+                  <td>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => handleEditClick(sub)}
+                      style={{ background: 'none', border: 'none', padding: 0 }}
+                      title="Edit"
+                    >
+                      <FontAwesomeIcon icon={faEdit} style={{ fontSize: '0.8rem' }} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Add/Edit Form */}
+      {/* Bottom Pagination Controls */}
+      <div className="d-flex justify-content-end mt-2">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Previous Page"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} />
+        </button>
+        <span className="align-self-center mx-2">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Next Page"
+        >
+          <FontAwesomeIcon icon={faChevronRight} />
+        </button>
+      </div>
+
+      {/* Confirm Delete Modal */}
+      {showConfirmDelete && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <ConfirmModal
+            message={`Are you sure you want to delete ${selectedSubs.length} subscription(s)?`}
+            onConfirm={handleDelete}
+            onCancel={() => setShowConfirmDelete(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Add/Edit Modal */}
       {(showAddForm || showEditForm) && (
         <div className="modal">
           <div className="modal-content">
@@ -226,7 +473,7 @@ const ManageSubscriptions = ({
                 />
               </div>
               <div className="form-group">
-                <label>Features</label>
+                <label>Features (comma separated)</label>
                 <input
                   type="text"
                   name="features"
@@ -239,7 +486,7 @@ const ManageSubscriptions = ({
                 />
               </div>
               <div className="form-group">
-                <label>Modules</label>
+                <label>Modules (comma separated)</label>
                 <input
                   type="text"
                   name="modules"
@@ -273,7 +520,7 @@ const ManageSubscriptions = ({
                     ? showAddForm
                       ? 'Adding...'
                       : 'Updating...'
-                    :                  showAddForm
+                    : showAddForm
                     ? 'Add Subscription'
                     : 'Update Subscription'}
                 </button>
@@ -293,22 +540,10 @@ const ManageSubscriptions = ({
           </div>
         </div>
       )}
-
-      {/* Confirmation Modal */}
-      {showConfirmDelete && (
-        <Suspense fallback={<div>Loading...</div>}>
-          <ConfirmModal
-            message={`Are you sure you want to delete ${selectedSubs.length} subscription(s)?`}
-            onConfirm={handleDelete}
-            onCancel={() => setShowConfirmDelete(false)}
-          />
-        </Suspense>
-      )}
     </div>
   );
 };
 
-// PropTypes validation
 ManageSubscriptions.propTypes = {
   subscriptions: PropTypes.arrayOf(
     PropTypes.shape({
@@ -328,12 +563,10 @@ ManageSubscriptions.propTypes = {
   deleteSubscriptions: PropTypes.func.isRequired,
 };
 
-// Map state to props
 const mapStateToProps = (state) => ({
   subscriptions: state.subscription.subscriptions || [],
 });
 
-// Export connected component
 export default connect(mapStateToProps, {
   getSubscriptions,
   createSubscription,

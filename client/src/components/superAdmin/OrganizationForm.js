@@ -1,3 +1,4 @@
+// client/src/components/superAdmin/OrganizationForm.js
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 
@@ -10,33 +11,25 @@ const OrganizationForm = ({
   isSubmitting,
   subscriptions,
 }) => {
-  // If user picks 'monthly'/'yearly' but hasn't typed end date, auto-calc
   useEffect(() => {
-    // Log
+    // Auto-calculate end date if not provided and billing term is set
     console.log('[CLIENT] Checking auto-calc for end date');
     if (!data.subscriptionStartDate || data.subscriptionEndDate) {
-      // If there's no start date or the user already typed an end date, do nothing
       return;
     }
     if (data.billingTerm === 'monthly' || data.billingTerm === 'yearly') {
       const start = new Date(data.subscriptionStartDate);
-      let daysToAdd = data.billingTerm === 'monthly' ? 30 : 365;
+      const daysToAdd = data.billingTerm === 'monthly' ? 30 : 365;
       const endTime = start.getTime() + daysToAdd * 24 * 60 * 60 * 1000;
       const endDate = new Date(endTime);
       const endDateStr = endDate.toISOString().slice(0, 10);
-
       setData((prev) => ({
         ...prev,
         subscriptionEndDate: endDateStr,
       }));
       console.log('[CLIENT] Auto-calculated end date to', endDateStr);
     }
-  }, [
-    data.billingTerm,
-    data.subscriptionStartDate,
-    data.subscriptionEndDate,
-    setData,
-  ]);
+  }, [data.billingTerm, data.subscriptionStartDate, data.subscriptionEndDate, setData]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -50,7 +43,6 @@ const OrganizationForm = ({
     <div className="modal">
       <div className="modal-content" style={{ maxWidth: '600px' }}>
         <h4>{isEditing ? 'Edit Organization' : 'Add New Organization'}</h4>
-
         <form
           onSubmit={(e) => {
             e.preventDefault();

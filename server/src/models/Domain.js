@@ -6,10 +6,7 @@ const domainSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  description: {
-    type: String,
-    required: false,
-  },
+  description: String,
   subjects: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -26,19 +23,23 @@ const domainSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subscription',
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  ownerOrgId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    required: false,
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
+  // New field: auto-populated with client name or "Cybernack"
+  addedBy: {
+    type: String,
+    default: '',
   },
+}, {
+  timestamps: true,
 });
 
-// Add indexes for faster queries
 domainSchema.index({ name: 1 });
-domainSchema.index({ subjects: 1 });
+domainSchema.index({ subscription_id: 1 });
+domainSchema.index({ ownerOrgId: 1 });
 
 const Domain = mongoose.models.Domain || mongoose.model('Domain', domainSchema);
 export default Domain;

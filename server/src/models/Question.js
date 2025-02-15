@@ -1,50 +1,55 @@
+// server/src/models/Question.js
 import mongoose from 'mongoose';
 
-/**
- * Example question schema:
- * - question_text: required
- * - answer_options: array of strings
- * - correct_answer: string (must match one of the answer_options typically)
- * - subject_id: references the Subject model
- * - subscription_id: references the Subscription model (NEW)
- * - difficulty, explanation, etc. (optional)
- */
-const questionSchema = new mongoose.Schema(
-  {
-    question_text: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    answer_options: {
-      type: [String],
-      required: true,
-    },
-    correct_answer: {
-      type: String,
-      required: true,
-    },
-    subject_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Subject',
-      required: true,
-    },
-    // NEW: reference to Subscription
-    subscription_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Subscription',
-      required: false,
-    },
-    difficulty: {
-      type: String,
-      default: 'Medium',
-    },
-    explanation: {
-      type: String,
-    },
+const questionSchema = new mongoose.Schema({
+  question_text: {
+    type: String,
+    required: true,
+    trim: true,
   },
-  { timestamps: true }
-);
+  // Optional duplicate field if needed
+  question: {
+    type: String,
+  },
+  answer_options: {
+    type: [String],
+    required: true,
+  },
+  correct_answer: {
+    type: String,
+    required: true,
+  },
+  subject_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subject',
+    required: true,
+  },
+  subscription_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subscription',
+  },
+  ownerOrgId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    required: false,
+  },
+  difficulty: {
+    type: String,
+    default: 'Medium',
+  },
+  explanation: {
+    type: String,
+  },
+  // New field: auto-populated with client name or "Cybernack"
+  addedBy: {
+    type: String,
+    default: '',
+  },
+}, { timestamps: true });
+
+questionSchema.index({ subject_id: 1 });
+questionSchema.index({ subscription_id: 1 });
+questionSchema.index({ ownerOrgId: 1 });
 
 const Question = mongoose.model('Question', questionSchema);
 export default Question;

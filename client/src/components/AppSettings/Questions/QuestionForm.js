@@ -9,7 +9,7 @@ const QuestionForm = ({
   isSubmitting,
   onCancel,
   allSubjects,
-  allSubscriptions, // NEW
+  allSubscriptions,
 }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,7 +88,7 @@ const QuestionForm = ({
             type="text"
             name="answer_options"
             className="form-control"
-            placeholder="e.g. option1,option2,option3"
+            placeholder="e.g. option1, option2, option3"
             value={data.answer_options || ''}
             onChange={handleChange}
             required
@@ -142,7 +142,7 @@ const QuestionForm = ({
           />
         </div>
 
-        {/* NEW: Subscription */}
+        {/* Subscription Dropdown */}
         <div className="form-group">
           <label>Subscription</label>
           <select
@@ -163,21 +163,16 @@ const QuestionForm = ({
           </small>
         </div>
 
-        {/* Action Buttons */}
         <div className="d-flex justify-content-end">
           <button
             type="button"
-            className="btn btn-secondary mr-2"
+            className="btn btn-secondary me-2"
             onClick={onCancel}
             disabled={isSubmitting}
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isSubmitting}
-          >
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
@@ -196,7 +191,7 @@ QuestionForm.propTypes = {
     correct_answer: PropTypes.string,
     difficulty: PropTypes.string,
     explanation: PropTypes.string,
-    subscription_id: PropTypes.string, // NEW
+    subscription_id: PropTypes.string,
   }).isRequired,
   setData: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,

@@ -8,18 +8,10 @@ import Domain from '../models/Domain.js';
 import Subject from '../models/Subject.js';
 import Question from '../models/Question.js';
 
-/** A small tier map: 'Free'->1, 'Standard'->2, 'Enterprise'->3 */
 const subTier = { Free: 1, Standard: 2, Enterprise: 3 };
 
-/**
- * Utility function to filter the doc if ?search=... is specified.
- * We keep only items that match (Industry/Domain/Subject name or Question text),
- * plus their parent path.
- */
 function filterDocBySearch(settingsDoc, search) {
   const lowerSearch = search.toLowerCase();
-
-  // Build a new doc
   const newDoc = {
     _id: settingsDoc._id,
     orgId: settingsDoc.orgId,
@@ -30,8 +22,8 @@ function filterDocBySearch(settingsDoc, search) {
     __v: settingsDoc.__v,
   };
 
-  function matchesName(nameOrText) {
-    return nameOrText.toLowerCase().includes(lowerSearch);
+  function matchesName(text) {
+    return text.toLowerCase().includes(lowerSearch);
   }
 
   settingsDoc.industries.forEach((ind) => {
@@ -86,23 +78,14 @@ function filterDocBySearch(settingsDoc, search) {
   return newDoc;
 }
 
-/**
- * GET /organization-settings/hierarchy?search=
- * Builds or retrieves the Industry->Domain->Subject->Question doc for this org.
- * If the user’s subscription changed, we rebuild it. If ?search=..., we filter results.
- */
 export async function getHierarchy(req, res) {
   try {
     const { search } = req.query;
     const org = await Organization.findById(req.user.org).populate('subscription');
-    if (!org) {
-      return res.status(404).json({ error: 'Organization not found.' });
-    }
-
+    if (!org) return res.status(404).json({ error: 'Organization not found.' });
     const orgSubName = org.subscription?.name || 'Free';
     const orgTier = subTier[orgSubName] || 1;
 
-    // Which subscription IDs are <= orgTier
     const allSubs = await Subscription.find({ isActive: true });
     const allowedSubIds = [];
     for (const s of allSubs) {
@@ -110,23 +93,32 @@ export async function getHierarchy(req, res) {
       if (sTier <= orgTier) allowedSubIds.push(s._id);
     }
 
-    // Check if we have existing settings
     let settings = await OrganizationSettings.findOne({ orgId: org._id })
-      .populate('industries.industryId')
-      .populate('industries.domains.domainId')
-      .populate('industries.domains.subjects.subjectId')
-      .populate('industries.domains.subjects.questions.questionId');
+      .populate({
+        path: 'industries.industryId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      })
+      .populate({
+        path: 'industries.domains.domainId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      })
+      .populate({
+        path: 'industries.domains.subjects.subjectId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      })
+      .populate({
+        path: 'industries.domains.subjects.questions.questionId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      });
 
     if (settings) {
       const oldTier = settings.subscriptionTier || 1;
       if (oldTier !== orgTier) {
-        // The subscription tier changed => rebuild
         await OrganizationSettings.deleteOne({ _id: settings._id });
         settings = null;
       }
     }
 
-    // If no doc, build from scratch
     if (!settings) {
       const industries = await Industry.find({ subscription_id: { $in: allowedSubIds } });
       const industriesArray = [];
@@ -178,18 +170,28 @@ export async function getHierarchy(req, res) {
       await newSettings.save();
 
       settings = await OrganizationSettings.findById(newSettings._id)
-        .populate('industries.industryId')
-        .populate('industries.domains.domainId')
-        .populate('industries.domains.subjects.subjectId')
-        .populate('industries.domains.subjects.questions.questionId');
+        .populate({
+          path: 'industries.industryId',
+          populate: { path: 'ownerOrgId', model: 'Organization' }
+        })
+        .populate({
+          path: 'industries.domains.domainId',
+          populate: { path: 'ownerOrgId', model: 'Organization' }
+        })
+        .populate({
+          path: 'industries.domains.subjects.subjectId',
+          populate: { path: 'ownerOrgId', model: 'Organization' }
+        })
+        .populate({
+          path: 'industries.domains.subjects.questions.questionId',
+          populate: { path: 'ownerOrgId', model: 'Organization' }
+        });
     }
 
-    // If we have a doc and there's a search param, filter
     if (settings && search) {
       const filtered = filterDocBySearch(settings, search);
       return res.json(filtered);
     }
-
     return res.json(settings);
   } catch (err) {
     console.error('Error in getHierarchy:', err);
@@ -197,23 +199,28 @@ export async function getHierarchy(req, res) {
   }
 }
 
-/**
- * POST /organization-settings/toggle
- * Partial toggling logic for Industry, Domain, Subject, or Question.
- * This is crucial to update the .active fields and cascade if needed.
- */
 export async function toggleItem(req, res) {
   try {
-    const { itemType, itemId, onlyHere, newActive, parentIndustryId, parentDomainId, parentSubjectId } =
-      req.body;
+    const { itemType, itemId, onlyHere, newActive, parentIndustryId, parentDomainId, parentSubjectId } = req.body;
     const orgId = req.user.org;
 
     let settings = await OrganizationSettings.findOne({ orgId })
-      .populate('industries.industryId')
-      .populate('industries.domains.domainId')
-      .populate('industries.domains.subjects.subjectId')
-      .populate('industries.domains.subjects.questions.questionId');
-
+      .populate({
+        path: 'industries.industryId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      })
+      .populate({
+        path: 'industries.domains.domainId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      })
+      .populate({
+        path: 'industries.domains.subjects.subjectId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      })
+      .populate({
+        path: 'industries.domains.subjects.questions.questionId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      });
     if (!settings) {
       return res.status(404).json({ error: 'OrganizationSettings not found for this org.' });
     }
@@ -248,7 +255,6 @@ export async function toggleItem(req, res) {
 
     switch (itemType) {
       case 'industry': {
-        // Only one reference for an industry, so onlyHere is effectively always true
         for (const ind of settings.industries) {
           if (String(ind.industryId._id) === String(itemId)) {
             cascadeIndustry(ind);
@@ -259,7 +265,6 @@ export async function toggleItem(req, res) {
       }
       case 'domain': {
         if (onlyHere && parentIndustryId) {
-          // Only in the specified industry
           for (const ind of settings.industries) {
             if (String(ind.industryId._id) === String(parentIndustryId)) {
               for (const dom of ind.domains) {
@@ -272,7 +277,6 @@ export async function toggleItem(req, res) {
             }
           }
         } else {
-          // Across all references
           for (const ind of settings.industries) {
             for (const dom of ind.domains) {
               if (String(dom.domainId._id) === String(itemId)) {
@@ -285,7 +289,6 @@ export async function toggleItem(req, res) {
       }
       case 'subject': {
         if (onlyHere && parentIndustryId && parentDomainId) {
-          // Only in that single path
           for (const ind of settings.industries) {
             if (String(ind.industryId._id) === String(parentIndustryId)) {
               for (const dom of ind.domains) {
@@ -303,7 +306,6 @@ export async function toggleItem(req, res) {
             }
           }
         } else {
-          // Across all references
           for (const ind of settings.industries) {
             for (const dom of ind.domains) {
               for (const sub of dom.subjects) {
@@ -318,7 +320,6 @@ export async function toggleItem(req, res) {
       }
       case 'question': {
         if (onlyHere && parentIndustryId && parentDomainId && parentSubjectId) {
-          // Only in that single path
           for (const ind of settings.industries) {
             if (String(ind.industryId._id) === String(parentIndustryId)) {
               for (const dom of ind.domains) {
@@ -341,7 +342,6 @@ export async function toggleItem(req, res) {
             }
           }
         } else {
-          // Across all references
           for (const ind of settings.industries) {
             for (const dom of ind.domains) {
               for (const sub of dom.subjects) {
@@ -360,15 +360,25 @@ export async function toggleItem(req, res) {
         return res.status(400).json({ error: 'Invalid itemType.' });
     }
 
-    // Save and re-populate
     await settings.save();
 
     const updated = await OrganizationSettings.findById(settings._id)
-      .populate('industries.industryId')
-      .populate('industries.domains.domainId')
-      .populate('industries.domains.subjects.subjectId')
-      .populate('industries.domains.subjects.questions.questionId');
-
+      .populate({
+        path: 'industries.industryId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      })
+      .populate({
+        path: 'industries.domains.domainId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      })
+      .populate({
+        path: 'industries.domains.subjects.subjectId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      })
+      .populate({
+        path: 'industries.domains.subjects.questions.questionId',
+        populate: { path: 'ownerOrgId', model: 'Organization' }
+      });
     return res.json(updated);
   } catch (err) {
     console.error('Error toggling item:', err);
@@ -376,22 +386,8 @@ export async function toggleItem(req, res) {
   }
 }
 
-/**
- * POST /organization-settings/hierarchy
- * Overwrite the entire doc if you still want a full update approach
- */
 export async function updateHierarchy(req, res) {
   try {
-    // Just example code:
-    // const { industries } = req.body;
-    // const orgId = req.user.org;
-    // let updated = await OrganizationSettings.findOneAndUpdate(
-    //   { orgId },
-    //   { industries },
-    //   { new: true }
-    // )
-    // .populate(...);
-    // return res.json(updated);
     return res.json({ success: true });
   } catch (err) {
     console.error('Error updating hierarchy:', err);

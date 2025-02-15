@@ -9,7 +9,7 @@ import { getUserProfile } from './auth/actions';
 import { store } from './store';
 import './style/style.scss';
 
-// Lazy load components
+/* LAZY IMPORTS */
 const LazySignup = React.lazy(() => import('./components/auth/signup'));
 const LazySignin = React.lazy(() => import('./components/auth/signin'));
 const LazyForgotPassword = React.lazy(() => import('./components/auth/ForgotPassword'));
@@ -33,6 +33,7 @@ const LazyYourSubscription = React.lazy(() =>
 const LazySignout = React.lazy(() => import('./components/auth/signout'));
 const LazyAuthComponent = React.lazy(() => import('./components/auth/require_auth'));
 
+// App Settings
 const LazyIndustryPage = React.lazy(() =>
   import('./components/AppSettings/Industries/IndustryPage')
 );
@@ -46,23 +47,23 @@ const LazyQuestionPage = React.lazy(() =>
   import('./components/AppSettings/Questions/QuestionPage')
 );
 
-// New: Import the ClientAdminUsers component
+// Admin
 const LazyClientAdminUsers = React.lazy(() =>
   import('./components/admin/ClientAdminUsers')
 );
-
-// New: Import the ManageDomainsAndSubjects component
 const LazyManageDomainsAndSubjects = React.lazy(() =>
   import('./components/admin/ManageDomainsAndSubjects')
 );
+// NEW: BulkUpload page
+const LazyBulkUpload = React.lazy(() => import('./components/admin/BulkUpload'));
 
-// Check if token exists and dispatch auth action
+// Check if token exists in localStorage
 const token = localStorage.getItem('auth_jwt_token');
 if (token) {
   store.dispatch({ type: AUTH_USER });
 }
 
-// Fallback loader for lazy components
+// Fallback for lazy
 const FallbackLoader = () => (
   <div className="fallback-loader">
     <div className="spinner"></div>
@@ -70,7 +71,6 @@ const FallbackLoader = () => (
   </div>
 );
 
-// Main App component
 const App = () => {
   return (
     <Provider store={store}>
@@ -94,7 +94,7 @@ const App = () => {
   );
 };
 
-// Protected App Component
+// The protected section
 const ProtectedApp = memo(() => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -110,17 +110,14 @@ const ProtectedApp = memo(() => {
 
   return (
     <div className="app">
-      {/* Application Header */}
       <Header />
-
-      {/* Protected Routes */}
       <div className="content">
         <React.Suspense fallback={<FallbackLoader />}>
           <Routes>
             {/* Account */}
             <Route path="/account" element={<LazyAuthComponent Component={LazyAccount} />} />
 
-            {/* Admin Settings */}
+            {/* Superadmin */}
             <Route
               path="/superadmin/dashboard"
               element={
@@ -158,11 +155,6 @@ const ProtectedApp = memo(() => {
               }
             />
 
-            {/* 
-              *** KEY CHANGE ***
-              Before: allowedRoles={['superadmin']}
-              Now: allow superadmin OR admin
-            */}
             <Route
               path="/superadmin/your-subscription"
               element={
@@ -173,7 +165,7 @@ const ProtectedApp = memo(() => {
               }
             />
 
-            {/* Application Settings */}
+            {/* App Settings (superadmin) */}
             <Route
               path="/application/settings/industries"
               element={
@@ -210,8 +202,18 @@ const ProtectedApp = memo(() => {
                 />
               }
             />
+            {/* NEW: superadmin bulk upload */}
+            <Route
+              path="/application/settings/bulk-upload"
+              element={
+                <LazyAuthComponent
+                  Component={LazyBulkUpload}
+                  allowedRoles={['superadmin']}
+                />
+              }
+            />
 
-            {/* New: Client Admin User Management */}
+            {/* Admin */}
             <Route
               path="/admin/users"
               element={
@@ -221,13 +223,21 @@ const ProtectedApp = memo(() => {
                 />
               }
             />
-
-            {/* New: Manage Domains and Subjects */}
             <Route
               path="/admin/domains-subjects"
               element={
                 <LazyAuthComponent
                   Component={LazyManageDomainsAndSubjects}
+                  allowedRoles={['admin']}
+                />
+              }
+            />
+            {/* NEW: admin bulk upload */}
+            <Route
+              path="/admin/bulk-upload"
+              element={
+                <LazyAuthComponent
+                  Component={LazyBulkUpload}
                   allowedRoles={['admin']}
                 />
               }

@@ -2,15 +2,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from '../../api'; // the api.js instance
 import { connect } from 'react-redux';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBars } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
 
 /**
  * A small modal for "Only Here" vs. "All references".
- * If you want partial toggles for Domain/Subject/Question, you need this.
  */
 function DeactivateModal({ show, onClose, itemName, onOnlyHere, onAll }) {
   if (!show) return null;
-
   return (
     <div
       className="modal d-block"
@@ -43,19 +44,31 @@ function DeactivateModal({ show, onClose, itemName, onOnlyHere, onAll }) {
   );
 }
 
-function ManageDomainsAndSubjects({ organization }) {
+/**
+ * Helper to render an ownership badge:
+ * - If the record's ownerOrgId exists and equals the current organization's _id, show "Locally Added".
+ * - If the user is superadmin and the record is owned by another org, display "Added by [OrgName]".
+ */
+function renderOwnerBadge(entity, currentOrgId, userRole) {
+  if (!entity?.ownerOrgId) return null;
+  const owner = entity.ownerOrgId;
+  if (currentOrgId && owner._id === currentOrgId) {
+    return <span className="badge bg-success ms-2">Locally Added</span>;
+  } else if (userRole === 'superadmin' && owner.name) {
+    return <span className="badge bg-info ms-2">Added by {owner.name}</span>;
+  }
+  return null;
+}
+
+function ManageDomainsAndSubjects({ organization, role }) {
   const [hierarchy, setHierarchy] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Debounced search text
   const [searchText, setSearchText] = useState('');
   const debounceRef = useRef(null);
-
-  // For partial toggles (modal for "only here" vs "all")
   const [showModal, setShowModal] = useState(false);
-  const [modalItem, setModalItem] = useState(null); // { itemType, itemId, itemName, newActive, parentIDs... }
+  const [modalItem, setModalItem] = useState(null);
 
-  // 1) Fetch entire or filtered hierarchy
+  // Fetch hierarchy (optionally filtered by search)
   const fetchHierarchy = useCallback(
     async (query) => {
       try {
@@ -76,24 +89,21 @@ function ManageDomainsAndSubjects({ organization }) {
     []
   );
 
-  // On mount, fetch with no search
   useEffect(() => {
     fetchHierarchy('');
   }, [fetchHierarchy]);
 
-  // 2) Debounced search
+  // Debounced search change handler
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearchText(val);
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       fetchHierarchy(val);
     }, 500);
   };
 
-  // 3) Toggle item endpoint
+  // Toggle item handler
   async function toggleItem({
     itemType,
     itemId,
@@ -113,9 +123,7 @@ function ManageDomainsAndSubjects({ organization }) {
       if (parentIndustryId) body.parentIndustryId = parentIndustryId;
       if (parentDomainId) body.parentDomainId = parentDomainId;
       if (parentSubjectId) body.parentSubjectId = parentSubjectId;
-
       const { data } = await axios.post('/organization-settings/toggle', body);
-      // The server returns the updated hierarchy
       setHierarchy(data);
     } catch (err) {
       console.error('Error toggling item:', err);
@@ -123,14 +131,11 @@ function ManageDomainsAndSubjects({ organization }) {
     }
   }
 
-  // Toggle handlers
-
-  // Industry
+  // Handlers for toggles
   const handleToggleIndustry = (indIndex) => {
     if (!hierarchy) return;
     const ind = hierarchy.industries[indIndex];
     const newVal = !ind.active;
-    // Always onlyHere (since an industry is unique)
     toggleItem({
       itemType: 'industry',
       itemId: ind.industryId._id,
@@ -139,15 +144,12 @@ function ManageDomainsAndSubjects({ organization }) {
     });
   };
 
-  // Domain
   const handleToggleDomain = (indIndex, domIndex) => {
     if (!hierarchy) return;
     const ind = hierarchy.industries[indIndex];
     const dom = ind.domains[domIndex];
     const newVal = !dom.active;
-
     if (newVal === false) {
-      // Deactivate => open modal
       setModalItem({
         itemType: 'domain',
         itemId: dom.domainId._id,
@@ -157,7 +159,6 @@ function ManageDomainsAndSubjects({ organization }) {
       });
       setShowModal(true);
     } else {
-      // Re-activate => do onlyHere
       toggleItem({
         itemType: 'domain',
         itemId: dom.domainId._id,
@@ -168,14 +169,12 @@ function ManageDomainsAndSubjects({ organization }) {
     }
   };
 
-  // Subject
   const handleToggleSubject = (indIndex, domIndex, subIndex) => {
     if (!hierarchy) return;
     const ind = hierarchy.industries[indIndex];
     const dom = ind.domains[domIndex];
     const sub = dom.subjects[subIndex];
     const newVal = !sub.active;
-
     if (newVal === false) {
       setModalItem({
         itemType: 'subject',
@@ -198,7 +197,6 @@ function ManageDomainsAndSubjects({ organization }) {
     }
   };
 
-  // Question
   const handleToggleQuestion = (indIndex, domIndex, subIndex, qIndex) => {
     if (!hierarchy) return;
     const ind = hierarchy.industries[indIndex];
@@ -206,7 +204,6 @@ function ManageDomainsAndSubjects({ organization }) {
     const sub = dom.subjects[subIndex];
     const q = sub.questions[qIndex];
     const newVal = !q.active;
-
     if (newVal === false) {
       setModalItem({
         itemType: 'question',
@@ -231,13 +228,12 @@ function ManageDomainsAndSubjects({ organization }) {
     }
   };
 
-  // Modal close
+  // Modal handlers
   const handleModalClose = () => {
     setShowModal(false);
     setModalItem(null);
   };
 
-  // "Only Here"
   const handleOnlyHere = () => {
     if (!modalItem) return;
     toggleItem({
@@ -252,7 +248,6 @@ function ManageDomainsAndSubjects({ organization }) {
     handleModalClose();
   };
 
-  // "Across All"
   const handleAll = () => {
     if (!modalItem) return;
     toggleItem({
@@ -264,7 +259,6 @@ function ManageDomainsAndSubjects({ organization }) {
     handleModalClose();
   };
 
-  // Render
   if (loading) return <div>Loading hierarchy...</div>;
   if (!hierarchy) return <div>No hierarchy data.</div>;
 
@@ -273,10 +267,7 @@ function ManageDomainsAndSubjects({ organization }) {
       <h2>Manage Domains & Subjects</h2>
       <p>
         Use the search box to filter items. Toggle each item to activate/deactivate.
-        Debounced search means you won't lose focus.
       </p>
-
-      {/* Debounced search box */}
       <div className="mb-3">
         <input
           type="text"
@@ -286,7 +277,6 @@ function ManageDomainsAndSubjects({ organization }) {
           placeholder="Search..."
         />
       </div>
-
       {hierarchy.industries?.map((ind, iInd) => (
         <div key={ind.industryId?._id || iInd} className="border p-2 mb-2">
           <div>
@@ -299,6 +289,7 @@ function ManageDomainsAndSubjects({ organization }) {
             <label htmlFor={`ind-${iInd}`} className="ms-2 fw-bold">
               {ind.industryId?.name || 'Unnamed Industry'}
             </label>
+            {renderOwnerBadge(ind.industryId, organization?._id, role)}
           </div>
           <div style={{ marginLeft: '1.5rem' }}>
             {ind.domains.map((dom, iDom) => (
@@ -312,7 +303,7 @@ function ManageDomainsAndSubjects({ organization }) {
                 <label htmlFor={`dom-${iInd}-${iDom}`} className="ms-1 fw-semibold">
                   {dom.domainId?.name || 'Unnamed Domain'}
                 </label>
-
+                {renderOwnerBadge(dom.domainId, organization?._id, role)}
                 <div style={{ marginLeft: '1.5rem' }}>
                   {dom.subjects.map((sub, iSub) => (
                     <div key={sub.subjectId?._id || iSub} className="mb-1">
@@ -322,13 +313,10 @@ function ManageDomainsAndSubjects({ organization }) {
                         onChange={() => handleToggleSubject(iInd, iDom, iSub)}
                         id={`sub-${iInd}-${iDom}-${iSub}`}
                       />
-                      <label
-                        htmlFor={`sub-${iInd}-${iDom}-${iSub}`}
-                        className="ms-1"
-                      >
+                      <label htmlFor={`sub-${iInd}-${iDom}-${iSub}`} className="ms-1">
                         {sub.subjectId?.name || 'Unnamed Subject'}
                       </label>
-
+                      {renderOwnerBadge(sub.subjectId, organization?._id, role)}
                       <div style={{ marginLeft: '1.5rem' }}>
                         {sub.questions.map((q, iQ) => (
                           <div key={q.questionId?._id || iQ} className="form-check mb-1">
@@ -345,6 +333,7 @@ function ManageDomainsAndSubjects({ organization }) {
                             >
                               {q.questionId?.question_text || 'Unnamed Question'}
                             </label>
+                            {renderOwnerBadge(q.questionId, organization?._id, role)}
                           </div>
                         ))}
                       </div>
@@ -356,8 +345,6 @@ function ManageDomainsAndSubjects({ organization }) {
           </div>
         </div>
       ))}
-
-      {/* "Only Here" vs. "All" Modal */}
       <DeactivateModal
         show={showModal}
         onClose={handleModalClose}
@@ -371,6 +358,7 @@ function ManageDomainsAndSubjects({ organization }) {
 
 const mapStateToProps = (state) => ({
   organization: state.auth.profile?.organization,
+  role: state.auth.profile?.role,
 });
 
 export default connect(mapStateToProps)(ManageDomainsAndSubjects);

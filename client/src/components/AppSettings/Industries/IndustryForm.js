@@ -8,7 +8,7 @@ const IndustryForm = ({
   onSubmit,
   isSubmitting,
   onCancel,
-  allSubscriptions, // NEW
+  allSubscriptions,
 }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,7 +46,7 @@ const IndustryForm = ({
           />
         </div>
 
-        {/* NEW: Subscription Dropdown */}
+        {/* Subscription Dropdown */}
         <div className="form-group">
           <label>Subscription</label>
           <select
@@ -70,17 +70,13 @@ const IndustryForm = ({
         <div className="d-flex justify-content-end">
           <button
             type="button"
-            className="btn btn-secondary mr-2"
+            className="btn btn-secondary me-2"
             onClick={onCancel}
             disabled={isSubmitting}
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isSubmitting}
-          >
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
@@ -94,7 +90,7 @@ IndustryForm.propTypes = {
   data: PropTypes.shape({
     name: PropTypes.string,
     description: PropTypes.string,
-    subscription_id: PropTypes.string, // NEW
+    subscription_id: PropTypes.string,
   }).isRequired,
   setData: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,

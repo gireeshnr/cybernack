@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
-import AppLogo from '../statics/Logo.png'; // Application logo
+import AppLogo from '../statics/Logo.png';
 
 const Header = ({ authenticated, role, organization }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -54,13 +54,10 @@ const Header = ({ authenticated, role, organization }) => {
           </NavLink>
         </li>
 
-        {/* Admin Settings (shared by superadmin + admin) */}
+        {/* Admin Settings (for both admin and superadmin) */}
         {authenticated && (role === 'superadmin' || role === 'admin') && (
           <li className="nav-item">
-            <div
-              className="nav-link"
-              onClick={() => toggleMenu('adminSettings')}
-            >
+            <div className="nav-link" onClick={() => toggleMenu('adminSettings')}>
               <i className="fas fa-cogs" />
               <span className="menu-text">Admin Settings</span>
               <i
@@ -71,7 +68,7 @@ const Header = ({ authenticated, role, organization }) => {
             </div>
             {activeMenu === 'adminSettings' && (
               <ul className="submenu">
-                {/* superadmin-only sub-menu items */}
+                {/* superadmin-only submenu items */}
                 {role === 'superadmin' && (
                   <>
                     <li className="nav-item">
@@ -97,17 +94,15 @@ const Header = ({ authenticated, role, organization }) => {
                     </li>
                   </>
                 )}
-                {/* "Your Subscription" visible to both superadmin & admin */}
+
                 <li className="nav-item">
-                  <NavLink
-                    className="nav-link"
-                    to="/superadmin/your-subscription"
-                  >
+                  <NavLink className="nav-link" to="/superadmin/your-subscription">
                     <i className="fas fa-star" />
                     <span className="menu-text">Your Subscription</span>
                   </NavLink>
                 </li>
-                {/* "Users" visible to client admin only */}
+
+                {/* admin only */}
                 {role === 'admin' && (
                   <li className="nav-item">
                     <NavLink className="nav-link" to="/admin/users">
@@ -116,7 +111,6 @@ const Header = ({ authenticated, role, organization }) => {
                     </NavLink>
                   </li>
                 )}
-                {/* New: Manage Domains and Subjects */}
                 {role === 'admin' && (
                   <li className="nav-item">
                     <NavLink className="nav-link" to="/admin/domains-subjects">
@@ -125,18 +119,24 @@ const Header = ({ authenticated, role, organization }) => {
                     </NavLink>
                   </li>
                 )}
+                {/* Admin bulk upload */}
+                {role === 'admin' && (
+                  <li className="nav-item">
+                    <NavLink className="nav-link" to="/admin/bulk-upload">
+                      <i className="fas fa-upload" />
+                      <span className="menu-text">Bulk Upload</span>
+                    </NavLink>
+                  </li>
+                )}
               </ul>
             )}
           </li>
         )}
 
-        {/* Application Settings (still superadmin only) */}
+        {/* App Settings (superadmin only) */}
         {authenticated && role === 'superadmin' && organization === 'Cybernack' && (
           <li className="nav-item">
-            <div
-              className="nav-link"
-              onClick={() => toggleMenu('appSettings')}
-            >
+            <div className="nav-link" onClick={() => toggleMenu('appSettings')}>
               <i className="fas fa-wrench" />
               <span className="menu-text">App Settings</span>
               <i
@@ -175,12 +175,22 @@ const Header = ({ authenticated, role, organization }) => {
                   </NavLink>
                 </li>
                 <li className="nav-item">
-                <NavLink
+                  <NavLink
                     className="nav-link"
                     to="/application/settings/questions"
                   >
                     <i className="fas fa-question-circle" />
                     <span className="menu-text">Questions</span>
+                  </NavLink>
+                </li>
+                {/* superadmin bulk upload */}
+                <li className="nav-item">
+                  <NavLink
+                    className="nav-link"
+                    to="/application/settings/bulk-upload"
+                  >
+                    <i className="fas fa-upload" />
+                    <span className="menu-text">Bulk Upload</span>
                   </NavLink>
                 </li>
               </ul>
@@ -230,7 +240,7 @@ Header.propTypes = {
 const mapStateToProps = (state) => ({
   authenticated: state.auth.authenticated,
   role: state.auth.profile?.role,
-  organization: state.auth.profile?.org, // e.g. "Cybernack" for superadmin
+  organization: state.auth.profile?.org,
 });
 
 export default connect(mapStateToProps)(Header);

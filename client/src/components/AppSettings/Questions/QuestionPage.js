@@ -7,14 +7,12 @@ import {
   deleteQuestion,
 } from '../../../reducers/questionSlice';
 import { fetchSubjects } from '../../../reducers/subjectSlice';
-
-// Import your existing subscription action
 import { getSubscriptions } from '../../../auth/subscriptionActions';
-
 import QuestionForm from './QuestionForm';
 import ConfirmModal from '../../ConfirmModal';
+import QuestionTable from './QuestionTable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt, faPlus, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faTrashAlt, faPlus, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
 
 const QuestionPage = () => {
@@ -23,12 +21,11 @@ const QuestionPage = () => {
   const { subjects } = useSelector((state) => state.subjects);
   const { subscriptions } = useSelector((state) => state.subscription);
 
-  // For multi-select to delete
   const [selectedQuestions, setSelectedQuestions] = useState([]);
+  const [allSelected, setAllSelected] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  // question form data
   const [questionData, setQuestionData] = useState({
     subject_id: '',
     question: '',
@@ -37,21 +34,37 @@ const QuestionPage = () => {
     correct_answer: '',
     difficulty: '',
     explanation: '',
-    subscription_id: '', // NEW
+    subscription_id: '',
   });
   const [editingQuestion, setEditingQuestion] = useState(null);
 
-  // Fetch questions, subjects, subscriptions on mount
+  // Column filters
+  const [columnFilters, setColumnFilters] = useState({
+    question_text: '',
+    subject: '',
+    subscription: '',
+    difficulty: '',
+    addedBy: '',
+  });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
+
   useEffect(() => {
     dispatch(fetchQuestions());
     dispatch(fetchSubjects());
     dispatch(getSubscriptions());
   }, [dispatch]);
 
-  // Display errors from Redux
   useEffect(() => {
     if (error) toast.error(`Error: ${error}`);
   }, [error]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [columnFilters]);
 
   const resetForm = () => {
     setQuestionData({
@@ -72,29 +85,25 @@ const QuestionPage = () => {
     setShowModal(false);
   };
 
-  // Toggle selection for bulk delete
   const handleRowClick = (id) => {
-    setSelectedQuestions((prev) =>
-      prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id]
-    );
-  };
-
-  // Bulk Delete
-  const handleDeleteQuestions = async () => {
-    try {
-      for (const id of selectedQuestions) {
-        await dispatch(deleteQuestion(id));
-      }
-      dispatch(fetchQuestions());
-      toast.success(`${selectedQuestions.length} question(s) deleted!`);
-      setSelectedQuestions([]);
-      setShowConfirmDelete(false);
-    } catch {
-      // error handled in Redux
+    if (selectedQuestions.includes(id)) {
+      setSelectedQuestions(selectedQuestions.filter((q) => q !== id));
+    } else {
+      setSelectedQuestions([...selectedQuestions, id]);
     }
   };
 
-  // Add a new question
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedQuestions([]);
+      setAllSelected(false);
+    } else {
+      const allIds = filteredQuestions.map((q) => q._id);
+      setSelectedQuestions(allIds);
+      setAllSelected(true);
+    }
+  };
+
   const handleAddQuestion = async () => {
     if (!questionData.subject_id) {
       toast.error('Subject is required.');
@@ -116,47 +125,17 @@ const QuestionPage = () => {
       toast.error('Correct answer is required.');
       return;
     }
-
     const payload = {
       ...questionData,
       answer_options: questionData.answer_options.split(',').map((s) => s.trim()),
     };
-
     try {
       await dispatch(createQuestion(payload));
       dispatch(fetchQuestions());
       closeModal();
-    } catch {
-      // error in Redux
-    }
+    } catch {}
   };
 
-  // Edit
-  const handleEditClick = (question) => {
-    const opts = Array.isArray(question.answer_options)
-      ? question.answer_options.join(', ')
-      : question.answer_options || '';
-
-    setQuestionData({
-      subject_id:
-        (question.subject_id && question.subject_id._id) || question.subject_id || '',
-      question: question.question || '',
-      question_text: question.question_text || '',
-      answer_options: opts,
-      correct_answer: question.correct_answer || '',
-      difficulty: question.difficulty || '',
-      explanation: question.explanation || '',
-      subscription_id:
-        (question.subscription_id && question.subscription_id._id) ||
-        question.subscription_id ||
-        '',
-    });
-
-    setEditingQuestion(question);
-    setShowModal(true);
-  };
-
-  // Update
   const handleUpdateQuestion = async () => {
     if (!questionData.subject_id) {
       toast.error('Subject is required.');
@@ -178,37 +157,117 @@ const QuestionPage = () => {
       toast.error('Correct answer is required.');
       return;
     }
-
     const payload = {
       ...questionData,
       answer_options: questionData.answer_options.split(',').map((s) => s.trim()),
     };
-
     try {
-      await dispatch(
-        updateQuestion({ id: editingQuestion._id, questionData: payload })
-      );
+      await dispatch(updateQuestion({ id: editingQuestion._id, questionData: payload }));
       dispatch(fetchQuestions());
       closeModal();
-    } catch {
-      // error handled in Redux
+    } catch {}
+  };
+
+  const handleDeleteQuestions = async () => {
+    try {
+      for (const id of selectedQuestions) {
+        await dispatch(deleteQuestion(id));
+      }
+      dispatch(fetchQuestions());
+      setSelectedQuestions([]);
+      setAllSelected(false);
+      setShowConfirmDelete(false);
+    } catch {}
+  };
+
+  const handleEditClick = (question) => {
+    const opts = Array.isArray(question.answer_options)
+      ? question.answer_options.join(', ')
+      : question.answer_options || '';
+    setQuestionData({
+      subject_id:
+        (question.subject_id && question.subject_id._id) ||
+        question.subject_id ||
+        '',
+      question: question.question || '',
+      question_text: question.question_text || '',
+      answer_options: opts,
+      correct_answer: question.correct_answer || '',
+      difficulty: question.difficulty || '',
+      explanation: question.explanation || '',
+      subscription_id:
+        (question.subscription_id && question.subscription_id._id) ||
+        question.subscription_id ||
+        '',
+    });
+    setEditingQuestion(question);
+    setShowModal(true);
+  };
+
+  const handleColumnFilterChange = (column, value) => {
+    setColumnFilters((prev) => ({ ...prev, [column]: value }));
+  };
+
+  const filteredQuestions = questions.filter((q) => {
+    let match = true;
+    if (columnFilters.question_text && !q.question_text.toLowerCase().includes(columnFilters.question_text.toLowerCase())) {
+      match = false;
     }
+    if (columnFilters.subject) {
+      let subjName = '';
+      if (q.subject_id && typeof q.subject_id === 'object') {
+        subjName = q.subject_id.name || '';
+      }
+      if (!subjName.toLowerCase().includes(columnFilters.subject.toLowerCase())) {
+        match = false;
+      }
+    }
+    if (columnFilters.subscription) {
+      let subName = '';
+      if (q.subscription_id && typeof q.subscription_id === 'object') {
+        subName = q.subscription_id.name || '';
+      }
+      if (!subName.toLowerCase().includes(columnFilters.subscription.toLowerCase())) {
+        match = false;
+      }
+    }
+    if (columnFilters.difficulty && !q.difficulty.toLowerCase().includes(columnFilters.difficulty.toLowerCase())) {
+      match = false;
+    }
+    if (columnFilters.addedBy) {
+      if (!q.addedBy || !q.addedBy.toLowerCase().includes(columnFilters.addedBy.toLowerCase())) {
+        match = false;
+      }
+    }
+    return match;
+  });
+
+  const totalPages = Math.ceil(filteredQuestions.length / recordsPerPage);
+  const displayedQuestions = filteredQuestions.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
   return (
     <div className="container">
       <h2>Manage Questions</h2>
 
-      {/* Top Action Buttons */}
-      <div className="d-flex justify-content-between mb-3">
+      {/* Top Action Buttons Row */}
+      <div className="d-flex justify-content-between mb-2">
         <button
-          className={`btn btn-danger ${
-            selectedQuestions.length === 0 ? 'disabled' : ''
-          }`}
+          className={`btn btn-danger ${selectedQuestions.length === 0 ? 'disabled' : ''}`}
           onClick={() => setShowConfirmDelete(true)}
           disabled={selectedQuestions.length === 0}
         >
-          <FontAwesomeIcon icon={faTrashAlt} /> Delete Selected
+          <FontAwesomeIcon icon={faTrashAlt} />
         </button>
         <button
           className="btn btn-success"
@@ -217,91 +276,68 @@ const QuestionPage = () => {
             setShowModal(true);
           }}
         >
-          <FontAwesomeIcon icon={faPlus} /> Add New Question
+          <FontAwesomeIcon icon={faPlus} />
         </button>
       </div>
 
-      {/* TABLE - showing fields including subscription if you want */}
-      <table className="table table-hover table-striped">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Subject</th>
-            <th>Question</th>
-            <th>Question Text</th>
-            <th>Answer Options</th>
-            <th>Correct Answer</th>
-            <th>Difficulty</th>
-            <th>Subscription</th> {/* NEW column if you want to display it */}
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan="9" className="text-center">
-                Loading questions...
-              </td>
-            </tr>
-          ) : questions.length > 0 ? (
-            questions.map((q) => {
-              const opts = Array.isArray(q.answer_options)
-                ? q.answer_options.join(', ')
-                : q.answer_options || '';
+      {/* Pagination Controls (top right) */}
+      <div className="d-flex justify-content-end mb-2">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Previous Page"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} />
+        </button>
+        <span className="align-self-center mx-2">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Next Page"
+        >
+          <FontAwesomeIcon icon={faChevronRight} />
+        </button>
+      </div>
 
-              let subscriptionLabel = '—';
-              if (q.subscription_id) {
-                subscriptionLabel =
-                  typeof q.subscription_id === 'object'
-                    ? q.subscription_id.name
-                    : q.subscription_id;
-              }
+      {/* Question Table */}
+      <QuestionTable
+        questions={displayedQuestions}
+        selectedQuestions={selectedQuestions}
+        onRowClick={handleRowClick}
+        onEditClick={handleEditClick}
+        columnFilters={columnFilters}
+        onColumnFilterChange={handleColumnFilterChange}
+        onToggleSelectAll={toggleSelectAll}
+        allSelected={allSelected}
+      />
 
-              return (
-                <tr
-                  key={q._id}
-                  className={selectedQuestions.includes(q._id) ? 'table-primary' : ''}
-                >
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedQuestions.includes(q._id)}
-                      onChange={() => handleRowClick(q._id)}
-                    />
-                  </td>
-                  <td>
-                    {q.subject_id && typeof q.subject_id === 'object'
-                      ? q.subject_id.name
-                      : q.subject_id}
-                  </td>
-                  <td>{q.question}</td>
-                  <td>{q.question_text}</td>
-                  <td>{opts}</td>
-                  <td>{q.correct_answer}</td>
-                  <td>{q.difficulty || '—'}</td>
-                  <td>{subscriptionLabel}</td>
-                  <td>
-                    <FontAwesomeIcon
-                      icon={faEdit}
-                      onClick={() => handleEditClick(q)}
-                      style={{ cursor: 'pointer', fontSize: '0.9rem' }}
-                      title="Edit"
-                    />
-                  </td>
-                </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td colSpan="9" className="text-center">
-                No questions available.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      {/* Pagination Controls (bottom right) */}
+      <div className="d-flex justify-content-end mt-2">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Previous Page"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} />
+        </button>
+        <span className="align-self-center mx-2">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          style={{ background: 'transparent', border: 'none' }}
+          title="Next Page"
+        >
+          <FontAwesomeIcon icon={faChevronRight} />
+        </button>
+      </div>
 
-      {/* Confirm Delete Modal */}
       {showConfirmDelete && (
         <ConfirmModal
           message={`Are you sure you want to delete ${selectedQuestions.length} question(s)?`}
@@ -310,7 +346,6 @@ const QuestionPage = () => {
         />
       )}
 
-      {/* Add/Edit Modal */}
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" role="dialog">
           <div className="modal-dialog modal-dialog-centered" role="document">
@@ -329,10 +364,9 @@ const QuestionPage = () => {
                   data={questionData}
                   setData={setQuestionData}
                   onSubmit={editingQuestion ? handleUpdateQuestion : handleAddQuestion}
-                  isSubmitting={false} // or pass loading if you want
+                  isSubmitting={false}
                   onCancel={closeModal}
                   allSubjects={subjects}
-                  // Pass subscriptions to the form
                   allSubscriptions={subscriptions}
                 />
               </div>
@@ -340,6 +374,8 @@ const QuestionPage = () => {
           </div>
         </div>
       )}
+
+      {error && <div className="alert alert-danger mt-2">{error}</div>}
     </div>
   );
 };
