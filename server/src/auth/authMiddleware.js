@@ -1,7 +1,7 @@
 // server/src/auth/authMiddleware.js
 import jwt from 'jsonwebtoken';
 import config from '../config.js';
-import User from '../models/User.js';
+import User from '../models/user.js';
 import Organization from '../models/Organization.js'; // Import the Organization model
 
 const authMiddleware = async (req, res, next) => {
