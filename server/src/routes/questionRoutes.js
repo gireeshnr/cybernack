@@ -1,3 +1,4 @@
+// server/src/routes/questionRoutes.js
 import express from 'express';
 import {
   createQuestion,
@@ -5,13 +6,13 @@ import {
   updateQuestion,
   deleteQuestion,
 } from '../controllers/questionController.js';
-import { authMiddleware, isSuperAdmin } from '../auth/authMiddleware.js';
+import { authMiddleware } from '../auth/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/', authMiddleware, isSuperAdmin, createQuestion);
-router.get('/', authMiddleware, isSuperAdmin, getQuestions);
-router.put('/:id', authMiddleware, isSuperAdmin, updateQuestion);
-router.delete('/:id', authMiddleware, isSuperAdmin, deleteQuestion);
+router.post('/', authMiddleware, createQuestion);
+router.get('/', authMiddleware, getQuestions);
+router.put('/:id', authMiddleware, updateQuestion);
+router.delete('/:id', authMiddleware, deleteQuestion);
 
 export default router;

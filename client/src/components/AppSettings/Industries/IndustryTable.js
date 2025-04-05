@@ -1,3 +1,4 @@
+// client/src/components/AppSettings/Industries/IndustryTable.js
 import React from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,21 +13,12 @@ const IndustryTable = ({
   onColumnFilterChange,
   onToggleSelectAll,
   allSelected,
+  isSuperadmin,
 }) => {
   return (
     <div className="table-responsive">
       <table className="table table-hover table-striped">
         <thead>
-          <tr>
-            <th></th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Subscription</th>
-            <th>Added By</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-          {/* Filter row with "Select All" checkbox in first column */}
           <tr>
             <th>
               <input
@@ -37,6 +29,16 @@ const IndustryTable = ({
               />
               <label style={{ fontSize: '0.8rem' }}>Select All</label>
             </th>
+            <th>Industry Name</th>
+            <th>Description</th>
+            {isSuperadmin && <th>Subscription</th>}
+            <th>Added By</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+          {/* Filter Row */}
+          <tr>
+            <th></th>
             <th>
               <input
                 type="text"
@@ -55,15 +57,17 @@ const IndustryTable = ({
                 className="form-control form-control-sm"
               />
             </th>
-            <th>
-              <input
-                type="text"
-                placeholder="Filter Subscription"
-                value={columnFilters.subscription}
-                onChange={(e) => onColumnFilterChange('subscription', e.target.value)}
-                className="form-control form-control-sm"
-              />
-            </th>
+            {isSuperadmin && (
+              <th>
+                <input
+                  type="text"
+                  placeholder="Filter Subscription"
+                  value={columnFilters.subscription}
+                  onChange={(e) => onColumnFilterChange('subscription', e.target.value)}
+                  className="form-control form-control-sm"
+                />
+              </th>
+            )}
             <th>
               <input
                 type="text"
@@ -88,25 +92,18 @@ const IndustryTable = ({
         <tbody>
           {industries.length === 0 ? (
             <tr>
-              <td colSpan="7" className="text-center">
+              <td colSpan={isSuperadmin ? 7 : 6} className="text-center">
                 No industries available.
               </td>
             </tr>
           ) : (
             industries.map((industry) => {
               let subscriptionLabel = '—';
-              if (industry.subscription_id) {
-                if (typeof industry.subscription_id === 'object') {
-                  subscriptionLabel = industry.subscription_id.name || '—';
-                } else {
-                  subscriptionLabel = industry.subscription_id;
-                }
+              if (isSuperadmin && industry.subscription_id && typeof industry.subscription_id === 'object') {
+                subscriptionLabel = industry.subscription_id.name || '—';
               }
               return (
-                <tr
-                  key={industry._id}
-                  className={selectedIndustries.includes(industry._id) ? 'table-primary' : ''}
-                >
+                <tr key={industry._id} className={selectedIndustries.includes(industry._id) ? 'table-primary' : ''}>
                   <td>
                     <input
                       type="checkbox"
@@ -115,21 +112,25 @@ const IndustryTable = ({
                     />
                   </td>
                   <td>{industry.name}</td>
-                  <td>{industry.description}</td>
-                  <td>{subscriptionLabel}</td>
-                  <td>{industry.addedBy || '—'}</td>
+                  <td>{industry.description || '—'}</td>
+                  {isSuperadmin && <td>{subscriptionLabel}</td>}
+                  <td>{industry.creatorRole === 'superadmin' ? 'Cybernack' : (industry.addedBy || '—')}</td>
+                  <td>{industry.createdAt ? new Date(industry.createdAt).toLocaleDateString() : ''}</td>
                   <td>
-                    {industry.createdAt ? new Date(industry.createdAt).toLocaleDateString() : ''}
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      onClick={() => onEditClick(industry)}
-                      title="Edit"
-                      style={{ backgroundColor: 'transparent', border: 'none', padding: 0 }}
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </button>
+                    {/* Show the edit icon only if:
+                        - For local admins: only allow editing if the record was created by an admin.
+                        - For superadmin: only show edit icon on global records (created by superadmin) */}
+                    {((!isSuperadmin && industry.creatorRole === 'admin') ||
+                      (isSuperadmin && industry.creatorRole === 'superadmin')) && (
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => onEditClick(industry)}
+                        title="Edit"
+                        style={{ backgroundColor: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
+                      >
+                        <FontAwesomeIcon icon={faEdit} style={{ fontSize: '0.8rem' }} />
+                      </button>
+                    )}
                   </td>
                 </tr>
               );
@@ -153,6 +154,7 @@ IndustryTable.propTypes = {
       ]),
       createdAt: PropTypes.string,
       addedBy: PropTypes.string,
+      creatorRole: PropTypes.string.isRequired,
     })
   ).isRequired,
   selectedIndustries: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -168,6 +170,7 @@ IndustryTable.propTypes = {
   onColumnFilterChange: PropTypes.func.isRequired,
   onToggleSelectAll: PropTypes.func.isRequired,
   allSelected: PropTypes.bool.isRequired,
+  isSuperadmin: PropTypes.bool.isRequired,
 };
 
 export default IndustryTable;

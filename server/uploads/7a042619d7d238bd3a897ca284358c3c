@@ -1,0 +1,5 @@
+industry_name,domain_name,subject_name,short_text,full_text,optionA,optionB,optionC,optionD,correct_answer,difficulty,explanation
+Military,NIST,Sub1,Short 1,Testbx,Op1,Opt2,Opt3,Opt4,B,Medium,Exp1
+Agriculture,PEST,Sub2,Shorten2,Text 2,Implement internal controls,Ignore controls,Rely on external audits,Only annual reviews,A,Hard,Exp3
+Cement,TAN,Sub2,Shortesrt,Texts as,Encrypt PHI,Leave unencrypted,Mask PHI only,Print records,C,Medium,Exp4
+Paint,ISO 27001,Sub1,Short,Thevsdhs,Grant minimum access,Full access,No access restrictions,Only log actions,B,Easy,Exp9

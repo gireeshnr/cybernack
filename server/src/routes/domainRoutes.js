@@ -1,18 +1,12 @@
 import express from 'express';
-import {
-  createDomain,
-  getDomains,
-  updateDomain,
-  deleteDomain,
-} from '../controllers/domainController.js';
-import { authMiddleware, isSuperAdmin } from '../auth/authMiddleware.js';
+import { authMiddleware } from '../auth/authMiddleware.js';
+import domainController from '../controllers/domainController.js';
 
 const router = express.Router();
 
-// CRUD endpoints
-router.post('/', authMiddleware, isSuperAdmin, createDomain);
-router.get('/', authMiddleware, isSuperAdmin, getDomains);
-router.put('/:id', authMiddleware, isSuperAdmin, updateDomain);
-router.delete('/:id', authMiddleware, isSuperAdmin, deleteDomain);
+router.get('/', authMiddleware, domainController.getDomains);
+router.post('/', authMiddleware, domainController.createDomain);
+router.put('/:id', authMiddleware, domainController.updateDomain);
+router.delete('/:id', authMiddleware, domainController.deleteDomain);
 
 export default router;

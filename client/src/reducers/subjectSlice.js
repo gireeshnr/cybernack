@@ -1,27 +1,31 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import axios from '../api';
 import { toast } from 'react-hot-toast';
 
-const baseURL =
-  process.env.REACT_APP_API_BASE_URL ||
-  (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
-const API_URL = `${baseURL}/subject`;
+const API_URL =
+  (process.env.REACT_APP_API_BASE_URL ||
+    (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '')) +
+  '/subject';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('auth_jwt_token');
   return { headers: { Authorization: `Bearer ${token}` } };
 };
 
-// Thunks
-export const fetchSubjects = createAsyncThunk('subjects/fetchSubjects', async (_, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(API_URL, getAuthHeaders());
-    return response.data;
-  } catch (error) {
-    toast.error('Error fetching subjects.');
-    return rejectWithValue(error.message);
+export const fetchSubjects = createAsyncThunk(
+  'subjects/fetchSubjects',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(API_URL, getAuthHeaders());
+      return response.data;
+    } catch (error) {
+      const errMsg =
+        error.response?.data?.message || 'Error fetching subjects.';
+      toast.error(errMsg);
+      return rejectWithValue(errMsg);
+    }
   }
-});
+);
 
 export const createSubject = createAsyncThunk(
   'subjects/createSubject',
@@ -31,8 +35,10 @@ export const createSubject = createAsyncThunk(
       toast.success('Subject created successfully!');
       return response.data;
     } catch (error) {
-      toast.error('Error creating subject.');
-      return rejectWithValue(error.message);
+      const errMsg =
+        error.response?.data?.message || 'Error creating subject.';
+      toast.error(errMsg);
+      return rejectWithValue(errMsg);
     }
   }
 );
@@ -41,12 +47,18 @@ export const updateSubject = createAsyncThunk(
   'subjects/updateSubject',
   async ({ id, subjectData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`${API_URL}/${id}`, subjectData, getAuthHeaders());
-      toast.success('Subject updated!');
+      const response = await axios.put(
+        `${API_URL}/${id}`,
+        subjectData,
+        getAuthHeaders()
+      );
+      toast.success('Subject updated successfully!');
       return response.data;
     } catch (error) {
-      toast.error('Error updating subject.');
-      return rejectWithValue(error.message);
+      const errMsg =
+        error.response?.data?.message || 'Error updating subject.';
+      toast.error(errMsg);
+      return rejectWithValue(errMsg);
     }
   }
 );
@@ -56,10 +68,13 @@ export const deleteSubject = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       await axios.delete(`${API_URL}/${id}`, getAuthHeaders());
+      toast.success('Subject deleted successfully!');
       return id;
     } catch (error) {
-      toast.error('Error deleting subject.');
-      return rejectWithValue(error.message);
+      const errMsg =
+        error.response?.data?.message || 'Error deleting subject.';
+      toast.error(errMsg);
+      return rejectWithValue(errMsg);
     }
   }
 );
@@ -74,7 +89,6 @@ const subjectSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch
       .addCase(fetchSubjects.pending, (state) => {
         state.loading = true;
       })
@@ -86,8 +100,6 @@ const subjectSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
-
-      // Create
       .addCase(createSubject.pending, (state) => {
         state.loading = true;
       })
@@ -99,8 +111,6 @@ const subjectSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
-
-      // Update
       .addCase(updateSubject.pending, (state) => {
         state.loading = true;
       })
@@ -115,8 +125,6 @@ const subjectSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
-
-      // Delete
       .addCase(deleteSubject.pending, (state) => {
         state.loading = true;
       })

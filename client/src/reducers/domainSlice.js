@@ -1,70 +1,73 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import axios from '../api';
 import { toast } from 'react-hot-toast';
 
-/**
- * Attempt to unify with REACT_APP_API_BASE_URL,
- * fallback to 'http://localhost:8000' if running on localhost dev.
- */
-const baseURL =
-  process.env.REACT_APP_API_BASE_URL ||
-  (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
-
-const API_URL = `${baseURL}/domain`;
+const API_URL = (process.env.REACT_APP_API_BASE_URL || '') + '/domain';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('auth_jwt_token');
   return { headers: { Authorization: `Bearer ${token}` } };
 };
 
-// Thunks
-export const fetchDomains = createAsyncThunk('domains/fetchDomains', async (_, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(API_URL, getAuthHeaders());
-    return response.data;
-  } catch (error) {
-    toast.error('Error fetching domains.');
-    return rejectWithValue(error.message);
+export const fetchDomains = createAsyncThunk(
+  'domains/fetchDomains',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(API_URL, getAuthHeaders());
+      return response.data;
+    } catch (error) {
+      const errMsg = error.response?.data?.message || 'Error fetching domains.';
+      toast.error(errMsg);
+      return rejectWithValue(errMsg);
+    }
   }
-});
+);
 
-export const createDomain = createAsyncThunk('domains/createDomain', async (data, { rejectWithValue }) => {
-  try {
-    const response = await axios.post(API_URL, data, getAuthHeaders());
-    toast.success('Domain created successfully!');
-    return response.data;
-  } catch (error) {
-    toast.error('Error creating domain.');
-    return rejectWithValue(error.message);
+export const createDomain = createAsyncThunk(
+  'domains/createDomain',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(API_URL, data, getAuthHeaders());
+      toast.success('Domain created successfully!');
+      return response.data;
+    } catch (error) {
+      const errMsg = error.response?.data?.message || 'Error creating domain.';
+      toast.error(errMsg);
+      return rejectWithValue(errMsg);
+    }
   }
-});
+);
 
 export const updateDomain = createAsyncThunk(
   'domains/updateDomain',
   async ({ id, domainData }, { rejectWithValue }) => {
     try {
       const response = await axios.put(`${API_URL}/${id}`, domainData, getAuthHeaders());
-      toast.success('Domain updated!');
+      toast.success('Domain updated successfully!');
       return response.data;
     } catch (error) {
-      toast.error('Error updating domain.');
-      return rejectWithValue(error.message);
+      const errMsg = error.response?.data?.message || 'Error updating domain.';
+      toast.error(errMsg);
+      return rejectWithValue(errMsg);
     }
   }
 );
 
-export const deleteDomain = createAsyncThunk('domains/deleteDomain', async (id, { rejectWithValue }) => {
-  try {
-    await axios.delete(`${API_URL}/${id}`, getAuthHeaders());
-    toast.success('Domain deleted!');
-    return id;
-  } catch (error) {
-    toast.error('Error deleting domain.');
-    return rejectWithValue(error.message);
+export const deleteDomain = createAsyncThunk(
+  'domains/deleteDomain',
+  async (id, { rejectWithValue }) => {
+    try {
+      await axios.delete(`${API_URL}/${id}`, getAuthHeaders());
+      toast.success('Domain deleted successfully!');
+      return id;
+    } catch (error) {
+      const errMsg = error.response?.data?.message || 'Error deleting domain.';
+      toast.error(errMsg);
+      return rejectWithValue(errMsg);
+    }
   }
-});
+);
 
-// Slice
 const domainSlice = createSlice({
   name: 'domains',
   initialState: { domains: [], loading: false, error: null },
@@ -75,7 +78,6 @@ const domainSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch
       .addCase(fetchDomains.pending, (state) => {
         state.loading = true;
       })
@@ -87,8 +89,6 @@ const domainSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
-
-      // Create
       .addCase(createDomain.pending, (state) => {
         state.loading = true;
       })
@@ -100,8 +100,6 @@ const domainSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
-
-      // Update
       .addCase(updateDomain.pending, (state) => {
         state.loading = true;
       })
@@ -116,8 +114,6 @@ const domainSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
-
-      // Delete
       .addCase(deleteDomain.pending, (state) => {
         state.loading = true;
       })

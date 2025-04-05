@@ -1,17 +1,13 @@
+// server/src/routes/industryRoutes.js
 import express from 'express';
-import {
-  createIndustry,
-  getIndustries,
-  updateIndustry,
-  deleteIndustry,
-} from '../controllers/industryController.js';
-import { authMiddleware, isSuperAdmin } from '../auth/authMiddleware.js';
+import { authMiddleware } from '../auth/authMiddleware.js';
+import industryController from '../controllers/industryController.js';
 
 const router = express.Router();
 
-router.post('/', authMiddleware, isSuperAdmin, createIndustry);
-router.get('/', authMiddleware, isSuperAdmin, getIndustries);
-router.put('/:id', authMiddleware, isSuperAdmin, updateIndustry);
-router.delete('/:id', authMiddleware, isSuperAdmin, deleteIndustry);
+router.get('/', authMiddleware, industryController.getIndustries);
+router.post('/', authMiddleware, industryController.createIndustry);
+router.put('/:id', authMiddleware, industryController.updateIndustry);
+router.delete('/:id', authMiddleware, industryController.deleteIndustry);
 
 export default router;

@@ -1,0 +1,59 @@
+.configure-content-container {
+    max-width: 900px;
+    margin: 0 auto; // center horizontally
+    
+    h2 {
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    
+    .search-bar {
+      // adjust the search bar style as desired
+      input {
+        border-radius: 0.25rem;
+      }
+    }
+  
+    .domain-header {
+      background-color: #f8f9fa;
+      border-left: 4px solid #0d6efd; // or your brand color
+    }
+    
+    .subject-item {
+      // spacing, background, etc.
+      margin-top: -1px; 
+    }
+    
+    .questions-list {
+      border-left: 1px dashed #ccc;
+      padding-left: 1rem;
+    }
+  
+    /* Modal Styling */
+    .modal-backdrop-custom {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1050;
+    }
+    
+    .modal-dialog-centered-custom {
+      width: 500px;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    .custom-modal-content {
+      border: none;
+      .modal-header {
+        border-bottom: 1px solid #dee2e6;
+      }
+      .modal-footer {
+        border-top: 1px solid #dee2e6;
+      }
+    }
+  }

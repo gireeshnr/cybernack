@@ -1,5 +1,5 @@
 // client/src/components/superAdmin/manageSubscriptions.js
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import {
@@ -18,8 +18,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
 
-const ConfirmModal = lazy(() => import('../ConfirmModal'));
-
 const ManageSubscriptions = ({
   subscriptions,
   getSubscriptions,
@@ -27,7 +25,6 @@ const ManageSubscriptions = ({
   updateSubscription,
   deleteSubscriptions,
 }) => {
-  // Initial state for a subscription record
   const initialSubscriptionState = {
     name: '',
     description: '',
@@ -38,7 +35,6 @@ const ManageSubscriptions = ({
     isActive: true,
   };
 
-  // Local component states
   const [newSubscription, setNewSubscription] = useState(initialSubscriptionState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSubs, setSelectedSubs] = useState([]);
@@ -46,9 +42,8 @@ const ManageSubscriptions = ({
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingSub, setEditingSub] = useState(null);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
-  // Column filters state (for filtering the table)
+  // Column filters
   const [columnFilters, setColumnFilters] = useState({
     name: '',
     description: '',
@@ -59,21 +54,18 @@ const ManageSubscriptions = ({
     active: '',
   });
 
-  // Pagination state
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
 
-  // Fetch subscriptions on mount
   useEffect(() => {
     getSubscriptions();
   }, [getSubscriptions]);
 
-  // Reset pagination whenever filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [columnFilters]);
 
-  // Toggle a single subscription selection
   const handleRowClick = (subId) => {
     setSelectedSubs((prevSelected) =>
       prevSelected.includes(subId)
@@ -82,7 +74,6 @@ const ManageSubscriptions = ({
     );
   };
 
-  // Toggle "Select All" checkbox in header
   const toggleSelectAll = () => {
     if (allSelected) {
       setSelectedSubs([]);
@@ -94,20 +85,17 @@ const ManageSubscriptions = ({
     }
   };
 
-  // Handle input changes for the add/edit form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNewSubscription({ ...newSubscription, [name]: value });
   };
 
-  // Handle clicks to open the add form
   const handleAddClick = () => {
     setNewSubscription(initialSubscriptionState);
     setShowAddForm(true);
     setShowEditForm(false);
   };
 
-  // Handle adding a new subscription
   const handleAddSubscription = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -117,14 +105,13 @@ const ManageSubscriptions = ({
       setNewSubscription(initialSubscriptionState);
       await getSubscriptions();
       setShowAddForm(false);
-    } catch (err) {
+    } catch {
       toast.error('Error adding subscription. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle editing: load the subscription data into form and open modal
   const handleEditClick = (sub) => {
     setNewSubscription({
       name: sub.name,
@@ -140,7 +127,6 @@ const ManageSubscriptions = ({
     setShowAddForm(false);
   };
 
-  // Handle updating an existing subscription
   const handleUpdateSubscription = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -149,32 +135,32 @@ const ManageSubscriptions = ({
       toast.success('Subscription updated successfully!');
       await getSubscriptions();
       setShowEditForm(false);
-    } catch (err) {
+    } catch {
       toast.error('Error updating subscription. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle bulk deletion of selected subscriptions
   const handleDelete = async () => {
+    if (!selectedSubs.length) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedSubs.length} subscription(s)?`)) {
+      return;
+    }
     try {
       await deleteSubscriptions(selectedSubs);
       setSelectedSubs([]);
       toast.success(`${selectedSubs.length} subscription(s) deleted successfully!`);
-      setShowConfirmDelete(false);
       await getSubscriptions();
-    } catch (err) {
+    } catch {
       toast.error('Error deleting subscriptions. Please try again.');
     }
   };
 
-  // Handle column filter changes
   const handleColumnFilterChange = (column, value) => {
     setColumnFilters((prev) => ({ ...prev, [column]: value }));
   };
 
-  // Filter subscriptions based on the filter inputs
   const filteredSubscriptions = useMemo(() => {
     return subscriptions.filter((sub) => {
       let match = true;
@@ -212,7 +198,6 @@ const ManageSubscriptions = ({
     });
   }, [subscriptions, columnFilters]);
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredSubscriptions.length / recordsPerPage);
   const displayedSubscriptions = filteredSubscriptions.slice(
     (currentPage - 1) * recordsPerPage,
@@ -222,7 +207,6 @@ const ManageSubscriptions = ({
   const handlePreviousPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
-
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
@@ -235,7 +219,7 @@ const ManageSubscriptions = ({
       <div className="d-flex justify-content-between mb-2">
         <button
           className={`btn btn-danger ${selectedSubs.length === 0 ? 'disabled' : ''}`}
-          onClick={() => setShowConfirmDelete(true)}
+          onClick={handleDelete}
           disabled={selectedSubs.length === 0}
         >
           <FontAwesomeIcon icon={faTrashAlt} />
@@ -245,7 +229,7 @@ const ManageSubscriptions = ({
         </button>
       </div>
 
-      {/* Top Pagination Controls */}
+      {/* Top Pagination */}
       <div className="d-flex justify-content-end mb-2">
         <button
           onClick={handlePreviousPage}
@@ -268,7 +252,7 @@ const ManageSubscriptions = ({
         </button>
       </div>
 
-      {/* Subscriptions Table with Filter Row */}
+      {/* Subscriptions Table */}
       <div className="table-responsive">
         <table className="table table-hover table-striped">
           <thead>
@@ -374,7 +358,6 @@ const ManageSubscriptions = ({
                   <td>{sub.isActive ? 'Yes' : 'No'}</td>
                   <td>
                     <button
-                      className="btn btn-secondary btn-sm"
                       onClick={() => handleEditClick(sub)}
                       style={{ background: 'none', border: 'none', padding: 0 }}
                       title="Edit"
@@ -389,7 +372,7 @@ const ManageSubscriptions = ({
         </table>
       </div>
 
-      {/* Bottom Pagination Controls */}
+      {/* Bottom Pagination */}
       <div className="d-flex justify-content-end mt-2">
         <button
           onClick={handlePreviousPage}
@@ -412,18 +395,7 @@ const ManageSubscriptions = ({
         </button>
       </div>
 
-      {/* Confirm Delete Modal */}
-      {showConfirmDelete && (
-        <Suspense fallback={<div>Loading...</div>}>
-          <ConfirmModal
-            message={`Are you sure you want to delete ${selectedSubs.length} subscription(s)?`}
-            onConfirm={handleDelete}
-            onCancel={() => setShowConfirmDelete(false)}
-          />
-        </Suspense>
-      )}
-
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Form */}
       {(showAddForm || showEditForm) && (
         <div className="modal">
           <div className="modal-content">
@@ -480,9 +452,11 @@ const ManageSubscriptions = ({
                   className="form-control"
                   value={newSubscription.features.join(', ')}
                   onChange={(e) =>
-                    setNewSubscription({ ...newSubscription, features: e.target.value.split(', ') })
+                    setNewSubscription({
+                      ...newSubscription,
+                      features: e.target.value.split(', ').map((s) => s.trim()),
+                    })
                   }
-                  placeholder="Enter comma-separated features"
                 />
               </div>
               <div className="form-group">
@@ -493,9 +467,11 @@ const ManageSubscriptions = ({
                   className="form-control"
                   value={newSubscription.modules.join(', ')}
                   onChange={(e) =>
-                    setNewSubscription({ ...newSubscription, modules: e.target.value.split(', ') })
+                    setNewSubscription({
+                      ...newSubscription,
+                      modules: e.target.value.split(', ').map((s) => s.trim()),
+                    })
                   }
-                  placeholder="Enter comma-separated modules"
                 />
               </div>
               <div className="form-group">
@@ -545,18 +521,7 @@ const ManageSubscriptions = ({
 };
 
 ManageSubscriptions.propTypes = {
-  subscriptions: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      description: PropTypes.string,
-      priceMonthly: PropTypes.number.isRequired,
-      priceYearly: PropTypes.number.isRequired,
-      features: PropTypes.arrayOf(PropTypes.string),
-      modules: PropTypes.arrayOf(PropTypes.string),
-      isActive: PropTypes.bool.isRequired,
-    })
-  ).isRequired,
+  subscriptions: PropTypes.array.isRequired,
   getSubscriptions: PropTypes.func.isRequired,
   createSubscription: PropTypes.func.isRequired,
   updateSubscription: PropTypes.func.isRequired,

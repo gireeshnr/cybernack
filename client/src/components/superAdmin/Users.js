@@ -6,10 +6,8 @@ import { getOrganizations, getUsers, addUser, updateUser, deleteUsers } from '..
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt, faPlus, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
-import ConfirmModal from '../ConfirmModal';
 
 const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, organizations, users }) => {
-  // Initial user form data
   const initialUserData = {
     firstName: '',
     lastName: '',
@@ -21,7 +19,6 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
     isActive: true,
   };
 
-  // Local states for form and selection
   const [userData, setUserData] = useState(initialUserData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -29,13 +26,11 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
 
-  // Column filters state
+  // Column filters
   const [columnFilters, setColumnFilters] = useState({
     firstName: '',
     lastName: '',
@@ -45,39 +40,31 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
     active: '',
   });
 
-  // Fetch organizations and users on mount
   useEffect(() => {
     getOrganizations();
     getUsers();
   }, [getOrganizations, getUsers]);
 
-  // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [columnFilters]);
 
-  // Function to handle row selection toggle
   const handleRowClick = (userId) => {
-    setSelectedUsers((prevSelected) =>
-      prevSelected.includes(userId)
-        ? prevSelected.filter((id) => id !== userId)
-        : [...prevSelected, userId]
+    setSelectedUsers((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
     );
   };
-
-  // Toggle select all checkbox in header
   const toggleSelectAll = () => {
     if (allSelected) {
       setSelectedUsers([]);
       setAllSelected(false);
     } else {
-      const allIds = filteredUsers.map((user) => user._id);
+      const allIds = filteredUsers.map((u) => u._id);
       setSelectedUsers(allIds);
       setAllSelected(true);
     }
   };
 
-  // Handle form field changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setUserData({
@@ -86,30 +73,37 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
     });
   };
 
-  // Handle filter input changes
+  // Filters
   const handleColumnFilterChange = (column, value) => {
     setColumnFilters((prev) => ({ ...prev, [column]: value }));
   };
 
-  // Filter users based on column filters
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
       let match = true;
-      if (columnFilters.firstName && !user.name.first.toLowerCase().includes(columnFilters.firstName.toLowerCase())) {
-        match = false;
+      if (columnFilters.firstName) {
+        if (!user.name.first.toLowerCase().includes(columnFilters.firstName.toLowerCase())) {
+          match = false;
+        }
       }
-      if (columnFilters.lastName && !user.name.last.toLowerCase().includes(columnFilters.lastName.toLowerCase())) {
-        match = false;
+      if (columnFilters.lastName) {
+        if (!user.name.last.toLowerCase().includes(columnFilters.lastName.toLowerCase())) {
+          match = false;
+        }
       }
-      if (columnFilters.email && !user.email.toLowerCase().includes(columnFilters.email.toLowerCase())) {
-        match = false;
+      if (columnFilters.email) {
+        if (!user.email.toLowerCase().includes(columnFilters.email.toLowerCase())) {
+          match = false;
+        }
       }
-      if (columnFilters.role && !user.role.toLowerCase().includes(columnFilters.role.toLowerCase())) {
-        match = false;
+      if (columnFilters.role) {
+        if (!user.role.toLowerCase().includes(columnFilters.role.toLowerCase())) {
+          match = false;
+        }
       }
       if (columnFilters.organization) {
-        const orgName = user.org ? user.org.name : '';
-        if (!orgName.toLowerCase().includes(columnFilters.organization.toLowerCase())) {
+        const orgName = user.org ? user.org.name.toLowerCase() : '';
+        if (!orgName.includes(columnFilters.organization.toLowerCase())) {
           match = false;
         }
       }
@@ -123,25 +117,25 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
     });
   }, [users, columnFilters]);
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredUsers.length / recordsPerPage);
-  const displayedUsers = filteredUsers.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
+  const displayedUsers = filteredUsers.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
 
   const handlePreviousPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
-
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
-  // Form handling for add/edit
+  // Add
   const handleAddUserClick = () => {
     setUserData(initialUserData);
     setShowAddForm(true);
     setShowEditForm(false);
   };
-
   const handleAddUser = async (e) => {
     e.preventDefault();
     if (userData.password !== userData.confirmPassword) {
@@ -153,12 +147,13 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
       await addUser({ ...userData, isActive: true });
       toast.success('New user added successfully and activated!');
       setShowAddForm(false);
-      await getUsers();
+      getUsers();
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Edit
   const handleEditClick = (user) => {
     setUserData({
       firstName: user.name.first,
@@ -167,12 +162,13 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
       role: user.role,
       organizationId: user.org ? user.org._id : '',
       isActive: user.isActive,
+      password: '',
+      confirmPassword: '',
     });
     setEditingUser(user);
     setShowEditForm(true);
     setShowAddForm(false);
   };
-
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -180,41 +176,35 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
       await updateUser(editingUser._id, { ...userData });
       toast.success('User updated successfully!');
       setShowEditForm(false);
-      await getUsers();
+      getUsers();
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Delete
   const handleDelete = async () => {
+    if (!selectedUsers.length) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedUsers.length} user(s)?`)) {
+      return;
+    }
     try {
       await deleteUsers(selectedUsers);
       setSelectedUsers([]);
       toast.success(`${selectedUsers.length} user(s) deleted successfully!`);
-      setShowConfirmDelete(false);
-      await getUsers();
-    } catch {
-      // error handling if needed
-    }
+      getUsers();
+    } catch {}
   };
-
-  // Prepare table data (you can add additional fields if needed)
-  const tableData = useMemo(() => {
-    return users.map((user) => ({
-      ...user,
-      organizationName: user.org ? user.org.name : 'N/A',
-    }));
-  }, [users]);
 
   return (
     <div className="container">
       <h2>Manage Users</h2>
 
-      {/* Top Action Row */}
+      {/* Top row */}
       <div className="d-flex justify-content-between mb-2">
         <button
           className={`btn btn-danger ${selectedUsers.length === 0 ? 'disabled' : ''}`}
-          onClick={() => setShowConfirmDelete(true)}
+          onClick={handleDelete}
           disabled={selectedUsers.length === 0}
         >
           <FontAwesomeIcon icon={faTrashAlt} />
@@ -224,7 +214,7 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
         </button>
       </div>
 
-      {/* Pagination Controls (top right) */}
+      {/* Pagination top */}
       <div className="d-flex justify-content-end mb-2">
         <button
           onClick={handlePreviousPage}
@@ -247,7 +237,7 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
         </button>
       </div>
 
-      {/* Table with Filter Row */}
+      {/* Table */}
       <div className="table-responsive">
         <table className="table table-hover table-striped">
           <thead>
@@ -269,6 +259,7 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
               <th>Active</th>
               <th>Actions</th>
             </tr>
+            {/* Filter row */}
             <tr>
               <th></th>
               <th>
@@ -354,12 +345,7 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
                   <td>
                     <button
                       onClick={() => handleEditClick(user)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        padding: 0,
-                        cursor: 'pointer',
-                      }}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                       title="Edit"
                     >
                       <FontAwesomeIcon icon={faEdit} style={{ fontSize: '0.8rem' }} />
@@ -372,7 +358,7 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
         </table>
       </div>
 
-      {/* Pagination Controls (bottom right) */}
+      {/* Pagination bottom */}
       <div className="d-flex justify-content-end mt-2">
         <button
           onClick={handlePreviousPage}
@@ -395,15 +381,7 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
         </button>
       </div>
 
-      {showConfirmDelete && (
-        <ConfirmModal
-          message={`Are you sure you want to delete ${selectedUsers.length} user(s)?`}
-          onConfirm={handleDelete}
-          onCancel={() => setShowConfirmDelete(false)}
-        />
-      )}
-
-      {/* Modal for Add/Edit User */}
+      {/* Add/Edit Form */}
       {(showAddForm || showEditForm) && (
         <div className="modal">
           <div className="modal-content">
@@ -499,9 +477,26 @@ const Users = ({ getOrganizations, getUsers, addUser, updateUser, deleteUsers, o
                   </div>
                 </>
               )}
+              {showEditForm && (
+                <div className="form-group">
+                  <label>Active:</label>
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={userData.isActive}
+                    onChange={handleChange}
+                  />
+                </div>
+              )}
               <div className="d-flex justify-content-end mt-3">
                 <button type="submit" className="btn btn-primary me-2" disabled={isSubmitting}>
-                  {isSubmitting ? (showAddForm ? 'Adding...' : 'Updating...') : (showAddForm ? 'Add User' : 'Update User')}
+                  {isSubmitting
+                    ? showAddForm
+                      ? 'Adding...'
+                      : 'Updating...'
+                    : showAddForm
+                    ? 'Add User'
+                    : 'Update User'}
                 </button>
                 <button
                   type="button"

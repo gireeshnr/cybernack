@@ -8,24 +8,13 @@ const DomainForm = ({
   onSubmit,
   isSubmitting,
   onCancel,
+  allSubscriptions,
   allIndustries,
-  allSubscriptions, // NEW
+  isSuperadmin,
 }) => {
-  // Handles text fields (name, description)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handles multi-select of industries
-  const handleIndustriesChange = (e) => {
-    const selectedValues = Array.from(e.target.selectedOptions).map(
-      (option) => option.value
-    );
-    setData((prev) => ({
-      ...prev,
-      industries: selectedValues,
-    }));
   };
 
   return (
@@ -37,86 +26,93 @@ const DomainForm = ({
           onSubmit();
         }}
       >
-        <div className="form-group">
-          <label>Name</label>
+        {/* For superadmin, subscription field goes at the top */}
+        {isSuperadmin && (
+          <div className="form-group mb-2">
+            <label>Subscription</label>
+            <select
+              name="subscription_id"
+              className="form-control"
+              value={data.subscription_id || ''}
+              onChange={handleChange}
+              required
+            >
+              <option value="">-- Select Subscription --</option>
+              {allSubscriptions.map((sub) => (
+                <option key={sub._id} value={sub._id}>
+                  {sub.name}
+                </option>
+              ))}
+            </select>
+            <small className="form-text text-muted">
+              Select the subscription level for this domain.
+            </small>
+          </div>
+        )}
+
+        {/* Domain Name */}
+        <div className="form-group mb-2">
+          <label>Domain Name</label>
           <input
             type="text"
             name="name"
             className="form-control"
-            value={data.name}
+            value={data.name || ''}
             onChange={handleChange}
             required
           />
         </div>
 
-        <div className="form-group">
+        {/* Description */}
+        <div className="form-group mb-2">
           <label>Description</label>
           <textarea
             name="description"
             className="form-control"
             value={data.description || ''}
             onChange={handleChange}
-            rows="3"
+            rows="2"
           />
         </div>
 
-        {/* Multi-select for Industries */}
-        <div className="form-group">
-          <label>Industries <span className="text-danger">*</span></label>
-          <select
-            multiple
-            className="form-control"
-            value={data.industries || []}
-            onChange={handleIndustriesChange}
-          >
-            {allIndustries.map((ind) => (
-              <option key={ind._id} value={ind._id}>
-                {ind.name}
-              </option>
-            ))}
-          </select>
-          <small className="form-text text-muted">
-            Hold Ctrl (Windows) or Cmd (Mac) to select multiple.  
-            <br />
-            At least one Industry is required.
-          </small>
-        </div>
+        {/* Industry Selection (only for superadmin) */}
+        {isSuperadmin && (
+          <div className="form-group mb-2">
+            <label>Industry</label>
+            <select
+              name="industry_id"
+              className="form-control"
+              value={data.industry_id || ''}
+              onChange={handleChange}
+              required
+              disabled={!data.subscription_id}
+            >
+              {!data.subscription_id ? (
+                <option value="">Select subscription first</option>
+              ) : (
+                <>
+                  <option value="">-- Select Industry --</option>
+                  {allIndustries.map((industry) => (
+                    <option key={industry._id} value={industry._id}>
+                      {industry.name}
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+          </div>
+        )}
 
-        {/* NEW: Subscription Dropdown */}
-        <div className="form-group">
-          <label>Subscription</label>
-          <select
-            name="subscription_id"
-            className="form-control"
-            value={data.subscription_id || ''}
-            onChange={handleChange}
-          >
-            <option value="">-- Select Subscription --</option>
-            {allSubscriptions.map((sub) => (
-              <option key={sub._id} value={sub._id}>
-                {sub.name}
-              </option>
-            ))}
-          </select>
-          <small className="form-text text-muted">
-            Optional: choose a subscription plan for this domain.
-          </small>
-        </div>
-
-        <div className="d-flex justify-content-end">
+        <div className="d-flex justify-content-end mt-3">
           <button
             type="button"
-            className="btn btn-secondary mr-2"
+            className="btn btn-secondary me-2"
             onClick={onCancel}
             disabled={isSubmitting}
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isSubmitting}
-          >
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
@@ -128,27 +124,29 @@ const DomainForm = ({
 DomainForm.propTypes = {
   isEditing: PropTypes.bool.isRequired,
   data: PropTypes.shape({
-    name: PropTypes.string.isRequired,
+    name: PropTypes.string,
     description: PropTypes.string,
-    industries: PropTypes.arrayOf(PropTypes.string),
-    subscription_id: PropTypes.string, // NEW
+    industry_id: PropTypes.string,
+    subscription_id: PropTypes.string,
   }).isRequired,
   setData: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   isSubmitting: PropTypes.bool.isRequired,
   onCancel: PropTypes.func.isRequired,
-  allIndustries: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string,
-      name: PropTypes.string,
-    })
-  ).isRequired,
   allSubscriptions: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string,
       name: PropTypes.string,
     })
   ).isRequired,
+  allIndustries: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string,
+      name: PropTypes.string,
+      subscription_id: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    })
+  ).isRequired,
+  isSuperadmin: PropTypes.bool.isRequired,
 };
 
 export default DomainForm;

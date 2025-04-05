@@ -1,3 +1,5 @@
+// server/src/auth/rbacMiddleware.js
+
 // Enhanced Role-based Access Control Middleware
 export const allowRoles = (...roles) => {
   return (req, res, next) => {

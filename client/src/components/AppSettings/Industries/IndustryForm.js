@@ -9,6 +9,7 @@ const IndustryForm = ({
   isSubmitting,
   onCancel,
   allSubscriptions,
+  isSuperadmin, // if true, show the subscription dropdown
 }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,13 +18,15 @@ const IndustryForm = ({
 
   return (
     <div className="card p-3 mb-4">
+      <h4>{isEditing ? 'Edit Industry' : 'Add New Industry'}</h4>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit();
         }}
       >
-        <div className="form-group">
+        {/* Industry Name */}
+        <div className="form-group mb-2">
           <label>Industry Name</label>
           <input
             type="text"
@@ -34,8 +37,8 @@ const IndustryForm = ({
             required
           />
         </div>
-
-        <div className="form-group">
+        {/* Description */}
+        <div className="form-group mb-2">
           <label>Description</label>
           <textarea
             name="description"
@@ -45,29 +48,30 @@ const IndustryForm = ({
             rows="2"
           />
         </div>
-
-        {/* Subscription Dropdown */}
-        <div className="form-group">
-          <label>Subscription</label>
-          <select
-            name="subscription_id"
-            className="form-control"
-            value={data.subscription_id || ''}
-            onChange={handleChange}
-          >
-            <option value="">-- Select Subscription --</option>
-            {allSubscriptions.map((sub) => (
-              <option key={sub._id} value={sub._id}>
-                {sub.name}
-              </option>
-            ))}
-          </select>
-          <small className="form-text text-muted">
-            Choose which subscription this industry belongs to.
-          </small>
-        </div>
-
-        <div className="d-flex justify-content-end">
+        {/* Subscription Dropdown (for superadmin only) */}
+        {isSuperadmin && (
+          <div className="form-group mb-2">
+            <label>Subscription</label>
+            <select
+              name="subscription_id"
+              className="form-control"
+              value={data.subscription_id || ''}
+              onChange={handleChange}
+              required
+            >
+              <option value="">-- Select Subscription --</option>
+              {allSubscriptions.map((sub) => (
+                <option key={sub._id} value={sub._id}>
+                  {sub.name}
+                </option>
+              ))}
+            </select>
+            <small className="form-text text-muted">
+              Select the subscription level for this industry.
+            </small>
+          </div>
+        )}
+        <div className="d-flex justify-content-end mt-3">
           <button
             type="button"
             className="btn btn-secondary me-2"
@@ -102,6 +106,7 @@ IndustryForm.propTypes = {
       name: PropTypes.string,
     })
   ).isRequired,
+  isSuperadmin: PropTypes.bool.isRequired,
 };
 
 export default IndustryForm;

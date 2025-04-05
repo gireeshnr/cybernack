@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-// Use REACT_APP_API_BASE_URL
 const baseURL =
   process.env.REACT_APP_API_BASE_URL ||
   (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
@@ -14,26 +13,32 @@ const getAuthHeaders = () => {
 };
 
 // Thunks
-export const fetchQuestions = createAsyncThunk('questions/fetchQuestions', async (_, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(API_URL, getAuthHeaders());
-    return response.data;
-  } catch (error) {
-    toast.error('Error fetching questions.');
-    return rejectWithValue(error.message);
+export const fetchQuestions = createAsyncThunk(
+  'questions/fetchQuestions',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(API_URL, getAuthHeaders());
+      return response.data;
+    } catch (error) {
+      toast.error('Error fetching questions.');
+      return rejectWithValue(error.message);
+    }
   }
-});
+);
 
-export const createQuestion = createAsyncThunk('questions/createQuestion', async (data, { rejectWithValue }) => {
-  try {
-    const response = await axios.post(API_URL, data, getAuthHeaders());
-    toast.success('Question created successfully!');
-    return response.data;
-  } catch (error) {
-    toast.error('Error creating question.');
-    return rejectWithValue(error.message);
+export const createQuestion = createAsyncThunk(
+  'questions/createQuestion',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(API_URL, data, getAuthHeaders());
+      toast.success('Question created successfully!');
+      return response.data;
+    } catch (error) {
+      toast.error('Error creating question.');
+      return rejectWithValue(error.message);
+    }
   }
-});
+);
 
 export const updateQuestion = createAsyncThunk(
   'questions/updateQuestion',
@@ -62,7 +67,6 @@ export const deleteQuestion = createAsyncThunk(
   }
 );
 
-// Slice
 const questionSlice = createSlice({
   name: 'questions',
   initialState: { questions: [], loading: false, error: null },
@@ -79,6 +83,8 @@ const questionSlice = createSlice({
       })
       .addCase(fetchQuestions.fulfilled, (state, { payload }) => {
         state.loading = false;
+        // sort newest first
+        payload.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         state.questions = payload;
       })
       .addCase(fetchQuestions.rejected, (state, { payload }) => {
@@ -92,7 +98,8 @@ const questionSlice = createSlice({
       })
       .addCase(createQuestion.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.questions.push(payload);
+        // Insert newly created question at the top
+        state.questions.unshift(payload);
       })
       .addCase(createQuestion.rejected, (state, { payload }) => {
         state.loading = false;

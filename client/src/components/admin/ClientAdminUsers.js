@@ -6,7 +6,6 @@ import { getUsers, addUser, updateUser, deleteUsers } from '../../auth/actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
-import ConfirmModal from '../ConfirmModal';
 
 const ClientAdminUsers = ({
   getUsers,
@@ -31,7 +30,6 @@ const ClientAdminUsers = ({
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   useEffect(() => {
     getUsers();
@@ -106,15 +104,18 @@ const ClientAdminUsers = ({
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteSelected = async () => {
+    if (!selectedUsers.length) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedUsers.length} user(s)?`)) {
+      return;
+    }
     try {
       await deleteUsers(selectedUsers);
       setSelectedUsers([]);
       toast.success(`${selectedUsers.length} user(s) deleted successfully!`);
-      setShowConfirmDelete(false);
       await refreshUsers();
     } finally {
-      // Ensure no additional code execution in case of errors
+      // 
     }
   };
 
@@ -125,7 +126,7 @@ const ClientAdminUsers = ({
       <div className="d-flex justify-content-between mb-3">
         <button
           className={`icon-delete btn btn-danger ${selectedUsers.length === 0 ? 'disabled' : ''}`}
-          onClick={() => setShowConfirmDelete(true)}
+          onClick={handleDeleteSelected}
           disabled={selectedUsers.length === 0}
         >
           <FontAwesomeIcon icon={faTrashAlt} /> Delete Selected
@@ -266,16 +267,16 @@ const ClientAdminUsers = ({
               <div className="d-flex justify-content-end mt-3">
                 <button
                   type="submit"
-                  className="btn btn-primary me-2" // Added margin-right here
+                  className="btn btn-primary me-2"
                   disabled={isSubmitting}
                 >
                   {isSubmitting
                     ? showAddForm
                       ? 'Adding...'
                       : 'Updating...'
-                      : showAddForm
-                      ? 'Add User'
-                      : 'Update User'}
+                    : showAddForm
+                    ? 'Add User'
+                    : 'Update User'}
                 </button>
                 <button
                   type="button"
@@ -283,7 +284,7 @@ const ClientAdminUsers = ({
                   onClick={() => {
                     setShowAddForm(false);
                     setShowEditForm(false);
-                    setUserData(initialUserData); // Reset the form
+                    setUserData(initialUserData);
                   }}
                 >
                   Cancel
@@ -292,15 +293,6 @@ const ClientAdminUsers = ({
             </form>
           </div>
         </div>
-      )}
-
-      {/* Confirmation modal for deleting users */}
-      {showConfirmDelete && (
-        <ConfirmModal
-          message={`Are you sure you want to delete ${selectedUsers.length} user(s)?`}
-          onConfirm={handleDelete}
-          onCancel={() => setShowConfirmDelete(false)}
-        />
       )}
     </div>
   );
@@ -311,18 +303,7 @@ ClientAdminUsers.propTypes = {
   addUser: PropTypes.func.isRequired,
   updateUser: PropTypes.func.isRequired,
   deleteUsers: PropTypes.func.isRequired,
-  users: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      name: PropTypes.shape({
-        first: PropTypes.string.isRequired,
-        last: PropTypes.string.isRequired,
-      }).isRequired,
-      email: PropTypes.string.isRequired,
-      role: PropTypes.string.isRequired,
-      isActive: PropTypes.bool.isRequired,
-    })
-  ).isRequired,
+  users: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = (state) => ({

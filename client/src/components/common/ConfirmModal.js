@@ -1,4 +1,4 @@
-// client/src/components/ConfirmModal.js
+// client/src/components/common/ConfirmModal.js
 import React from 'react';
 import PropTypes from 'prop-types';
 

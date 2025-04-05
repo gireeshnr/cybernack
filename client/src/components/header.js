@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
-import AppLogo from '../statics/Logo.png';
+import AppLogo from '../statics/icon.png';
 
 const Header = ({ authenticated, role, organization }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -54,21 +54,16 @@ const Header = ({ authenticated, role, organization }) => {
           </NavLink>
         </li>
 
-        {/* Admin Settings (for both admin and superadmin) */}
+        {/* Admin Settings (for both superadmin and admin) */}
         {authenticated && (role === 'superadmin' || role === 'admin') && (
           <li className="nav-item">
             <div className="nav-link" onClick={() => toggleMenu('adminSettings')}>
               <i className="fas fa-cogs" />
               <span className="menu-text">Admin Settings</span>
-              <i
-                className={`fas fa-chevron-${
-                  activeMenu === 'adminSettings' ? 'up' : 'down'
-                } submenu-icon`}
-              />
+              <i className={`fas fa-chevron-${activeMenu === 'adminSettings' ? 'up' : 'down'} submenu-icon`} />
             </div>
             {activeMenu === 'adminSettings' && (
               <ul className="submenu">
-                {/* superadmin-only submenu items */}
                 {role === 'superadmin' && (
                   <>
                     <li className="nav-item">
@@ -84,25 +79,20 @@ const Header = ({ authenticated, role, organization }) => {
                       </NavLink>
                     </li>
                     <li className="nav-item">
-                      <NavLink
-                        className="nav-link"
-                        to="/superadmin/manage-subscriptions"
-                      >
+                      <NavLink className="nav-link" to="/superadmin/manage-subscriptions">
                         <i className="fas fa-list-alt" />
                         <span className="menu-text">Subscriptions</span>
                       </NavLink>
                     </li>
                   </>
                 )}
-
+                {/* Replace Subjects with Your Subscription for both roles */}
                 <li className="nav-item">
                   <NavLink className="nav-link" to="/superadmin/your-subscription">
                     <i className="fas fa-star" />
                     <span className="menu-text">Your Subscription</span>
                   </NavLink>
                 </li>
-
-                {/* admin only */}
                 {role === 'admin' && (
                   <li className="nav-item">
                     <NavLink className="nav-link" to="/admin/users">
@@ -111,23 +101,52 @@ const Header = ({ authenticated, role, organization }) => {
                     </NavLink>
                   </li>
                 )}
-                {role === 'admin' && (
-                  <li className="nav-item">
-                    <NavLink className="nav-link" to="/admin/domains-subjects">
-                      <i className="fas fa-globe" />
-                      <span className="menu-text">Manage Domains & Subjects</span>
-                    </NavLink>
-                  </li>
-                )}
-                {/* Admin bulk upload */}
-                {role === 'admin' && (
-                  <li className="nav-item">
-                    <NavLink className="nav-link" to="/admin/bulk-upload">
-                      <i className="fas fa-upload" />
-                      <span className="menu-text">Bulk Upload</span>
-                    </NavLink>
-                  </li>
-                )}
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/application/settings/roles">
+                    <i className="fas fa-id-badge" />
+                    <span className="menu-text">Roles</span>
+                  </NavLink>
+                </li>
+              </ul>
+            )}
+          </li>
+        )}
+
+        {/* Admin App Settings submenu */}
+        {authenticated && role === 'admin' && (
+          <li className="nav-item">
+            <div className="nav-link" onClick={() => toggleMenu('adminAppSettings')}>
+              <i className="fas fa-wrench" />
+              <span className="menu-text">App Settings</span>
+              <i className={`fas fa-chevron-${activeMenu === 'adminAppSettings' ? 'up' : 'down'} submenu-icon`} />
+            </div>
+            {activeMenu === 'adminAppSettings' && (
+              <ul className="submenu">
+                {/* For local admin, order: Domains, then Subjects, then Questions, then Bulk Upload */}
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/application/settings/domains">
+                    <i className="fas fa-globe" />
+                    <span className="menu-text">Domains</span>
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/application/settings/subjects">
+                    <i className="fas fa-book" />
+                    <span className="menu-text">Subjects</span>
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/application/settings/questions">
+                    <i className="fas fa-question-circle" />
+                    <span className="menu-text">Questions</span>
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/application/settings/bulk-upload">
+                    <i className="fas fa-upload" />
+                    <span className="menu-text">Bulk Upload</span>
+                  </NavLink>
+                </li>
               </ul>
             )}
           </li>
@@ -139,56 +158,44 @@ const Header = ({ authenticated, role, organization }) => {
             <div className="nav-link" onClick={() => toggleMenu('appSettings')}>
               <i className="fas fa-wrench" />
               <span className="menu-text">App Settings</span>
-              <i
-                className={`fas fa-chevron-${
-                  activeMenu === 'appSettings' ? 'up' : 'down'
-                } submenu-icon`}
-              />
+              <i className={`fas fa-chevron-${activeMenu === 'appSettings' ? 'up' : 'down'} submenu-icon`} />
             </div>
             {activeMenu === 'appSettings' && (
               <ul className="submenu">
                 <li className="nav-item">
-                  <NavLink
-                    className="nav-link"
-                    to="/application/settings/industries"
-                  >
+                  <NavLink className="nav-link" to="/application/settings/industries">
                     <i className="fas fa-database" />
                     <span className="menu-text">Industries</span>
                   </NavLink>
                 </li>
                 <li className="nav-item">
-                  <NavLink
-                    className="nav-link"
-                    to="/application/settings/domains"
-                  >
+                  <NavLink className="nav-link" to="/application/settings/domains">
                     <i className="fas fa-globe" />
                     <span className="menu-text">Domains</span>
                   </NavLink>
                 </li>
                 <li className="nav-item">
-                  <NavLink
-                    className="nav-link"
-                    to="/application/settings/subjects"
-                  >
+                  <NavLink className="nav-link" to="/application/settings/subjects">
                     <i className="fas fa-book" />
                     <span className="menu-text">Subjects</span>
                   </NavLink>
                 </li>
                 <li className="nav-item">
-                  <NavLink
-                    className="nav-link"
-                    to="/application/settings/questions"
-                  >
+                  <NavLink className="nav-link" to="/application/settings/questions">
                     <i className="fas fa-question-circle" />
                     <span className="menu-text">Questions</span>
                   </NavLink>
                 </li>
-                {/* superadmin bulk upload */}
                 <li className="nav-item">
-                  <NavLink
-                    className="nav-link"
-                    to="/application/settings/bulk-upload"
-                  >
+                  <NavLink className="nav-link" to="/application/settings/training-path">
+                    <i className="fas fa-chalkboard-teacher" />
+                    <span className="menu-text" style={{ marginLeft: '4px' }}>
+                      Training Path
+                    </span>
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/application/settings/bulk-upload">
                     <i className="fas fa-upload" />
                     <span className="menu-text">Bulk Upload</span>
                   </NavLink>

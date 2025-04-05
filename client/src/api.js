@@ -1,9 +1,6 @@
 // client/src/api.js
 import axios from 'axios';
 
-// We read REACT_APP_API_BASE_URL from environment
-// In dev: .env => REACT_APP_API_BASE_URL=http://localhost:8000
-// In production: environment variable or fallback
 const baseURL =
   process.env.REACT_APP_API_BASE_URL ||
   (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
@@ -29,7 +26,6 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // e.g. redirect to login
       localStorage.removeItem('auth_jwt_token');
       window.location.href = '/signin';
     }

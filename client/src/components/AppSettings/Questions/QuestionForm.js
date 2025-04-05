@@ -1,3 +1,4 @@
+// client/src/components/AppSettings/Questions/QuestionForm.js
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -10,6 +11,7 @@ const QuestionForm = ({
   onCancel,
   allSubjects,
   allSubscriptions,
+  isSuperadmin,
 }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,8 +32,32 @@ const QuestionForm = ({
           onSubmit();
         }}
       >
+        {/* Subscription (only for superadmin) */}
+        {isSuperadmin && (
+          <div className="form-group mb-2">
+            <label>Subscription</label>
+            <select
+              name="subscription_id"
+              className="form-control"
+              value={data.subscription_id || ''}
+              onChange={handleChange}
+              required
+            >
+              <option value="">-- Select Subscription --</option>
+              {allSubscriptions.map((sub) => (
+                <option key={sub._id} value={sub._id}>
+                  {sub.name}
+                </option>
+              ))}
+            </select>
+            <small className="form-text text-muted">
+              Choose the subscription level for this question.
+            </small>
+          </div>
+        )}
+
         {/* Subject */}
-        <div className="form-group">
+        <div className="form-group mb-2">
           <label>Subject</label>
           <select
             name="subject_id"
@@ -52,87 +78,114 @@ const QuestionForm = ({
           </small>
         </div>
 
-        {/* Question short label */}
-        <div className="form-group">
-          <label>Question</label>
+        {/* Short text (snippet) */}
+        <div className="form-group mb-2">
+          <label>Short Question Snippet</label>
           <input
             type="text"
-            name="question"
+            name="short_text"
             className="form-control"
-            value={data.question || ''}
+            value={data.short_text || ''}
             onChange={handleChange}
             required
           />
           <small className="form-text text-muted">
-            Short question identifier/title.
+            A brief snippet (up to ~100 chars).
           </small>
         </div>
 
-        {/* Question Text */}
-        <div className="form-group">
-          <label>Question Text</label>
+        {/* Full text (optional) */}
+        <div className="form-group mb-2">
+          <label>Full Question Text (optional)</label>
           <textarea
-            name="question_text"
+            name="full_text"
             className="form-control"
-            value={data.question_text || ''}
+            value={data.full_text || ''}
             onChange={handleChange}
             rows="3"
-            required
           />
         </div>
 
-        {/* Answer Options */}
-        <div className="form-group">
-          <label>Answer Options (comma separated)</label>
+        {/* EXACT 4 answer options */}
+        <label className="form-label mt-3">Answer Options</label>
+        <div className="form-group d-flex flex-column gap-1 mb-2">
           <input
             type="text"
-            name="answer_options"
+            name="optionA"
             className="form-control"
-            placeholder="e.g. option1, option2, option3"
-            value={data.answer_options || ''}
+            placeholder="Option A"
+            value={data.optionA || ''}
             onChange={handleChange}
             required
           />
-          <small className="form-text text-muted">
-            We'll split by commas to form multiple choice answers.
-          </small>
+          <input
+            type="text"
+            name="optionB"
+            className="form-control"
+            placeholder="Option B"
+            value={data.optionB || ''}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="text"
+            name="optionC"
+            className="form-control"
+            placeholder="Option C"
+            value={data.optionC || ''}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="text"
+            name="optionD"
+            className="form-control"
+            placeholder="Option D"
+            value={data.optionD || ''}
+            onChange={handleChange}
+            required
+          />
         </div>
 
         {/* Correct Answer */}
-        <div className="form-group">
+        <div className="form-group mb-2">
           <label>Correct Answer</label>
-          <input
-            type="text"
+          <select
             name="correct_answer"
             className="form-control"
             value={data.correct_answer || ''}
             onChange={handleChange}
             required
-          />
+          >
+            <option value="">-- Select --</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+          </select>
           <small className="form-text text-muted">
-            This should match exactly one of the answer options.
+            Must match exactly one of A/B/C/D.
           </small>
         </div>
 
         {/* Difficulty */}
-        <div className="form-group">
+        <div className="form-group mb-2">
           <label>Difficulty</label>
           <select
             name="difficulty"
             className="form-control"
-            value={data.difficulty || ''}
+            value={data.difficulty || 'Medium'}
             onChange={handleChange}
           >
-            <option value="">-- Select Difficulty --</option>
-            <option value="Low">Low</option>
+            <option value="Easy">Easy</option>
             <option value="Medium">Medium</option>
-            <option value="High">High</option>
+            <option value="Hard">Hard</option>
           </select>
         </div>
 
         {/* Explanation */}
-        <div className="form-group">
-          <label>Explanation</label>
+        <div className="form-group mb-2">
+          <label>Explanation (optional)</label>
           <textarea
             name="explanation"
             className="form-control"
@@ -142,27 +195,7 @@ const QuestionForm = ({
           />
         </div>
 
-        {/* Subscription Dropdown */}
-        <div className="form-group">
-          <label>Subscription</label>
-          <select
-            name="subscription_id"
-            className="form-control"
-            value={data.subscription_id || ''}
-            onChange={handleChange}
-          >
-            <option value="">-- Select Subscription --</option>
-            {allSubscriptions.map((sub) => (
-              <option key={sub._id} value={sub._id}>
-                {sub.name}
-              </option>
-            ))}
-          </select>
-          <small className="form-text text-muted">
-            (Optional) Choose a subscription plan for this question.
-          </small>
-        </div>
-
+        {/* Buttons */}
         <div className="d-flex justify-content-end">
           <button
             type="button"
@@ -185,9 +218,12 @@ QuestionForm.propTypes = {
   isEditing: PropTypes.bool.isRequired,
   data: PropTypes.shape({
     subject_id: PropTypes.string,
-    question: PropTypes.string,
-    question_text: PropTypes.string,
-    answer_options: PropTypes.string,
+    short_text: PropTypes.string,
+    full_text: PropTypes.string,
+    optionA: PropTypes.string,
+    optionB: PropTypes.string,
+    optionC: PropTypes.string,
+    optionD: PropTypes.string,
     correct_answer: PropTypes.string,
     difficulty: PropTypes.string,
     explanation: PropTypes.string,
@@ -197,18 +233,9 @@ QuestionForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   isSubmitting: PropTypes.bool.isRequired,
   onCancel: PropTypes.func.isRequired,
-  allSubjects: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-    })
-  ).isRequired,
-  allSubscriptions: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-    })
-  ).isRequired,
+  allSubjects: PropTypes.array.isRequired,
+  allSubscriptions: PropTypes.array.isRequired,
+  isSuperadmin: PropTypes.bool.isRequired,
 };
 
 export default QuestionForm;

@@ -1,3 +1,4 @@
+// client/src/components/AppSettings/Domains/DomainTable.js
 import React from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,22 +13,17 @@ const DomainTable = ({
   onColumnFilterChange,
   onToggleSelectAll,
   allSelected,
+  isSuperadmin,
+  activeTab,
 }) => {
+  // For superadmins, show subscription column always.
+  // For local admins, show subscription column only when activeTab is "local".
+  const showSubscriptionColumn = isSuperadmin || activeTab === 'local';
+
   return (
     <div className="table-responsive">
       <table className="table table-hover table-striped">
         <thead>
-          <tr>
-            <th></th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Industries</th>
-            <th>Subscription</th>
-            <th>Added By</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-          {/* Filter row with "Select All" checkbox in first column */}
           <tr>
             <th>
               <input
@@ -36,10 +32,17 @@ const DomainTable = ({
                 onChange={onToggleSelectAll}
                 style={{ marginRight: '4px' }}
               />
-              <label htmlFor="selectAll" className="ms-1" style={{ fontSize: '0.8rem' }}>
-                Select All
-              </label>
+              <label style={{ fontSize: '0.8rem' }}>Select All</label>
             </th>
+            <th>Domain Name</th>
+            <th>Description</th>
+            {showSubscriptionColumn && <th>Subscription</th>}
+            <th>Added By</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+          <tr>
+            <th></th>
             <th>
               <input
                 type="text"
@@ -58,24 +61,17 @@ const DomainTable = ({
                 className="form-control form-control-sm"
               />
             </th>
-            <th>
-              <input
-                type="text"
-                placeholder="Filter Industries"
-                value={columnFilters.industries}
-                onChange={(e) => onColumnFilterChange('industries', e.target.value)}
-                className="form-control form-control-sm"
-              />
-            </th>
-            <th>
-              <input
-                type="text"
-                placeholder="Filter Subscription"
-                value={columnFilters.subscription}
-                onChange={(e) => onColumnFilterChange('subscription', e.target.value)}
-                className="form-control form-control-sm"
-              />
-            </th>
+            {showSubscriptionColumn && (
+              <th>
+                <input
+                  type="text"
+                  placeholder="Filter Subscription"
+                  value={columnFilters.subscription}
+                  onChange={(e) => onColumnFilterChange('subscription', e.target.value)}
+                  className="form-control form-control-sm"
+                />
+              </th>
+            )}
             <th>
               <input
                 type="text"
@@ -100,30 +96,28 @@ const DomainTable = ({
         <tbody>
           {domains.length === 0 ? (
             <tr>
-              <td colSpan="8" className="text-center">
+              <td colSpan={showSubscriptionColumn ? 7 : 6} className="text-center">
                 No domains available.
               </td>
             </tr>
           ) : (
             domains.map((domain) => {
-              const industryNames = Array.isArray(domain.industries)
-                ? domain.industries
-                    .map((ind) => (typeof ind === 'object' ? ind.name : ind))
-                    .join(', ')
-                : '—';
+              // Get subscription label
               let subscriptionLabel = '—';
-              if (domain.subscription_id) {
-                if (typeof domain.subscription_id === 'object') {
-                  subscriptionLabel = domain.subscription_id.name || '—';
-                } else {
-                  subscriptionLabel = domain.subscription_id;
-                }
+              if (domain.subscription_id && typeof domain.subscription_id === 'object') {
+                subscriptionLabel = domain.subscription_id.name || '—';
               }
+              
+              // Determine whether to show the edit icon.
+              let showEdit = false;
+              if (isSuperadmin) {
+                showEdit = domain.creatorRole === 'superadmin';
+              } else {
+                showEdit = domain.creatorRole === 'admin';
+              }
+
               return (
-                <tr
-                  key={domain._id}
-                  className={selectedDomains.includes(domain._id) ? 'table-primary' : ''}
-                >
+                <tr key={domain._id} className={selectedDomains.includes(domain._id) ? 'table-primary' : ''}>
                   <td>
                     <input
                       type="checkbox"
@@ -132,22 +126,21 @@ const DomainTable = ({
                     />
                   </td>
                   <td>{domain.name}</td>
-                  <td>{domain.description}</td>
-                  <td>{industryNames}</td>
-                  <td>{subscriptionLabel}</td>
-                  <td>{domain.addedBy || '—'}</td>
+                  <td>{domain.description || '—'}</td>
+                  {showSubscriptionColumn && <td>{subscriptionLabel}</td>}
+                  <td>{domain.creatorRole === 'superadmin' ? 'Cybernack' : (domain.addedBy || '—')}</td>
+                  <td>{domain.createdAt ? new Date(domain.createdAt).toLocaleDateString() : ''}</td>
                   <td>
-                    {domain.createdAt ? new Date(domain.createdAt).toLocaleDateString() : ''}
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      onClick={() => onEditClick(domain)}
-                      title="Edit"
-                      style={{ backgroundColor: 'transparent', border: 'none', padding: 0 }}
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </button>
+                    {showEdit && (
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => onEditClick(domain)}
+                        title="Edit"
+                        style={{ backgroundColor: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
+                      >
+                        <FontAwesomeIcon icon={faEdit} style={{ fontSize: '0.8rem' }} />
+                      </button>
+                    )}
                   </td>
                 </tr>
               );
@@ -165,13 +158,17 @@ DomainTable.propTypes = {
       _id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
       description: PropTypes.string,
-      industries: PropTypes.array,
+      industry_id: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.shape({ _id: PropTypes.string, name: PropTypes.string }),
+      ]).isRequired,
       subscription_id: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.shape({ _id: PropTypes.string, name: PropTypes.string }),
       ]),
       createdAt: PropTypes.string,
       addedBy: PropTypes.string,
+      creatorRole: PropTypes.string.isRequired,
     })
   ).isRequired,
   selectedDomains: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -180,7 +177,7 @@ DomainTable.propTypes = {
   columnFilters: PropTypes.shape({
     name: PropTypes.string,
     description: PropTypes.string,
-    industries: PropTypes.string,
+    industry: PropTypes.string,
     subscription: PropTypes.string,
     addedBy: PropTypes.string,
     createdAt: PropTypes.string,
@@ -188,6 +185,8 @@ DomainTable.propTypes = {
   onColumnFilterChange: PropTypes.func.isRequired,
   onToggleSelectAll: PropTypes.func.isRequired,
   allSelected: PropTypes.bool.isRequired,
+  isSuperadmin: PropTypes.bool.isRequired,
+  activeTab: PropTypes.string.isRequired,
 };
 
 export default DomainTable;

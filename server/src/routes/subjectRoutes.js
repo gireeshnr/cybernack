@@ -1,18 +1,13 @@
+// server/src/routes/subjectRoutes.js
 import express from 'express';
-import {
-  createSubject,
-  getSubjects,
-  updateSubject,
-  deleteSubject,
-} from '../controllers/subjectController.js';
-import { authMiddleware, isSuperAdmin } from '../auth/authMiddleware.js';
+import { authMiddleware } from '../auth/authMiddleware.js';
+import subjectController from '../controllers/subjectController.js';
 
 const router = express.Router();
 
-// CRUD endpoints
-router.post('/', authMiddleware, isSuperAdmin, createSubject);
-router.get('/', authMiddleware, isSuperAdmin, getSubjects);
-router.put('/:id', authMiddleware, isSuperAdmin, updateSubject);
-router.delete('/:id', authMiddleware, isSuperAdmin, deleteSubject);
+router.get('/', authMiddleware, subjectController.getSubjects);
+router.post('/', authMiddleware, subjectController.createSubject);
+router.put('/:id', authMiddleware, subjectController.updateSubject);
+router.delete('/:id', authMiddleware, subjectController.deleteSubject);
 
 export default router;
